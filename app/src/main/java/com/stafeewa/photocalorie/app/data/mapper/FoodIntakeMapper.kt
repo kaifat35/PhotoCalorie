@@ -5,9 +5,27 @@ import com.stafeewa.photocalorie.app.domain.entity.FoodEntry
 
 
 fun FoodEntry.toDbModel(): FoodEntryDbModel {
-    return FoodEntryDbModel(id, name, mealType, portion, protein, fat, carbs)
+    return FoodEntryDbModel(
+        id = this.id,
+        name = this.name,
+        mealType = this.mealType,
+        portion = this.portion,
+        protein = this.protein,
+        fat = this.fat,
+        carbs = this.carbs,
+        timestamp = this.timestamp
+    )
 }
 
 fun FoodEntryDbModel.toEntity(): FoodEntry {
-    return FoodEntry(id, name, mealType, portion, protein, fat, carbs)
+    return FoodEntry(
+        id = this.id,
+        name = this.name,
+        mealType = this.mealType,
+        portion = this.portion,
+        protein = this.protein,
+        fat = this.fat,
+        carbs = this.carbs,
+        timestamp = this.timestamp
+    )
 }

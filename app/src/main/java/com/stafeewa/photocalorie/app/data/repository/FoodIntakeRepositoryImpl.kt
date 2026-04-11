@@ -5,10 +5,10 @@ import com.stafeewa.photocalorie.app.data.mapper.toDbModel
 import com.stafeewa.photocalorie.app.data.mapper.toEntity
 import com.stafeewa.photocalorie.app.domain.entity.DailyIntake
 import com.stafeewa.photocalorie.app.domain.entity.FoodEntry
+import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.repository.FoodIntakeRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import javax.inject.Inject
@@ -39,19 +39,29 @@ class FoodIntakeRepositoryImpl @Inject constructor(
             )
         }
 
+    override fun getTodayEntries(): Flow<List<FoodEntry>> {
+        return dao.getTodayEntries().map { dbModels ->
+            dbModels.map { it.toEntity() }
+        }
+    }
+
     override suspend fun addFoodEntry(foodEntry: FoodEntry) {
         dao.insertFoodEntry(foodEntry.toDbModel())
     }
 
-    override suspend fun removeFoodEntry(entryId: String) {
-        dao.deleteFoodEntry(entryId)
+    override suspend fun removeFoodEntry(entryId: Long) {
+        dao.deleteFoodEntryById(entryId)
     }
 
-    override suspend fun updateFoodEntry(entryId: String, portion: Double) {
+    override suspend fun updateFoodEntry(entryId: Long, portion: Double) {
         dao.updatePortion(entryId, portion)
     }
 
     override suspend fun getTotalCaloriesForToday(): Double {
-        return dao.getTodayEntries().first().sumOf { it.calories }
+        return dao.getTodayTotalCalories() ?: 0.0
+    }
+
+    override suspend fun getEntriesByMealType(mealType: MealType): List<FoodEntry> {
+        return dao.getEntriesByMealType(mealType).map { it.toEntity() }
     }
 }

@@ -20,12 +20,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,168 +52,240 @@ import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.FoodEntry
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 
-
 @Composable
 fun FoodIntakeScreen(
     modifier: Modifier = Modifier,
     viewModel: FoodIntakeViewModel = hiltViewModel()
 ) {
+    val calorieGoal by viewModel.calorieGoal.collectAsStateWithLifecycle()
+    val remainingCalories by viewModel.remainingCalories.collectAsStateWithLifecycle()
+    val totalCalories by viewModel.totalCalories.collectAsStateWithLifecycle()
+    val breakfastEntries by viewModel.breakfastEntries.collectAsStateWithLifecycle()
+    val lunchEntries by viewModel.lunchEntries.collectAsStateWithLifecycle()
+    val dinnerEntries by viewModel.dinnerEntries.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
+    val successMessage by viewModel.successMessage.collectAsStateWithLifecycle()
 
-    val dailyCalories by viewModel.dailyCalories.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
+    // Показываем сообщения об ошибках/успехе
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
+
+    LaunchedEffect(successMessage) {
+        successMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearSuccess()
+        }
+    }
+
+    var showAddDialog by remember { mutableStateOf(false) }
+    var selectedMealType by remember { mutableStateOf<MealType?>(null) }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize()
-            .padding(bottom = 80.dp),
-        containerColor = Color(0xFF313131),// Темно-серый фон
+        modifier = Modifier.fillMaxSize(),
+        containerColor = Color(0xFF313131),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         content = { contentPadding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                item {
-                    // Заголовок
-                    Text(
-                        text = "Калории на сегодня",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            color = Color.White
-                        ),
-                        fontFamily = FontFamily(Font(R.font.jura)),
-                        fontSize = 30.sp
-                    )
-                }
-                item {
-                    // Норма калорий
-                    Text(
-                        text = "Ваша норма: ${dailyCalories?.toInt() ?: 0}",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            color = Color.White
-                        ),
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily(Font(R.font.jura)),
-                        fontSize = 24.sp
-                    )
-                }
-                item {
-                    // Потребленные калории
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Размытый зеленый круг (фон)
-                        Box(
-                            modifier = Modifier
-                                .size(150.dp)
-                                .background(
-                                    brush = Brush.radialGradient(
-                                        colors = listOf(
-                                            Color(0xCC009E1D),   // Полупрозрачный зеленый
-                                            Color.Transparent    // Края в ноль
-                                        )
-                                    ),
-                                    shape = CircleShape
-                                )
-                                .blur(30.dp) // сильное размытие
-                                .clip(CircleShape)
-                        )
-
-                        // Текст поверх круга
+            Box(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding)
+                        .padding(16.dp)
+                        .padding(bottom = 80.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item {
                         Text(
-                            text = "1903 ККал",
+                            text = "Калории на сегодня",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                color = Color.White
+                            ),
+                            fontFamily = FontFamily(Font(R.font.jura)),
+                            fontSize = 30.sp
+                        )
+                    }
+
+                    item {
+                        Text(
+                            text = "Ваша норма: ${calorieGoal?.toInt() ?: 0} ккал",
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 color = Color.White
                             ),
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily(Font(R.font.jura)),
-                            fontSize = 30.sp
+                            fontSize = 24.sp
                         )
                     }
-                }
 
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-
-                item {
-                    MealSection(
-                        "Завтрак", listOf(
-                            FoodEntry(
-                                name = "молоко",
-                                protein = 12.0,
-                                fat = 6.0,
-                                carbs = 8.0,
-                                id = 1,
-                                mealType = MealType.BREAKFAST,
-                                portion = 1.0,
-                                timestamp = System.currentTimeMillis(),
-                            ),
-                            FoodEntry(
-                                name = "хлопья",
-                                protein = 8.0,
-                                fat = 12.0,
-                                carbs = 30.0,
-                                id = 2,
-                                mealType = MealType.LUNCH,
-                                portion = 1.0,
-                                timestamp = System.currentTimeMillis(),
+                    item {
+                        // Потребленные калории
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(150.dp)
+                                    .background(
+                                        brush = Brush.radialGradient(
+                                            colors = listOf(
+                                                Color(0xCC009E1D),
+                                                Color.Transparent
+                                            )
+                                        ),
+                                        shape = CircleShape
+                                    )
+                                    .blur(30.dp)
+                                    .clip(CircleShape)
                             )
-                        ), total = "250к 20г 18г 38г"
-                    )
-                }
 
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-                item {
-                    MealSection("Обед", emptyList(), total = "250к 20г 18г 38г")
-                }
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-                item {
-                    MealSection("Ужин", emptyList(), total = "250к 20г 18г 38г")
-                }
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-                item {
-                    // Кнопка распознавания еды
-                    Button(
-                        onClick = { },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 8.dp),
-                        shape = RoundedCornerShape(30.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF009E1D)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "${totalCalories.toInt()} / ${calorieGoal.toInt()}",
+                                    style = MaterialTheme.typography.headlineMedium.copy(
+                                        color = Color.White
+                                    ),
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = FontFamily(Font(R.font.jura)),
+                                    fontSize = 30.sp
+                                )
+                                Text(
+                                    text = "Осталось: ${remainingCalories.toInt()} ккал",
+                                    color = if (remainingCalories < 0) Color.Red else Color.White.copy(alpha = 0.7f),
+                                    fontFamily = FontFamily(Font(R.font.jura)),
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
+
+                    item { Spacer(modifier = Modifier.height(24.dp)) }
+
+                    // Завтрак
+                    item {
+                        MealSection(
+                            title = "Завтрак",
+                            mealType = MealType.BREAKFAST,
+                            items = breakfastEntries,
+                            onAddClick = {
+                                selectedMealType = MealType.BREAKFAST
+                                showAddDialog = true
+                            },
+                            onDeleteClick = { entry ->
+                                viewModel.removeFoodEntry(entry.id)
+                            }
                         )
-                    ) {
-                        Text(
-                            "Распознать еду по фото",
-                            fontFamily = FontFamily(Font(R.font.jura)),
-                            fontSize = 18.sp,
-                            color = Color.White
+                    }
+
+                    item { Spacer(modifier = Modifier.height(24.dp)) }
+
+                    // Обед
+                    item {
+                        MealSection(
+                            title = "Обед",
+                            mealType = MealType.LUNCH,
+                            items = lunchEntries,
+                            onAddClick = {
+                                selectedMealType = MealType.LUNCH
+                                showAddDialog = true
+                            },
+                            onDeleteClick = { entry ->
+                                viewModel.removeFoodEntry(entry.id)
+                            }
                         )
+                    }
+
+                    item { Spacer(modifier = Modifier.height(24.dp)) }
+
+                    // Ужин
+                    item {
+                        MealSection(
+                            title = "Ужин",
+                            mealType = MealType.DINNER,
+                            items = dinnerEntries,
+                            onAddClick = {
+                                selectedMealType = MealType.DINNER
+                                showAddDialog = true
+                            },
+                            onDeleteClick = { entry ->
+                                viewModel.removeFoodEntry(entry.id)
+                            }
+                        )
+                    }
+
+                    item { Spacer(modifier = Modifier.height(24.dp)) }
+
+                    item {
+                        Button(
+                            onClick = { /* TODO: открыть камеру для распознавания */ },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 8.dp),
+                            shape = RoundedCornerShape(30.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF009E1D)
+                            )
+                        ) {
+                            Text(
+                                "Распознать еду по фото",
+                                fontFamily = FontFamily(Font(R.font.jura)),
+                                fontSize = 18.sp,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
 
+                // Индикатор загрузки
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.5f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFF009E1D))
+                    }
+                }
             }
         }
     )
+
+    // Диалог добавления еды
+    if (showAddDialog && selectedMealType != null) {
+        AddFoodDialog(
+            mealType = selectedMealType!!,
+            onDismiss = { showAddDialog = false },
+            onConfirm = { name, mealType, portion, protein, fat, carbs ->
+                viewModel.addFoodEntry(name, mealType, portion, protein, fat, carbs)
+                showAddDialog = false
+            }
+        )
+    }
 }
 
 @Composable
 fun MealSection(
     title: String,
+    mealType: MealType,
     items: List<FoodEntry>,
-    total: String,
+    onAddClick: () -> Unit,
+    onDeleteClick: (FoodEntry) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(false) }
+
+    val totalCalories = items.sumOf { it.calories }
+    val totalProtein = items.sumOf { it.protein }
+    val totalFat = items.sumOf { it.fat }
+    val totalCarbs = items.sumOf { it.carbs }
 
     Column(
         modifier = modifier
@@ -240,8 +316,8 @@ fun MealSection(
             )
 
             Icon(
-                painter = painterResource(id = if (isExpanded) R.drawable.plus else R.drawable.down),
-                contentDescription = if (isExpanded) "Добавить" else "Свернуть",
+                painter = painterResource(id = if (isExpanded) R.drawable.down else R.drawable.plus),
+                contentDescription = if (isExpanded) "Свернуть" else "Развернуть",
                 tint = Color.White,
                 modifier = Modifier
                     .size(24.dp)
@@ -249,90 +325,129 @@ fun MealSection(
             )
         }
 
-        // Итого (всегда видно)
-        Text(
-            text = "КБЖУ: $total",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                color = Color.White
-            ),
-            fontFamily = FontFamily(Font(R.font.jura)),
-            fontSize = 24.sp
-        )
+        // Итого
+        if (items.isNotEmpty()) {
+            Text(
+                text = "КБЖУ: ${totalCalories.toInt()}ккал | ${totalProtein.toInt()}г б | " +
+                        "${totalFat.toInt()}г ж | ${totalCarbs.toInt()}г у",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = Color.White
+                ),
+                fontFamily = FontFamily(Font(R.font.jura)),
+                fontSize = 16.sp
+            )
+        }
 
         // Список продуктов (только в развернутом состоянии)
         if (isExpanded) {
-            items.forEach { item ->
-                FoodItemRow(item)
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    thickness = 1.dp,
-                    color = Color(0xFFEEEEEE)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (items.isEmpty()) {
+                Text(
+                    text = "Нет добавленных блюд",
+                    color = Color.White.copy(alpha = 0.5f),
+                    fontFamily = FontFamily(Font(R.font.jura)),
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
+            } else {
+                items.forEach { item ->
+                    FoodItemRow(
+                        item = item,
+                        onDelete = { onDeleteClick(item) }
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        thickness = 1.dp,
+                        color = Color(0xFFEEEEEE)
+                    )
+                }
             }
 
-            // Кнопка добавления (только в развернутом состоянии)
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Добавить еду",
-                tint = Color.White,
-                modifier = Modifier
-                    .size(32.dp)
-                    .clickable { /* Логика добавления еды */ }
-                    .align(Alignment.CenterHorizontally)
-            )
+            // Кнопка добавления
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Добавить еду",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clickable { onAddClick() }
+                )
+            }
         }
     }
 }
 
 @Composable
-fun FoodItemRow(item: FoodEntry) {
-    Column {
-        // Название продукта
-        Text(
-            text = item.name,
-            fontFamily = FontFamily(Font(R.font.jura)),
-            fontSize = 24.sp,
-            style = MaterialTheme.typography.headlineMedium.copy(
-                color = Color.White // // Белый цвет текста
-            )
-        )
-
-        // Детали КБЖУ
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+fun FoodItemRow(
+    item: FoodEntry,
+    onDelete: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(2f)) {
             Text(
-                text = item.calories.toString(),
+                text = item.name,
                 fontFamily = FontFamily(Font(R.font.jura)),
-                fontSize = 24.sp,
-                color = Color.White
+                fontSize = 18.sp,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = Color.White
+                ),
+                fontWeight = FontWeight.Bold
             )
             Text(
-                text = item.protein.toString(),
+                text = "${item.portion.toInt()} г • ${item.calories.toInt()} ккал",
                 fontFamily = FontFamily(Font(R.font.jura)),
-                fontSize = 24.sp,
-                color = Color.White
-            )
-            Text(
-                text = item.fat.toString(),
-                fontFamily = FontFamily(Font(R.font.jura)),
-                fontSize = 24.sp,
-                color = Color.White
-            )
-            Text(
-                text = item.carbs.toString(),
-                fontFamily = FontFamily(Font(R.font.jura)),
-                fontSize = 24.sp,
-                color = Color.White
+                fontSize = 14.sp,
+                color = Color.White.copy(alpha = 0.7f)
             )
         }
+
+        Row(
+            modifier = Modifier.weight(1.5f),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            NutrientBadge("Б", item.protein.toInt(), Color(0xFF4CAF50))
+            NutrientBadge("Ж", item.fat.toInt(), Color(0xFFFF9800))
+            NutrientBadge("У", item.carbs.toInt(), Color(0xFF2196F3))
+        }
+
+        Icon(
+            painter = painterResource(id = R.drawable.bin),
+            contentDescription = "Удалить",
+            tint = Color.Red.copy(alpha = 0.7f),
+            modifier = Modifier
+                .size(24.dp)
+                .clickable { onDelete() }
+        )
     }
 }
 
-
-
-
-
-
-
+@Composable
+fun NutrientBadge(
+    label: String,
+    value: Int,
+    color: Color
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = color,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = value.toString(),
+            fontSize = 14.sp,
+            color = Color.White,
+            fontFamily = FontFamily(Font(R.font.jura))
+        )
+    }
+}

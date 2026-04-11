@@ -7,7 +7,7 @@ import com.stafeewa.photocalorie.app.domain.entity.MealType
 @Entity(tableName = "food_entry")
 data class FoodEntryDbModel(
     @PrimaryKey(autoGenerate = true)
-    val id: Int,
+    val id: Long = 0,
     val name: String,
     val mealType: MealType,
     val portion: Double,

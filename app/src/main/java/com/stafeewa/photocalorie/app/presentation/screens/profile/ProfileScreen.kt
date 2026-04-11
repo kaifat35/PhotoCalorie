@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -124,306 +125,317 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding)
-                .padding(bottom = 32.dp)
+                .padding(bottom = 104.dp)
         ) {
             item {
-                Column(
-                    modifier = Modifier
-                        .padding(horizontal = 38.dp)
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-
-                    Text(
-                        text = "Ваш профиль",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            color = Color.White
-                        ),
-                        fontFamily = FontFamily(Font(R.font.jura)),
-                        fontSize = 36.sp,
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-                    // Аватар пользователя
+                if (viewModel.isLoading.collectAsStateWithLifecycle().value) {
                     Box(
-                        contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(150.dp)
-                            .clip(CircleShape)
-                            .clickable { imagePicker.launch("image/*") }
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        val imageUri = getImageUriFromPath(editableProfile.imageUri)
+                        CircularProgressIndicator(color = Color(0xFF009E1D))
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = 38.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
 
-                        if (imageUri != null) {
-                            Image(
-                                painter = rememberAsyncImagePainter(
-                                    ImageRequest.Builder(context)
-                                        .data(imageUri)
-                                        .crossfade(true)
-                                        .build()
-                                ),
-                                contentDescription = "Profile Image",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "Ваш профиль",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                color = Color.White
+                            ),
+                            fontFamily = FontFamily(Font(R.font.jura)),
+                            fontSize = 36.sp,
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        // Аватар пользователя
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(150.dp)
+                                .clip(CircleShape)
+                                .clickable { imagePicker.launch("image/*") }
+                        ) {
+                            val imageUri = getImageUriFromPath(editableProfile.imageUri)
+
+                            if (imageUri != null) {
                                 Image(
-                                    painter = painterResource(id = R.drawable.ic_add_photo),
-                                    contentDescription = "Add Photo",
-                                    modifier = Modifier.size(155.dp)
+                                    painter = rememberAsyncImagePainter(
+                                        ImageRequest.Builder(context)
+                                            .data(imageUri)
+                                            .crossfade(true)
+                                            .build()
+                                    ),
+                                    contentDescription = "Profile Image",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
                                 )
-                                Image(
-                                    painter = painterResource(id = R.drawable.ic_user_image),
-                                    contentDescription = "User Image",
-                                    modifier = Modifier.size(121.dp)
-                                )
+                            } else {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_add_photo),
+                                        contentDescription = "Add Photo",
+                                        modifier = Modifier.size(155.dp)
+                                    )
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_user_image),
+                                        contentDescription = "User Image",
+                                        modifier = Modifier.size(121.dp)
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    Button(
-                        onClick = { imagePicker.launch("image/*") },
-                        modifier = Modifier
-                            .wrapContentSize()
-                            .padding(top = 8.dp)
-                            .height(44.dp),
-                        shape = RoundedCornerShape(30.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF474646)
-                        )
-                    ) {
-                        Text(
-                            "Добавить фото",
-                            fontFamily = FontFamily(Font(R.font.jura)),
-                            fontSize = 24.sp,
-                            modifier = Modifier.padding(horizontal = 24.dp)
-                        )
-                    }
-
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "Логин",
-                            color = Color.White,
-                            fontFamily = FontFamily(Font(R.font.jura)),
-                            fontSize = 24.sp,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        OutlinedTextField(
-                            value = editableProfile.login,
-                            onValueChange = {
-                                viewModel.processCommand(ProfileCommand.UpdateLogin(it))
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Text,
-                                imeAction = ImeAction.Done
-                            ),
-                            shape = RoundedCornerShape(30.dp),
-                            colors = textFieldColors()
-                        )
-                    }
-
-                    // Кнопка "Пол"
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "Пол",
-                            color = Color.White,
-                            fontFamily = FontFamily(Font(R.font.jura)),
-                            fontSize = 24.sp,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
                         Button(
-                            onClick = { bmrMenu = !bmrMenu },
+                            onClick = { imagePicker.launch("image/*") },
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
+                                .wrapContentSize()
+                                .padding(top = 8.dp)
+                                .height(44.dp),
                             shape = RoundedCornerShape(30.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF5C5A5A)
+                                containerColor = Color(0xFF474646)
                             )
                         ) {
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    editableProfile.gender ?: "Выберите пол",
-                                    fontFamily = FontFamily(Font(R.font.jura)),
-                                    fontSize = 24.sp
-                                )
-                                Icon(
-                                    painter = painterResource(id = R.drawable.down),
-                                    contentDescription = "Пол",
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
+                            Text(
+                                "Добавить фото",
+                                fontFamily = FontFamily(Font(R.font.jura)),
+                                fontSize = 24.sp,
+                                modifier = Modifier.padding(horizontal = 24.dp)
+                            )
                         }
 
-                        // Подменю "Пол"
-                        if (bmrMenu) {
-                            Column(
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "Логин",
+                                color = Color.White,
+                                fontFamily = FontFamily(Font(R.font.jura)),
+                                fontSize = 24.sp,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            OutlinedTextField(
+                                value = editableProfile.login,
+                                onValueChange = {
+                                    viewModel.processCommand(ProfileCommand.UpdateLogin(it))
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction = ImeAction.Done
+                                ),
+                                shape = RoundedCornerShape(30.dp),
+                                colors = textFieldColors()
+                            )
+                        }
+
+                        // Кнопка "Пол"
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "Пол",
+                                color = Color.White,
+                                fontFamily = FontFamily(Font(R.font.jura)),
+                                fontSize = 24.sp,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            Button(
+                                onClick = { bmrMenu = !bmrMenu },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(
-                                        Color(0xFF4E4E4E), shape = RoundedCornerShape(30.dp)
-                                    )
-                                    .padding(vertical = 8.dp)
+                                    .height(56.dp),
+                                shape = RoundedCornerShape(30.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF5C5A5A)
+                                )
                             ) {
-                                genderLevels.forEach { level ->
-                                    Button(
-                                        onClick = {
-                                            viewModel.processCommand(
-                                                ProfileCommand.UpdateGender(level)
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        editableProfile.gender ?: "Выберите пол",
+                                        fontFamily = FontFamily(Font(R.font.jura)),
+                                        fontSize = 24.sp
+                                    )
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.down),
+                                        contentDescription = "Пол",
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+
+                            // Подменю "Пол"
+                            if (bmrMenu) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            Color(0xFF4E4E4E), shape = RoundedCornerShape(30.dp)
+                                        )
+                                        .padding(vertical = 8.dp)
+                                ) {
+                                    genderLevels.forEach { level ->
+                                        Button(
+                                            onClick = {
+                                                viewModel.processCommand(
+                                                    ProfileCommand.UpdateGender(level)
+                                                )
+                                                bmrMenu = false
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(44.dp),
+                                            shape = RoundedCornerShape(0.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = if (editableProfile.gender == level) Color(
+                                                    0xFF313131
+                                                ) else Color.Transparent,
+                                                contentColor = Color.White
                                             )
-                                            bmrMenu = false
-                                        },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(44.dp),
-                                        shape = RoundedCornerShape(0.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (editableProfile.gender == level) Color(
-                                                0xFF313131
-                                            ) else Color.Transparent,
-                                            contentColor = Color.White
-                                        )
-                                    ) {
-                                        Text(
-                                            level,
-                                            fontFamily = FontFamily(Font(R.font.jura)),
-                                            fontSize = 24.sp,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
+                                        ) {
+                                            Text(
+                                                level,
+                                                fontFamily = FontFamily(Font(R.font.jura)),
+                                                fontSize = 24.sp,
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "Рост, м",
-                            color = Color.White,
-                            fontFamily = FontFamily(Font(R.font.jura)),
-                            fontSize = 24.sp,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        OutlinedTextField(
-                            value = editableProfile.height?.toString() ?: "",
-                            onValueChange = {
-                                val heightValue = it.toDoubleOrNull()
-                                viewModel.processCommand(ProfileCommand.UpdateHeight(heightValue))
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            shape = RoundedCornerShape(30.dp),
-                            colors = textFieldColors()
-                        )
-                    }
-
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "Вес, кг",
-                            color = Color.White,
-                            fontFamily = FontFamily(Font(R.font.jura)),
-                            fontSize = 24.sp,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        OutlinedTextField(
-                            value = editableProfile.weight?.toString() ?: "",
-                            onValueChange = {
-                                val weightValue = it.toDoubleOrNull()
-                                viewModel.processCommand(ProfileCommand.UpdateWeight(weightValue))
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            shape = RoundedCornerShape(30.dp),
-                            colors = textFieldColors()
-                        )
-                    }
-
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "Возраст",
-                            color = Color.White,
-                            fontFamily = FontFamily(Font(R.font.jura)),
-                            fontSize = 24.sp,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        OutlinedTextField(
-                            value = editableProfile.age?.toString() ?: "",
-                            onValueChange = {
-                                val ageValue = it.toIntOrNull()
-                                viewModel.processCommand(
-                                    ProfileCommand.UpdateAge(
-                                        ageValue ?: 0
-                                    )
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            shape = RoundedCornerShape(30.dp),
-                            colors = textFieldColors()
-                        )
-                    }
-
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "Почта",
-                            color = Color.White,
-                            fontFamily = FontFamily(Font(R.font.jura)),
-                            fontSize = 24.sp,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        OutlinedTextField(
-                            value = editableProfile.email,
-                            onValueChange = {
-                                viewModel.processCommand(ProfileCommand.UpdateMail(it))
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                            shape = RoundedCornerShape(30.dp),
-                            colors = textFieldColors()
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    ButtonSaveProfile(
-                        modifier = Modifier,
-                        onSaveProfile = {
-                            viewModel.processCommand(ProfileCommand.SaveProfile)
-                            onSaveProfile()
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "Рост, м",
+                                color = Color.White,
+                                fontFamily = FontFamily(Font(R.font.jura)),
+                                fontSize = 24.sp,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            OutlinedTextField(
+                                value = editableProfile.height?.toString() ?: "",
+                                onValueChange = {
+                                    val heightValue = it.toDoubleOrNull()
+                                    viewModel.processCommand(ProfileCommand.UpdateHeight(heightValue))
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                shape = RoundedCornerShape(30.dp),
+                                colors = textFieldColors()
+                            )
                         }
-                    )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "Вес, кг",
+                                color = Color.White,
+                                fontFamily = FontFamily(Font(R.font.jura)),
+                                fontSize = 24.sp,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            OutlinedTextField(
+                                value = editableProfile.weight?.toString() ?: "",
+                                onValueChange = {
+                                    val weightValue = it.toDoubleOrNull()
+                                    viewModel.processCommand(ProfileCommand.UpdateWeight(weightValue))
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                shape = RoundedCornerShape(30.dp),
+                                colors = textFieldColors()
+                            )
+                        }
 
-                    ButtonCalculateRate(
-                        modifier = Modifier,
-                        onCalculateRate = {
-                            when (val state = stateProfile) {
-                                is ProfileState.Configuration -> {
-                                    val config = state
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "Возраст",
+                                color = Color.White,
+                                fontFamily = FontFamily(Font(R.font.jura)),
+                                fontSize = 24.sp,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            OutlinedTextField(
+                                value = editableProfile.age?.toString() ?: "",
+                                onValueChange = {
+                                    val ageValue = it.toIntOrNull()
                                     viewModel.processCommand(
-                                        ProfileCommand.Calculate(
-                                            gender = config.gender ?: "",
-                                            height = config.height ?: 0.0,
-                                            weight = config.weight ?: 0.0,
-                                            age = config.age ?: 0
+                                        ProfileCommand.UpdateAge(
+                                            ageValue ?: 0
                                         )
                                     )
-                                }
-
-                                else -> {}
-                            }
-                            onCalculateRate()
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                shape = RoundedCornerShape(30.dp),
+                                colors = textFieldColors()
+                            )
                         }
-                    )
+
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = "Почта",
+                                color = Color.White,
+                                fontFamily = FontFamily(Font(R.font.jura)),
+                                fontSize = 24.sp,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            OutlinedTextField(
+                                value = editableProfile.email,
+                                onValueChange = {
+                                    viewModel.processCommand(ProfileCommand.UpdateMail(it))
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                                shape = RoundedCornerShape(30.dp),
+                                colors = textFieldColors()
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        ButtonSaveProfile(
+                            modifier = Modifier,
+                            onSaveProfile = {
+                                viewModel.processCommand(ProfileCommand.SaveProfile)
+                                onSaveProfile()
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        ButtonCalculateRate(
+                            modifier = Modifier,
+                            onCalculateRate = {
+                                when (val state = stateProfile) {
+                                    is ProfileState.Configuration -> {
+                                        val config = state
+                                        viewModel.processCommand(
+                                            ProfileCommand.Calculate(
+                                                gender = config.gender ?: "",
+                                                height = config.height ?: 0.0,
+                                                weight = config.weight ?: 0.0,
+                                                age = config.age ?: 0
+                                            )
+                                        )
+                                    }
+
+                                    else -> {}
+                                }
+                                onCalculateRate()
+                            }
+                        )
+                    }
                 }
             }
         }

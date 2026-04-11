@@ -105,7 +105,7 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             SettingsCard(
                                 title = stringResource(R.string.search_language),
-                                subtitle = stringResource(R.string.select_language_for_news_search)
+                                subtitle = stringResource(R.string.select_language_for_recipes_search)
 
                             ) {
                                 SettingsDropdown(
@@ -124,7 +124,7 @@ fun SettingsScreen(
                         item {
                             SettingsCard(
                                 title = stringResource(R.string.update_interval),
-                                subtitle = stringResource(R.string.how_often_to_update_news)
+                                subtitle = stringResource(R.string.how_often_to_update_recipe)
 
                             ) {
                                 SettingsDropdown(
