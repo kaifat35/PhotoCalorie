@@ -9,6 +9,7 @@ import com.stafeewa.photocalorie.app.domain.repository.UserProfileRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -60,7 +61,6 @@ class UserProfileRepositoryImpl @Inject constructor(
     override fun getUserProfile(): Flow<UserProfile> {
         Log.d(tag, "getUserProfile: Called, creating Flow")
 
-        // Создаём кастомный Flow, который гарантированно эмитит значение
         return flow {
             Log.d(tag, "flow: Started collecting")
 
@@ -90,13 +90,15 @@ class UserProfileRepositoryImpl @Inject constructor(
             emit(currentUser.toUserProfile())
             Log.d(tag, "flow: Emitted initial user: id=${currentUser.id}")
 
-            // Затем подписываемся на изменения и отправляем обновления
-            appDao.getCurrentUserFlow().collect { updatedUser ->
-                if (updatedUser != null) {
-                    Log.d(tag, "flow: Received update from Flow: id=${updatedUser.id}")
-                    emit(updatedUser.toUserProfile())
+            // Подписываемся на изменения, но с debounce и distinctUntilChanged
+            appDao.getCurrentUserFlow()
+                .distinctUntilChanged() // ← добавляем: не эмитим одинаковые значения
+                .collect { updatedUser ->
+                    if (updatedUser != null && updatedUser.id == currentUser?.id) {
+                        Log.d(tag, "flow: Received update from Flow: id=${updatedUser.id}")
+                        emit(updatedUser.toUserProfile())
+                    }
                 }
-            }
         }
     }
 

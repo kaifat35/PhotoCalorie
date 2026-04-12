@@ -324,13 +324,18 @@ fun ProfileScreen(
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             OutlinedTextField(
-                                value = editableProfile.height?.toString() ?: "",
-                                onValueChange = {
-                                    val heightValue = it.toDoubleOrNull()
-                                    viewModel.processCommand(ProfileCommand.UpdateHeight(heightValue))
+                                value = editableProfile.heightStr,
+                                onValueChange = { newValue ->
+                                    // Разрешаем ввод только цифр и одной точки
+                                    if (newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
+                                        viewModel.processCommand(ProfileCommand.UpdateHeightStr(newValue))
+                                    }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Decimal,
+                                    imeAction = ImeAction.Done
+                                ),
                                 shape = RoundedCornerShape(30.dp),
                                 colors = textFieldColors()
                             )
@@ -345,13 +350,17 @@ fun ProfileScreen(
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             OutlinedTextField(
-                                value = editableProfile.weight?.toString() ?: "",
-                                onValueChange = {
-                                    val weightValue = it.toDoubleOrNull()
-                                    viewModel.processCommand(ProfileCommand.UpdateWeight(weightValue))
+                                value = editableProfile.weightStr,
+                                onValueChange = { newValue ->
+                                    if (newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
+                                        viewModel.processCommand(ProfileCommand.UpdateWeightStr(newValue))
+                                    }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Decimal,
+                                    imeAction = ImeAction.Done
+                                ),
                                 shape = RoundedCornerShape(30.dp),
                                 colors = textFieldColors()
                             )
@@ -366,17 +375,17 @@ fun ProfileScreen(
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             OutlinedTextField(
-                                value = editableProfile.age?.toString() ?: "",
-                                onValueChange = {
-                                    val ageValue = it.toIntOrNull()
-                                    viewModel.processCommand(
-                                        ProfileCommand.UpdateAge(
-                                            ageValue ?: 0
-                                        )
-                                    )
+                                value = editableProfile.ageStr,
+                                onValueChange = { newValue ->
+                                    if (newValue.matches(Regex("^\\d*$"))) { // только цифры
+                                        viewModel.processCommand(ProfileCommand.UpdateAgeStr(newValue))
+                                    }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
                                 shape = RoundedCornerShape(30.dp),
                                 colors = textFieldColors()
                             )

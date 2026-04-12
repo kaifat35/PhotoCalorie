@@ -50,6 +50,10 @@ class ProfileViewModel @Inject constructor(
     private val _stateProfile = MutableStateFlow<ProfileState>(ProfileState.Initial)
     val stateProfile: StateFlow<ProfileState> = _stateProfile.asStateFlow()
 
+    // Храним исходные данные из БД (не редактируем напрямую)
+    private val _originalProfile = MutableStateFlow(EditableProfile())
+
+    // Храним редактируемые данные (локальные изменения)
     private val _editableProfile = MutableStateFlow(EditableProfile())
     val editableProfile: StateFlow<EditableProfile> = _editableProfile.asStateFlow()
 
@@ -64,27 +68,30 @@ class ProfileViewModel @Inject constructor(
 
     private fun loadUserProfile() {
         viewModelScope.launch {
-            Log.d("ProfileViewModel", "loadUserProfile: START, setting isLoading=true")
             _isLoading.value = true
 
             observeUserProfileUseCase()
                 .collect { profile ->
-                    Log.d("ProfileViewModel", "loadUserProfile: Profile received: userId=${profile.userId}, login=${profile.login}, dailyCalories=${profile.dailyCalories}")
+                    // Сохраняем исходные данные
+                    val loadedProfile = EditableProfile(
+                        userId = profile.userId,
+                        login = profile.login,
+                        email = profile.email,
+                        password = profile.password,
+                        gender = profile.gender,
+                        heightStr = profile.height?.toString() ?: "",
+                        weightStr = profile.weight?.toString() ?: "",
+                        ageStr = profile.age?.toString() ?: "",
+                        imageUri = profile.imageUri,
+                        dailyCalories = profile.dailyCalories
+                    )
+                    _originalProfile.value = loadedProfile
 
-                    _editableProfile.update {
-                        EditableProfile(
-                            userId = profile.userId,
-                            login = profile.login,
-                            email = profile.email,
-                            password = profile.password,
-                            gender = profile.gender,
-                            height = profile.height,
-                            weight = profile.weight,
-                            age = profile.age,
-                            imageUri = profile.imageUri,
-                            dailyCalories = profile.dailyCalories
-                        )
+                    // Обновляем редактируемый профиль ТОЛЬКО если он не был изменён пользователем
+                    if (!_editableProfile.value.isUserEdited) {
+                        _editableProfile.value = loadedProfile
                     }
+
                     _stateProfile.update {
                         ProfileState.Configuration(
                             userId = profile.userId,
@@ -100,53 +107,45 @@ class ProfileViewModel @Inject constructor(
                         )
                     }
                     _isLoading.value = false
-                    Log.d("ProfileViewModel", "loadUserProfile: Profile updated, isLoading=false")
                 }
         }
     }
 
     fun processCommand(command: ProfileCommand) {
         when (command) {
-            is ProfileCommand.UpdateAge -> {
-                viewModelScope.launch {
-                    try {
-                        updateAgeUseCase(command.age)
-                        _stateProfile.value = ProfileState.Success("Возраст обновлен")
-                    } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления возраста")
-                    }
+            is ProfileCommand.UpdateLogin -> {
+                // Обновляем только локальное состояние, не трогаем БД
+                _editableProfile.update {
+                    it.copy(
+                        login = command.login,
+                        isUserEdited = true
+                    )
                 }
             }
 
-            is ProfileCommand.UpdateDailyCalories -> {
-                viewModelScope.launch {
-                    try {
-                        updateDailyCaloriesUseCase(command.dailyCalories)
-                        _stateProfile.value = ProfileState.Success("Дневная норма калорий обновлена")
-                    } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления нормы калорий")
-                    }
+            is ProfileCommand.UpdateMail -> {
+                _editableProfile.update {
+                    it.copy(
+                        email = command.email,
+                        isUserEdited = true
+                    )
                 }
             }
 
             is ProfileCommand.UpdateGender -> {
+                _editableProfile.update {
+                    it.copy(
+                        gender = command.gender,
+                        isUserEdited = true
+                    )
+                }
+                // Обновляем БД сразу для пола (так как это не вызывает проблем с курсором)
                 viewModelScope.launch {
                     try {
                         updateGenderUseCase(command.gender)
                         _stateProfile.value = ProfileState.Success("Пол обновлен")
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления пола")
-                    }
-                }
-            }
-
-            is ProfileCommand.UpdateHeight -> {
-                viewModelScope.launch {
-                    try {
-                        updateHeightUseCase(command.height)
-                        _stateProfile.value = ProfileState.Success("Рост обновлен")
-                    } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления роста")
                     }
                 }
             }
@@ -165,6 +164,12 @@ class ProfileViewModel @Inject constructor(
                             fileHelper.deleteOldProfileImage(oldImagePath)
                         }
                         updateImageUseCase(localImagePath)
+                        _editableProfile.update {
+                            it.copy(
+                                imageUri = localImagePath,
+                                isUserEdited = true
+                            )
+                        }
                         _stateProfile.value = ProfileState.Success("Изображение обновлено")
                     } catch (e: Exception) {
                         Log.e("ProfileViewModel", "Error updating image", e)
@@ -173,58 +178,19 @@ class ProfileViewModel @Inject constructor(
                 }
             }
 
-            is ProfileCommand.UpdateLogin -> {
-                viewModelScope.launch {
-                    try {
-                        updateLoginUseCase(command.login)
-                        _stateProfile.value = ProfileState.Success("Логин обновлен")
-                    } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления логина")
-                    }
-                }
-            }
-
-            is ProfileCommand.UpdateMail -> {
-                viewModelScope.launch {
-                    try {
-                        updateMailUseCase(command.email)
-                        _stateProfile.value = ProfileState.Success("Почта обновлена")
-                    } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления почты")
-                    }
-                }
-            }
-
-            is ProfileCommand.UpdatePassword -> {
-                viewModelScope.launch {
-                    try {
-                        updatePasswordUseCase(command.password)
-                        _stateProfile.value = ProfileState.Success("Пароль обновлен")
-                    } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления пароля")
-                    }
-                }
-            }
-
-            is ProfileCommand.UpdateWeight -> {
-                viewModelScope.launch {
-                    try {
-                        updateWeightUseCase(command.weight)
-                        _stateProfile.value = ProfileState.Success("Вес обновлен")
-                    } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления веса")
-                    }
-                }
-            }
-
             is ProfileCommand.Calculate -> {
                 viewModelScope.launch {
                     try {
+                        val profile = _editableProfile.value
+                        val height = profile.heightStr.toDoubleOrNull() ?: 0.0
+                        val weight = profile.weightStr.toDoubleOrNull() ?: 0.0
+                        val age = profile.ageStr.toIntOrNull() ?: 0
+
                         val calories = calculateDailyCaloriesUseCase(
                             gender = command.gender,
-                            height = command.height,
-                            weight = command.weight,
-                            age = command.age,
+                            height = height,
+                            weight = weight,
+                            age = age,
                             activityLevel = command.activityLevel
                         )
                         _stateProfile.value = ProfileState.Success("Норма калорий рассчитана: ${calories.toInt()}")
@@ -238,17 +204,23 @@ class ProfileViewModel @Inject constructor(
                 viewModelScope.launch {
                     try {
                         val profile = _editableProfile.value
+                        val height = profile.heightStr.toDoubleOrNull()
+                        val weight = profile.weightStr.toDoubleOrNull()
+                        val age = profile.ageStr.toIntOrNull()
+
                         updateUserProfileUseCase(
                             login = profile.login,
                             email = profile.email,
                             password = profile.password,
                             gender = profile.gender,
-                            height = profile.height,
-                            weight = profile.weight,
-                            age = profile.age,
+                            height = height,
+                            weight = weight,
+                            age = age,
                             imageUri = profile.imageUri,
                             dailyCalories = profile.dailyCalories
                         )
+                        // После сохранения сбрасываем флаг редактирования
+                        _editableProfile.update { it.copy(isUserEdited = false) }
                         _stateProfile.value = ProfileState.Success("Профиль сохранен")
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка сохранения профиля")
@@ -270,25 +242,83 @@ class ProfileViewModel @Inject constructor(
                 }
             }
 
-            is ProfileCommand.UpdateEditableProfile -> {
-                _editableProfile.value = command.updates(_editableProfile.value)
+            is ProfileCommand.UpdateHeightStr -> {
+                _editableProfile.update {
+                    it.copy(
+                        heightStr = command.heightStr,
+                        isUserEdited = true
+                    )
+                }
+            }
+
+            is ProfileCommand.UpdateWeightStr -> {
+                _editableProfile.update {
+                    it.copy(
+                        weightStr = command.weightStr,
+                        isUserEdited = true
+                    )
+                }
+            }
+
+            is ProfileCommand.UpdateAgeStr -> {
+                _editableProfile.update {
+                    it.copy(
+                        ageStr = command.ageStr,
+                        isUserEdited = true
+                    )
+                }
+            }
+
+            is ProfileCommand.UpdatePassword -> {
+                viewModelScope.launch {
+                    try {
+                        updatePasswordUseCase(command.password)
+                        _stateProfile.value = ProfileState.Success("Пароль обновлен")
+                    } catch (e: Exception) {
+                        _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления пароля")
+                    }
+                }
+            }
+
+            else -> {
+                // Остальные команды (UpdateAge, UpdateDailyCalories, UpdateHeight, UpdateWeight)
+                // не используются напрямую, так как мы работаем через Str версии
             }
         }
     }
 }
 
-// Остальные классы остаются без изменений
+// Обновлённый EditableProfile с флагом редактирования
+data class EditableProfile(
+    val userId: Int? = null,
+    val login: String = "",
+    val email: String = "",
+    val password: String = "",
+    val gender: String? = null,
+    val heightStr: String = "",
+    val weightStr: String = "",
+    val ageStr: String = "",
+    val imageUri: String? = null,
+    val dailyCalories: Double? = null,
+    val isUserEdited: Boolean = false  // ← флаг, что пользователь редактирует
+) {
+    fun getHeight(): Double? = heightStr.toDoubleOrNull()
+    fun getWeight(): Double? = weightStr.toDoubleOrNull()
+    fun getAge(): Int? = ageStr.toIntOrNull()
+}
+
+// Обновлённые команды (убираем ненужные)
 sealed interface ProfileCommand {
-    data class UpdateAge(val age: Int) : ProfileCommand
-    data class UpdateDailyCalories(val dailyCalories: Double?) : ProfileCommand
-    data class UpdateGender(val gender: String?) : ProfileCommand
-    data class UpdateHeight(val height: Double?) : ProfileCommand
-    data class UpdateImage(val imageUri: String?) : ProfileCommand
     data class UpdateLogin(val login: String) : ProfileCommand
     data class UpdateMail(val email: String) : ProfileCommand
+    data class UpdateGender(val gender: String?) : ProfileCommand
+    data class UpdateImage(val imageUri: String?) : ProfileCommand
     data class UpdatePassword(val password: String) : ProfileCommand
-    data class UpdateWeight(val weight: Double?) : ProfileCommand
-    data class UpdateEditableProfile(val updates: EditableProfile.() -> EditableProfile) : ProfileCommand
+
+    data class UpdateHeightStr(val heightStr: String) : ProfileCommand
+    data class UpdateWeightStr(val weightStr: String) : ProfileCommand
+    data class UpdateAgeStr(val ageStr: String) : ProfileCommand
+
     data class Calculate(
         val gender: String,
         val height: Double,
@@ -296,22 +326,10 @@ sealed interface ProfileCommand {
         val age: Int,
         val activityLevel: ActivityLevel = ActivityLevel.MODERATE
     ) : ProfileCommand
+
     data object SaveProfile : ProfileCommand
     data object DeleteProfile : ProfileCommand
 }
-
-data class EditableProfile(
-    val userId: Int? = null,
-    val login: String = "",
-    val email: String = "",
-    val password: String = "",
-    val gender: String? = null,
-    val height: Double? = null,
-    val weight: Double? = null,
-    val age: Int? = null,
-    val imageUri: String? = null,
-    val dailyCalories: Double? = null
-)
 
 sealed interface ProfileState {
     data object Initial : ProfileState
