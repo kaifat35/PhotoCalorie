@@ -13,6 +13,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -106,7 +107,8 @@ fun RecognitionResultDialog(
                             onValueChange = { portion = it },
                             label = { Text("Вес порции (г)", color = Color.White.copy(alpha = 0.7f)) },
                             modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
                         )
 
                         val factor = portion.toDoubleOrNull()?.div(100) ?: 1.0
@@ -194,7 +196,8 @@ fun RecognitionResultDialog(
                                 value = manualName.ifEmpty { result.suggestedName },
                                 onValueChange = { manualName = it },
                                 label = { Text("Название", color = Color.White.copy(alpha = 0.7f)) },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
                             )
 
                             OutlinedTextField(
@@ -202,7 +205,8 @@ fun RecognitionResultDialog(
                                 onValueChange = { manualProtein = it },
                                 label = { Text("Белки на 100г", color = Color.White.copy(alpha = 0.7f)) },
                                 modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
                             )
 
                             OutlinedTextField(
@@ -210,7 +214,8 @@ fun RecognitionResultDialog(
                                 onValueChange = { manualFat = it },
                                 label = { Text("Жиры на 100г", color = Color.White.copy(alpha = 0.7f)) },
                                 modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
                             )
 
                             OutlinedTextField(
@@ -218,7 +223,8 @@ fun RecognitionResultDialog(
                                 onValueChange = { manualCarbs = it },
                                 label = { Text("Углеводы на 100г", color = Color.White.copy(alpha = 0.7f)) },
                                 modifier = Modifier.fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
                             )
 
                             // Предпросмотр КБЖУ
