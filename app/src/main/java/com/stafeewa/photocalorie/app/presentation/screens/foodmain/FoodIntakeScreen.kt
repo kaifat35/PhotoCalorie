@@ -325,16 +325,50 @@ fun MealSection(
             )
         }
 
-        // Итого
+        // Итого - разбиваем на две строки для лучшего отображения
         if (items.isNotEmpty()) {
+            // Первая строка: калории
             Text(
-                text = "КБЖУ: ${totalCalories.toInt()}ккал | ${totalProtein.toInt()}г б | " +
-                        "${totalFat.toInt()}г ж | ${totalCarbs.toInt()}г у",
+                text = "🔥 ${totalCalories.toInt()} ккал",
                 style = MaterialTheme.typography.headlineMedium.copy(
-                    color = Color.White
+                    color = Color(0xFFFF9800)
                 ),
                 fontFamily = FontFamily(Font(R.font.jura)),
-                fontSize = 16.sp
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            // Вторая строка: белки, жиры, углеводы
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Text(
+                    text = "🥩 Б: ${totalProtein.toInt()}г",
+                    color = Color(0xFF4CAF50),
+                    fontFamily = FontFamily(Font(R.font.jura)),
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = "🧈 Ж: ${totalFat.toInt()}г",
+                    color = Color(0xFFFF9800),
+                    fontFamily = FontFamily(Font(R.font.jura)),
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = "🍚 У: ${totalCarbs.toInt()}г",
+                    color = Color(0xFF2196F3),
+                    fontFamily = FontFamily(Font(R.font.jura)),
+                    fontSize = 14.sp
+                )
+            }
+        } else {
+            Text(
+                text = "Нет добавленных блюд",
+                color = Color.White.copy(alpha = 0.5f),
+                fontFamily = FontFamily(Font(R.font.jura)),
+                fontSize = 14.sp,
+                modifier = Modifier.padding(vertical = 4.dp)
             )
         }
 
@@ -381,7 +415,6 @@ fun MealSection(
         }
     }
 }
-
 @Composable
 fun FoodItemRow(
     item: FoodEntry,

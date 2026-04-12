@@ -4,11 +4,14 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [RecipeDbModel::class, SubscriptionDbModel::class, User::class, FoodEntryDbModel::class],
-    version = 1,
+    entities = [RecipeDbModel::class, SubscriptionDbModel::class, User::class,
+        FoodEntryDbModel::class, ProductDbModel::class],
+    version = 3,
     exportSchema = false
 )
 
 abstract class PhotoCalorieDatabase : RoomDatabase() {
-    abstract fun caloryAiDao(): PhotoCalorieDao
+    abstract fun photoCalorieDao(): PhotoCalorieDao
+
+    abstract fun productDao(): ProductDao
 }

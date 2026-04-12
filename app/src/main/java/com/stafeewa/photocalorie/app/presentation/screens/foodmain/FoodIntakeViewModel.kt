@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.domain.entity.FoodEntry
 import com.stafeewa.photocalorie.app.domain.entity.MealType
+import com.stafeewa.photocalorie.app.domain.entity.Product
+import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.usecase.foodintake.*
 import com.stafeewa.photocalorie.app.domain.usecase.userprofile.ObserveUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +25,8 @@ class FoodIntakeViewModel @Inject constructor(
     private val removeFoodEntryUseCase: RemoveFoodEntryUseCase,
     private val updateFoodEntryUseCase: UpdateFoodEntryUseCase,
     private val getTodayEntriesUseCase: GetTodayEntriesUseCase,
-    private val getDailyIntakeUseCase: GetDailyIntakeUseCase
+    private val getDailyIntakeUseCase: GetDailyIntakeUseCase,
+    private val productRepository: ProductRepository
 ) : ViewModel() {
 
     private val _calorieGoal = MutableStateFlow(2000.0)
@@ -52,6 +55,17 @@ class FoodIntakeViewModel @Inject constructor(
 
     private val _successMessage = MutableStateFlow<String?>(null)
     val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
+    private val _productSearchResults = MutableStateFlow<List<Product>>(emptyList())
+    val productSearchResults: StateFlow<List<Product>> = _productSearchResults.asStateFlow()
+
+    fun searchProducts(query: String) {
+        viewModelScope.launch {
+            productRepository.searchProducts(query)
+                .collect { products ->
+                    _productSearchResults.value = products
+                }
+        }
+    }
 
     init {
         loadData()

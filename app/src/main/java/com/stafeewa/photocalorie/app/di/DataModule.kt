@@ -5,12 +5,15 @@ import androidx.room.Room
 import androidx.work.WorkManager
 import com.stafeewa.photocalorie.app.data.local.PhotoCalorieDao
 import com.stafeewa.photocalorie.app.data.local.PhotoCalorieDatabase
+import com.stafeewa.photocalorie.app.data.local.ProductDao
 import com.stafeewa.photocalorie.app.data.remote.RecipesApiService
 import com.stafeewa.photocalorie.app.data.repository.PhotoCalorieRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.FoodIntakeRepositoryImpl
+import com.stafeewa.photocalorie.app.data.repository.ProductRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.SettingsRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.UserProfileRepositoryImpl
 import com.stafeewa.photocalorie.app.domain.repository.FoodIntakeRepository
+import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.repository.RecipeRepository
 import com.stafeewa.photocalorie.app.domain.repository.SettingsRepository
 import com.stafeewa.photocalorie.app.domain.repository.UserProfileRepository
@@ -31,6 +34,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 interface DataModule {
+
+    @Binds
+    @Singleton
+    fun bindProductRepository(
+        impl: ProductRepositoryImpl
+    ): ProductRepository
 
     @Binds
     @Singleton
@@ -110,7 +119,7 @@ interface DataModule {
             return Room.databaseBuilder(
                 context = context,
                 klass = PhotoCalorieDatabase::class.java,
-                name = "caloryAi.db"
+                name = "photo_calorie.db"
             ).fallbackToDestructiveMigration(true)
                 .build()
         }
@@ -119,7 +128,13 @@ interface DataModule {
         @Provides
         fun providesRecipesDao(
             database: PhotoCalorieDatabase
-        ): PhotoCalorieDao = database.caloryAiDao()
+        ): PhotoCalorieDao = database.photoCalorieDao()
+
+        @Provides
+        @Singleton
+        fun providesProductDao(
+            database: PhotoCalorieDatabase
+        ): ProductDao = database.productDao()
     }
 }
 
