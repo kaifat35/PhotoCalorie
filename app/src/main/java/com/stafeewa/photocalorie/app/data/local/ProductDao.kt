@@ -7,6 +7,7 @@ import androidx.room.Query
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import kotlinx.coroutines.flow.Flow
 
+
 @Dao
 interface ProductDao {
 
