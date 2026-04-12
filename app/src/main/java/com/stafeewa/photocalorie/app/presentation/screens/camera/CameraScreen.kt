@@ -203,13 +203,11 @@ fun CameraScreen(
             onDismiss = {
                 showResultDialog = false
                 viewModel.clearResult()
-                onBack()
             },
             onConfirm = { name, mealType, portion, protein, fat, carbs ->
                 onFoodRecognized(name, mealType, portion, protein, fat, carbs)
                 showResultDialog = false
                 viewModel.clearResult()
-                onBack()
             },
             onAddToDatabase = { name, mealType, protein, fat, carbs ->
                 viewModel.addNewFoodToDatabase(name, mealType, protein, fat, carbs)

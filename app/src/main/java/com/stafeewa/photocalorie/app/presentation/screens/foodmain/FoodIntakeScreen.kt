@@ -73,27 +73,28 @@ fun FoodIntakeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Получаем результат из камеры через NavController
-    LaunchedEffect(Unit) {
-        navController.currentBackStackEntry?.savedStateHandle?.getLiveData<Bundle>("food_result")?.observeForever { bundle ->
-            bundle?.let {
-                val name = it.getString("name") ?: ""
-                val mealTypeName = it.getString("mealType") ?: ""
-                val portion = it.getDouble("portion", 0.0)
-                val protein = it.getDouble("protein", 0.0)
-                val fat = it.getDouble("fat", 0.0)
-                val carbs = it.getDouble("carbs", 0.0)
+    LaunchedEffect(navController) {
+        val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle ?: return@LaunchedEffect
+        savedStateHandle.getStateFlow<Bundle?>("food_result", null).collect { bundle ->
+            bundle ?: return@collect
 
-                val mealType = try {
-                    MealType.valueOf(mealTypeName)
-                } catch (e: Exception) {
-                    MealType.LUNCH
-                }
+            val name = bundle.getString("name") ?: ""
+            val mealTypeName = bundle.getString("mealType") ?: ""
+            val portion = bundle.getDouble("portion", 0.0)
+            val protein = bundle.getDouble("protein", 0.0)
+            val fat = bundle.getDouble("fat", 0.0)
+            val carbs = bundle.getDouble("carbs", 0.0)
 
-                if (name.isNotBlank()) {
-                    viewModel.addFoodEntry(name, mealType, portion, protein, fat, carbs)
-                }
-                navController.currentBackStackEntry?.savedStateHandle?.remove<Bundle>("food_result")
+            val mealType = try {
+                MealType.valueOf(mealTypeName)
+            } catch (e: Exception) {
+                MealType.LUNCH
             }
+
+            if (name.isNotBlank()) {
+                viewModel.addFoodEntry(name, mealType, portion, protein, fat, carbs)
+            }
+            savedStateHandle["food_result"] = null
         }
     }
 
