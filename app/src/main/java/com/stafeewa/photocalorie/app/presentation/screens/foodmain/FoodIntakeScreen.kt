@@ -1,5 +1,6 @@
 package com.stafeewa.photocalorie.app.presentation.screens.foodmain
 
+import android.os.Bundle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.FoodEntry
 import com.stafeewa.photocalorie.app.domain.entity.MealType
@@ -55,6 +57,7 @@ import com.stafeewa.photocalorie.app.domain.entity.MealType
 @Composable
 fun FoodIntakeScreen(
     modifier: Modifier = Modifier,
+    navController: NavController,  // ← добавляем NavController как параметр
     viewModel: FoodIntakeViewModel = hiltViewModel()
 ) {
     val calorieGoal by viewModel.calorieGoal.collectAsStateWithLifecycle()
@@ -68,6 +71,31 @@ fun FoodIntakeScreen(
     val successMessage by viewModel.successMessage.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // Получаем результат из камеры через NavController
+    LaunchedEffect(Unit) {
+        navController.currentBackStackEntry?.savedStateHandle?.getLiveData<Bundle>("food_result")?.observeForever { bundle ->
+            bundle?.let {
+                val name = it.getString("name") ?: ""
+                val mealTypeName = it.getString("mealType") ?: ""
+                val portion = it.getDouble("portion", 0.0)
+                val protein = it.getDouble("protein", 0.0)
+                val fat = it.getDouble("fat", 0.0)
+                val carbs = it.getDouble("carbs", 0.0)
+
+                val mealType = try {
+                    MealType.valueOf(mealTypeName)
+                } catch (e: Exception) {
+                    MealType.LUNCH
+                }
+
+                if (name.isNotBlank()) {
+                    viewModel.addFoodEntry(name, mealType, portion, protein, fat, carbs)
+                }
+                navController.currentBackStackEntry?.savedStateHandle?.remove<Bundle>("food_result")
+            }
+        }
+    }
 
     // Показываем сообщения об ошибках/успехе
     LaunchedEffect(errorMessage) {
@@ -224,7 +252,9 @@ fun FoodIntakeScreen(
 
                     item {
                         Button(
-                            onClick = { /* TODO: открыть камеру для распознавания */ },
+                            onClick = {
+                                navController.navigate("camera")
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 24.dp, vertical = 8.dp),
@@ -271,6 +301,7 @@ fun FoodIntakeScreen(
     }
 }
 
+// Остальные функции (MealSection, FoodItemRow, NutrientBadge) остаются без изменений
 @Composable
 fun MealSection(
     title: String,
@@ -325,9 +356,7 @@ fun MealSection(
             )
         }
 
-        // Итого - разбиваем на две строки для лучшего отображения
         if (items.isNotEmpty()) {
-            // Первая строка: калории
             Text(
                 text = "🔥 ${totalCalories.toInt()} ккал",
                 style = MaterialTheme.typography.headlineMedium.copy(
@@ -338,7 +367,6 @@ fun MealSection(
                 fontWeight = FontWeight.Bold
             )
 
-            // Вторая строка: белки, жиры, углеводы
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -372,7 +400,6 @@ fun MealSection(
             )
         }
 
-        // Список продуктов (только в развернутом состоянии)
         if (isExpanded) {
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -398,7 +425,6 @@ fun MealSection(
                 }
             }
 
-            // Кнопка добавления
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -415,6 +441,7 @@ fun MealSection(
         }
     }
 }
+
 @Composable
 fun FoodItemRow(
     item: FoodEntry,

@@ -52,7 +52,7 @@ fun AddFoodDialog(
         portion: Double,
         protein: Double,
         fat: Double,
-        carbs: Double
+        carbs: Double,
     ) -> Unit
 ) {
     val viewModel: FoodIntakeViewModel = hiltViewModel()
@@ -324,7 +324,7 @@ fun AddFoodDialog(
                             fatValue * factor,
                             carbsValue * factor
                         )
-                        onDismiss()
+
                     } else if (selectedProduct != null) {
                         val portionValue = portion.toDoubleOrNull() ?: 100.0
                         val kbju = selectedProduct!!.calculateKbjuForPortion(portionValue)
@@ -336,7 +336,7 @@ fun AddFoodDialog(
                             kbju.fat,
                             kbju.carbs
                         )
-                        onDismiss()
+
                     }
                 },
                 enabled = if (isManualMode) {

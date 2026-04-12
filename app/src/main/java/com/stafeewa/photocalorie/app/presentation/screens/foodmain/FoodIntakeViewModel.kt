@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -57,13 +58,14 @@ class FoodIntakeViewModel @Inject constructor(
     val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
     private val _productSearchResults = MutableStateFlow<List<Product>>(emptyList())
     val productSearchResults: StateFlow<List<Product>> = _productSearchResults.asStateFlow()
+    private var searchJob: Job? = null
 
     fun searchProducts(query: String) {
-        viewModelScope.launch {
-            productRepository.searchProducts(query)
-                .collect { products ->
-                    _productSearchResults.value = products
-                }
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            productRepository.searchProducts(query).collect { products ->
+                _productSearchResults.value = products
+            }
         }
     }
 
@@ -113,26 +115,35 @@ class FoodIntakeViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             _isLoading.value = true
-            val result = addFoodEntryWithValidationUseCase(
-                name = name,
-                mealType = mealType,
-                portion = portion,
-                protein = protein,
-                fat = fat,
-                carbs = carbs
-            )
+            val result = runCatching {
+                addFoodEntryWithValidationUseCase(
+                    name = name,
+                    mealType = mealType,
+                    portion = portion,
+                    protein = protein,
+                    fat = fat,
+                    carbs = carbs
+                )
+            }
             _isLoading.value = false
 
-            when (result) {
-                is AddFoodEntryWithValidationUseCase.Result.Success -> {
-                    _successMessage.value = "${result.entry.name} добавлен"
-                    clearSuccessMessageAfterDelay()
+            result
+                .onSuccess { response ->
+                    when (response) {
+                        is AddFoodEntryWithValidationUseCase.Result.Success -> {
+                            _successMessage.value = "${response.entry.name} добавлен"
+                            clearSuccessMessageAfterDelay()
+                        }
+                        is AddFoodEntryWithValidationUseCase.Result.Error -> {
+                            _errorMessage.value = response.message
+                            clearErrorMessageAfterDelay()
+                        }
+                    }
                 }
-                is AddFoodEntryWithValidationUseCase.Result.Error -> {
-                    _errorMessage.value = result.message
+                .onFailure {
+                    _errorMessage.value = "Не удалось добавить блюдо. Попробуйте ещё раз."
                     clearErrorMessageAfterDelay()
                 }
-            }
         }
     }
 

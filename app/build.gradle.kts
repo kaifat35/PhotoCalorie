@@ -122,6 +122,11 @@ dependencies {
     //Google ML Kit
     implementation (libs.image.labeling)
     implementation (libs.object1.detection)
+    implementation(libs.accompanist.permissions)
+    implementation(libs.kotlinx.coroutines.play.services)
+
+    // ML Kit для распознавания текста (опционально)
+    implementation(libs.text.recognition)
 
     //Google Vision
     implementation (libs.play.services.vision)

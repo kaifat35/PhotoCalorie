@@ -1,5 +1,6 @@
 package com.stafeewa.photocalorie.app.presentation.navigation
 
+import android.os.Bundle
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -24,37 +25,65 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.stafeewa.photocalorie.app.presentation.screens.camera.CameraScreen
 import com.stafeewa.photocalorie.app.presentation.screens.foodmain.FoodIntakeScreen
 import com.stafeewa.photocalorie.app.presentation.screens.profile.ProfileScreen
 import com.stafeewa.photocalorie.app.presentation.screens.recipes.RecipeScreen
 import com.stafeewa.photocalorie.app.presentation.screens.settings.SettingsScreen
+import androidx.navigation.NavGraph.Companion.findStartDestination
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: Destination,
+    startDestination: String,
     modifier: Modifier = Modifier
-
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination.route
+        startDestination = startDestination
     ) {
-        Destination.entries.forEach { destination ->
-            composable(destination.route) {
-                when (destination) {
-                    Destination.HOME -> FoodIntakeScreen()
+        // Основные экраны
+        composable(Destination.HOME.route) {
+            FoodIntakeScreen(
+                navController = navController  // ← передаём NavController
+            )
+        }
 
-                    Destination.RECIPES -> RecipeScreen()
-                    Destination.PROFILE -> ProfileScreen(
-                        onSaveProfile = {},
-                        onCalculateRate = {}
-                    )
+        composable(Destination.RECIPES.route) {
+            RecipeScreen()
+        }
 
-                    Destination.SETTINGS -> SettingsScreen()
+        composable(Destination.PROFILE.route) {
+            ProfileScreen(
+                onSaveProfile = {},
+                onCalculateRate = {}
+            )
+        }
+
+        composable(Destination.SETTINGS.route) {
+            SettingsScreen()
+        }
+
+        // Экран камеры
+        composable("camera") {
+            CameraScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onFoodRecognized = { name, mealType, portion, protein, fat, carbs ->
+                    val resultBundle = Bundle().apply {
+                        putString("name", name)
+                        putString("mealType", mealType.name)
+                        putDouble("portion", portion)
+                        putDouble("protein", protein)
+                        putDouble("fat", fat)
+                        putDouble("carbs", carbs)
+                    }
+                    navController.previousBackStackEntry?.savedStateHandle?.set("food_result", resultBundle)
+                    navController.popBackStack()
                 }
-            }
+            )
         }
     }
 }
@@ -65,17 +94,17 @@ enum class Destination(
     val icon: ImageVector,
     val contentDescription: String
 ) {
-    HOME("home", "Home", Icons.Default.Home, "Home"),
-    RECIPES("recipes", "Recipes", Icons.Default.Search, "Recipes"),
-    SETTINGS("settings", "Settings", Icons.Default.Settings, "Settings"),
-    PROFILE("profile", "Profile", Icons.Default.Person, "Profile"),
+    HOME("home", "Главная", Icons.Default.Home, "Home"),
+    RECIPES("recipes", "Рецепты", Icons.Default.Search, "Recipes"),
+    SETTINGS("settings", "Настройки", Icons.Default.Settings, "Settings"),
+    PROFILE("profile", "Профиль", Icons.Default.Person, "Profile"),
 }
 
 @Composable
 fun NavigationBarExample(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
-    val startDestination = Destination.HOME
-    var selectedDestination by rememberSaveable { mutableIntStateOf(startDestination.ordinal) }
+    val startDestination = Destination.HOME.route
+    var selectedDestination by rememberSaveable { mutableIntStateOf(Destination.HOME.ordinal) }
 
     Scaffold(
         modifier = modifier,
@@ -85,23 +114,12 @@ fun NavigationBarExample(modifier: Modifier = Modifier) {
                     NavigationBarItem(
                         selected = selectedDestination == index,
                         onClick = {
-                            // Сначала очищаем BackStack до корня (popUpTo корневого экрана)
-                            navController.popBackStack(
-                                route = destination.route,
-                                inclusive = false,
-                                saveState = false
-                            )
-
-                            // Если уже находимся на этом экране, ничего не делаем
                             if (selectedDestination != index) {
                                 navController.navigate(route = destination.route) {
-                                    // Устанавливаем launchSingleTop = true чтобы не создавать дубликаты
                                     launchSingleTop = true
-                                    // Очищаем весь BackStack до этого экрана
-                                    popUpTo(destination.route) {
-                                        saveState = false
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
                                     }
-                                    // Сохраняем состояние (если нужно)
                                     restoreState = true
                                 }
                                 selectedDestination = index
@@ -119,6 +137,10 @@ fun NavigationBarExample(modifier: Modifier = Modifier) {
             }
         }
     ) { contentPadding ->
-        NavGraph(navController, startDestination, modifier = Modifier.padding(contentPadding))
+        NavGraph(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = Modifier.padding(contentPadding)
+        )
     }
 }
