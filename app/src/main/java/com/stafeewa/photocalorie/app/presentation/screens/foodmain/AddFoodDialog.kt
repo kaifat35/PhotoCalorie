@@ -250,7 +250,7 @@ fun AddFoodDialog(
                         HorizontalDivider(color = Color.White.copy(alpha = 0.3f))
 
                         Text(
-                            text = "Выбрано: ${selectedProduct!!.name}",
+                            text = "Выбрано: ${selectedProduct!!.name.toUserVisibleFoodName()}",
                             color = Color(0xFF009E1D),
                             fontFamily = FontFamily(Font(R.font.jura)),
                             fontSize = 16.sp
@@ -329,7 +329,7 @@ fun AddFoodDialog(
                         val portionValue = portion.toDoubleOrNull() ?: 100.0
                         val kbju = selectedProduct!!.calculateKbjuForPortion(portionValue)
                         onConfirm(
-                            selectedProduct!!.name,
+                            selectedProduct!!.name.toUserVisibleFoodName(),
                             mealType,
                             portionValue,
                             kbju.protein,
@@ -374,7 +374,7 @@ fun ProductSearchItem(
             .padding(12.dp)
     ) {
         Text(
-            text = product.name,
+            text = product.name.toUserVisibleFoodName(),
             color = Color.White,
             fontFamily = FontFamily(Font(R.font.jura)),
             fontSize = 18.sp
@@ -435,4 +435,11 @@ private fun getMealTypeName(mealType: MealType): String {
         MealType.DINNER -> "ужин"
         MealType.SNACK -> "перекус"
     }
+}
+
+private fun String.toUserVisibleFoodName(): String {
+    val normalized = trim()
+    val keywordPattern = Regex("""\s*(?:[|•—–-]\s*)?(?:keyword|ключ(?:евое)?\s*слово)\s*[:=].*$""", RegexOption.IGNORE_CASE)
+    val withoutKeyword = normalized.replace(keywordPattern, "").trim()
+    return withoutKeyword.ifEmpty { normalized }
 }

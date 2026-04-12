@@ -455,7 +455,7 @@ fun FoodItemRow(
     ) {
         Column(modifier = Modifier.weight(2f)) {
             Text(
-                text = item.name,
+                text = item.name.toUserVisibleFoodName(),
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 18.sp,
                 style = MaterialTheme.typography.headlineMedium.copy(
@@ -511,4 +511,11 @@ fun NutrientBadge(
             fontFamily = FontFamily(Font(R.font.jura))
         )
     }
+}
+
+private fun String.toUserVisibleFoodName(): String {
+    val normalized = trim()
+    val keywordPattern = Regex("""\s*(?:[|•—–-]\s*)?(?:keyword|ключ(?:евое)?\s*слово)\s*[:=].*$""", RegexOption.IGNORE_CASE)
+    val withoutKeyword = normalized.replace(keywordPattern, "").trim()
+    return withoutKeyword.ifEmpty { normalized }
 }
