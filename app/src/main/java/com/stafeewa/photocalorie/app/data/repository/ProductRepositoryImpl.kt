@@ -12,14 +12,14 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 @Singleton
 class ProductRepositoryImpl @Inject constructor(
     private val productDao: ProductDao
 ) : ProductRepository {
 
     override fun searchProducts(query: String): Flow<List<Product>> {
-        return productDao.searchProducts(query).map { dbModels ->
+        val normalizedQuery = query.trim().lowercase()
+        return productDao.searchProducts(query.trim(), normalizedQuery).map { dbModels ->
             dbModels.map { it.toDomain() }
         }
     }
@@ -51,7 +51,6 @@ class ProductRepositoryImpl @Inject constructor(
 
     private fun getDefaultProducts(): List<Product> {
         return listOf(
-            // ============ ЗАВТРАК ============
             Product(
                 name = "Овсяная каша на молоке",
                 mealType = MealType.BREAKFAST,
@@ -135,8 +134,6 @@ class ProductRepositoryImpl @Inject constructor(
                 carbsPer100g = 28.0,
                 caloriesPer100g = 222.0
             ),
-
-            // ============ ОБЕД ============
             Product(
                 name = "Борщ с говядиной",
                 mealType = MealType.LUNCH,
@@ -218,8 +215,6 @@ class ProductRepositoryImpl @Inject constructor(
                 carbsPer100g = 8.0,
                 caloriesPer100g = 113.0
             ),
-
-            // ============ УЖИН ============
             Product(
                 name = "Запечённая куриная грудка",
                 mealType = MealType.DINNER,
@@ -301,6 +296,40 @@ class ProductRepositoryImpl @Inject constructor(
                 carbsPer100g = 4.0,
                 caloriesPer100g = 125.0
             )
-        )
+        ).map { product ->
+            product.copy(keywords = buildMlKeywords(product.name))
+        }
+    }
+
+    private fun buildMlKeywords(name: String): List<String> {
+        val normalizedName = name.lowercase()
+        val base = mutableSetOf(name.lowercase())
+
+        if ("каша" in normalizedName) base += listOf("porridge", "oatmeal", "каша")
+        if ("овся" in normalizedName) base += listOf("oatmeal", "oats")
+        if ("греч" in normalizedName) base += listOf("buckwheat")
+        if ("рис" in normalizedName) base += listOf("rice")
+        if ("яич" in normalizedName || "омлет" in normalizedName) base += listOf("egg", "omelette", "omelet")
+        if ("твор" in normalizedName || "сырник" in normalizedName || "запеканка" in normalizedName) {
+            base += listOf("cottage cheese", "curd", "cheesecake")
+        }
+        if ("йогурт" in normalizedName) base += listOf("yogurt", "yoghurt")
+        if ("блин" in normalizedName) base += listOf("pancake", "crepe")
+        if ("борщ" in normalizedName) base += listOf("borscht", "beet soup")
+        if ("суп" in normalizedName) base += listOf("soup")
+        if ("кур" in normalizedName) base += listOf("chicken")
+        if ("рыб" in normalizedName) base += listOf("fish", "seafood")
+        if ("салат" in normalizedName) base += listOf("salad")
+        if ("цезарь" in normalizedName) base += listOf("caesar")
+        if ("гречес" in normalizedName) base += listOf("greek salad", "greek")
+        if ("котлет" in normalizedName) base += listOf("cutlet", "patty")
+        if ("плов" in normalizedName) base += listOf("pilaf", "pilau")
+        if ("макарон" in normalizedName) base += listOf("pasta", "spaghetti", "noodles")
+        if ("пюре" in normalizedName || "картофель" in normalizedName) base += listOf("mashed potato", "potato")
+        if ("овощ" in normalizedName || "рагу" in normalizedName || "капуст" in normalizedName) {
+            base += listOf("vegetables", "stew")
+        }
+
+        return base.toList()
     }
 }

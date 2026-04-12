@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
-import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.AddRecognizedFoodToDatabaseUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.RecognizeFoodUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,8 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CameraViewModel @Inject constructor(
     private val recognizeFoodUseCase: RecognizeFoodUseCase,
-    private val addRecognizedFoodToDatabaseUseCase: AddRecognizedFoodToDatabaseUseCase,
-    private val productRepository: ProductRepository
+    private val addRecognizedFoodToDatabaseUseCase: AddRecognizedFoodToDatabaseUseCase
 ) : ViewModel() {
 
     private val _recognitionResult = MutableStateFlow<RecognitionResult?>(null)
@@ -48,7 +46,11 @@ class CameraViewModel @Inject constructor(
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
-                    recognizeFood(bitmap)
+                    if (bitmap == null) {
+                        _recognitionResult.value = RecognitionResult.Error("Ошибка чтения фото")
+                        return
+                    }
+                    recognizeFood(cropToCaptureArea(bitmap))
                 }
 
                 override fun onError(exception: ImageCaptureException) {
@@ -56,6 +58,14 @@ class CameraViewModel @Inject constructor(
                 }
             }
         )
+    }
+
+    private fun cropToCaptureArea(bitmap: Bitmap): Bitmap {
+        val cropWidth = (bitmap.width * 0.72f).toInt().coerceAtLeast(1)
+        val cropHeight = (bitmap.height * 0.52f).toInt().coerceAtLeast(1)
+        val left = ((bitmap.width - cropWidth) / 2).coerceAtLeast(0)
+        val top = ((bitmap.height - cropHeight) / 2).coerceAtLeast(0)
+        return Bitmap.createBitmap(bitmap, left, top, cropWidth, cropHeight)
     }
 
     private fun recognizeFood(bitmap: Bitmap) {
@@ -71,16 +81,19 @@ class CameraViewModel @Inject constructor(
                         confidence = result.confidence
                     )
                 }
+
                 is RecognizeFoodUseCase.Result.MultipleMatches -> {
                     RecognitionResult.MultipleMatches(
                         matches = result.products
                     )
                 }
+
                 is RecognizeFoodUseCase.Result.NotFound -> {
                     RecognitionResult.NotFound(
                         suggestedName = result.suggestedName
                     )
                 }
+
                 is RecognizeFoodUseCase.Result.Error -> {
                     RecognitionResult.Error(result.message)
                 }
@@ -99,19 +112,21 @@ class CameraViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             try {
-                val calories = protein * 4 + fat * 9 + carbs * 4
-                val product = Product(
+                val product = addRecognizedFoodToDatabaseUseCase(
                     name = name,
                     mealType = mealType,
-                    defaultPortion = 100.0,
                     proteinPer100g = protein,
                     fatPer100g = fat,
-                    carbsPer100g = carbs,
-                    caloriesPer100g = calories
+                    carbsPer100g = carbs
                 )
-                productRepository.addProduct(product)
 
-                // После добавления в базу, возвращаем успешный результат
+                val expectedCalories = protein * 4 + fat * 9 + carbs * 4
+                val caloriesDelta = kotlin.math.abs(product.caloriesPer100g - expectedCalories)
+                if (caloriesDelta > 0.01) {
+                    _recognitionResult.value = RecognitionResult.Error("Ошибка расчёта калорий по БЖУ")
+                    return@launch
+                }
+
                 _recognitionResult.value = RecognitionResult.Success(
                     product = product,
                     confidence = 1.0f
@@ -122,15 +137,14 @@ class CameraViewModel @Inject constructor(
         }
     }
 
-
     fun clearResult() {
         _recognitionResult.value = null
     }
 }
 
 sealed class RecognitionResult {
-    data class Success(val product: com.stafeewa.photocalorie.app.domain.entity.Product, val confidence: Float) : RecognitionResult()
-    data class MultipleMatches(val matches: List<RecognizeFoodUseCase.ProductMatch>) : RecognitionResult()  // ← matches
+    data class Success(val product: Product, val confidence: Float) : RecognitionResult()
+    data class MultipleMatches(val matches: List<RecognizeFoodUseCase.ProductMatch>) : RecognitionResult()
     data class NotFound(val suggestedName: String) : RecognitionResult()
     data class Error(val message: String) : RecognitionResult()
 }
