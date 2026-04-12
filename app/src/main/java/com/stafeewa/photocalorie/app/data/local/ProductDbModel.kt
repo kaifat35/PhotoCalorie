@@ -14,5 +14,6 @@ data class ProductDbModel(
     val proteinPer100g: Double,
     val fatPer100g: Double,
     val carbsPer100g: Double,
-    val caloriesPer100g: Double
+    val caloriesPer100g: Double,
+    val searchKeywords: String = ""
 )

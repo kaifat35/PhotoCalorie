@@ -6,15 +6,21 @@ import com.stafeewa.photocalorie.app.domain.entity.FoodEntry
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
-import com.stafeewa.photocalorie.app.domain.usecase.foodintake.*
+import com.stafeewa.photocalorie.app.domain.usecase.foodintake.AddFoodEntryUseCase
+import com.stafeewa.photocalorie.app.domain.usecase.foodintake.AddFoodEntryWithValidationUseCase
+import com.stafeewa.photocalorie.app.domain.usecase.foodintake.GetDailyIntakeUseCase
+import com.stafeewa.photocalorie.app.domain.usecase.foodintake.GetTodayEntriesUseCase
+import com.stafeewa.photocalorie.app.domain.usecase.foodintake.RemoveFoodEntryUseCase
+import com.stafeewa.photocalorie.app.domain.usecase.foodintake.UpdateFoodEntryUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.userprofile.ObserveUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,6 +35,29 @@ class FoodIntakeViewModel @Inject constructor(
     private val getDailyIntakeUseCase: GetDailyIntakeUseCase,
     private val productRepository: ProductRepository
 ) : ViewModel() {
+
+    private val enToRuKeywordMap = mapOf(
+        "oatmeal" to "овсян",
+        "porridge" to "каша",
+        "buckwheat" to "греч",
+        "rice" to "рис",
+        "egg" to "яич",
+        "omelette" to "омлет",
+        "omelet" to "омлет",
+        "chicken" to "кур",
+        "fish" to "рыб",
+        "salad" to "салат",
+        "soup" to "суп",
+        "borscht" to "борщ",
+        "pasta" to "макарон",
+        "noodle" to "лапш",
+        "potato" to "карто",
+        "cutlet" to "котлет",
+        "pilaf" to "плов",
+        "cottage cheese" to "творог",
+        "yogurt" to "йогурт",
+        "pancake" to "блин"
+    )
 
     private val _calorieGoal = MutableStateFlow(2000.0)
     val calorieGoal: StateFlow<Double> = _calorieGoal.asStateFlow()
@@ -56,6 +85,7 @@ class FoodIntakeViewModel @Inject constructor(
 
     private val _successMessage = MutableStateFlow<String?>(null)
     val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
+
     private val _productSearchResults = MutableStateFlow<List<Product>>(emptyList())
     val productSearchResults: StateFlow<List<Product>> = _productSearchResults.asStateFlow()
     private var searchJob: Job? = null
@@ -74,7 +104,6 @@ class FoodIntakeViewModel @Inject constructor(
     }
 
     private fun loadData() {
-        // Подписываемся на обновления профиля (калории будут обновляться автоматически)
         observeUserProfileUseCase()
             .onEach { profile ->
                 val goal = profile.dailyCalories ?: 2000.0
@@ -83,7 +112,6 @@ class FoodIntakeViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
 
-        // Подписываемся на дневное потребление
         getDailyIntakeUseCase()
             .onEach { dailyIntake ->
                 _totalCalories.value = dailyIntake.totalCalories
@@ -91,7 +119,6 @@ class FoodIntakeViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
 
-        // Подписываемся на записи для разделения по приёмам пищи
         getTodayEntriesUseCase()
             .onEach { entries ->
                 _breakfastEntries.value = entries.filter { it.mealType == MealType.BREAKFAST }
@@ -116,14 +143,27 @@ class FoodIntakeViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             val result = runCatching {
-                addFoodEntryWithValidationUseCase(
-                    name = name,
-                    mealType = mealType,
-                    portion = portion,
-                    protein = protein,
-                    fat = fat,
-                    carbs = carbs
-                )
+                val resolvedProduct = resolveMlKitProduct(name)
+                if (resolvedProduct != null && protein == 0.0 && fat == 0.0 && carbs == 0.0) {
+                    val kbju = resolvedProduct.calculateKbjuForPortion(portion)
+                    addFoodEntryWithValidationUseCase(
+                        name = resolvedProduct.name,
+                        mealType = mealType,
+                        portion = portion,
+                        protein = kbju.protein,
+                        fat = kbju.fat,
+                        carbs = kbju.carbs
+                    )
+                } else {
+                    addFoodEntryWithValidationUseCase(
+                        name = name,
+                        mealType = mealType,
+                        portion = portion,
+                        protein = protein,
+                        fat = fat,
+                        carbs = carbs
+                    )
+                }
             }
             _isLoading.value = false
 
@@ -134,6 +174,7 @@ class FoodIntakeViewModel @Inject constructor(
                             _successMessage.value = "${response.entry.name} добавлен"
                             clearSuccessMessageAfterDelay()
                         }
+
                         is AddFoodEntryWithValidationUseCase.Result.Error -> {
                             _errorMessage.value = response.message
                             clearErrorMessageAfterDelay()
@@ -144,6 +185,67 @@ class FoodIntakeViewModel @Inject constructor(
                     _errorMessage.value = "Не удалось добавить блюдо. Попробуйте ещё раз."
                     clearErrorMessageAfterDelay()
                 }
+        }
+    }
+
+    suspend fun resolveMlKitProduct(label: String): Product? {
+        if (label.isBlank()) return null
+
+        val variants = buildSearchVariants(label)
+        val candidates = variants.flatMap { query ->
+            productRepository.searchProducts(query).first()
+        }.distinctBy { it.id }
+
+        if (candidates.isEmpty()) return null
+
+        val normalizedVariants = variants.map { normalizeLabel(it) }
+        return candidates.maxByOrNull { product ->
+            val productTokens = listOf(product.name) + product.keywords
+            val normalizedProductTokens = productTokens.map(::normalizeLabel)
+
+            normalizedVariants.maxOf { variant ->
+                normalizedProductTokens.maxOf { token ->
+                    calculateMatchScore(variant, token)
+                }
+            }
+        }
+    }
+
+    private fun buildSearchVariants(label: String): Set<String> {
+        val normalized = normalizeLabel(label)
+        val variants = mutableSetOf(normalized)
+
+        enToRuKeywordMap.forEach { (en, ru) ->
+            if (normalized.contains(en)) {
+                variants += normalized.replace(en, ru)
+                variants += ru
+            }
+        }
+
+        normalized.split(" ")
+            .filter { it.length >= 3 }
+            .forEach { token ->
+                variants += token
+                enToRuKeywordMap[token]?.let { variants += it }
+            }
+
+        return variants.filter { it.isNotBlank() }.toSet()
+    }
+
+    private fun normalizeLabel(value: String): String {
+        return value.lowercase()
+            .replace(Regex("[^a-zа-я0-9 ]"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+    }
+
+    private fun calculateMatchScore(recognized: String, dbName: String): Int {
+        return when {
+            recognized == dbName -> 100
+            dbName.contains(recognized) -> 80
+            recognized.contains(dbName) -> 70
+            recognized.split(" ").any { it.length > 2 && dbName.contains(it) } -> 50
+            else -> 10
         }
     }
 

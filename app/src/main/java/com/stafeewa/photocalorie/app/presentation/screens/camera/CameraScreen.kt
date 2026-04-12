@@ -6,9 +6,12 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -16,6 +19,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,7 +27,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
@@ -38,7 +49,6 @@ import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -79,14 +89,13 @@ fun CameraScreen(
                 .padding(paddingValues)
         ) {
             if (cameraPermissionState.status.isGranted) {
-                // Камера
                 val previewView = PreviewView(context)
                 android.view.ViewGroup.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT
                 ).also { previewView.layoutParams = it }
 
-                androidx.compose.runtime.DisposableEffect(Unit) {
+                DisposableEffect(Unit) {
                     val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
                     cameraProviderFuture.addListener({
                         val cameraProvider = cameraProviderFuture.get()
@@ -122,7 +131,10 @@ fun CameraScreen(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // Кнопка съёмки
+                CaptureAreaOverlay(
+                    modifier = Modifier.fillMaxSize()
+                )
+
                 IconButton(
                     onClick = {
                         imageCapture?.let { capture ->
@@ -141,11 +153,10 @@ fun CameraScreen(
                         painter = painterResource(id = R.drawable.ic_camera),
                         contentDescription = "Сделать фото",
                         tint = Color.White,
-                        modifier = Modifier
+                        modifier = Modifier.size(56.dp)
                     )
                 }
 
-                // Кнопка назад
                 IconButton(
                     onClick = onBack,
                     modifier = Modifier
@@ -159,7 +170,6 @@ fun CameraScreen(
                     )
                 }
 
-                // Индикатор загрузки
                 if (isProcessing) {
                     Box(
                         modifier = Modifier
@@ -176,7 +186,6 @@ fun CameraScreen(
                     }
                 }
             } else {
-                // Нет разрешения на камеру
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -196,7 +205,6 @@ fun CameraScreen(
         }
     }
 
-    // Диалог с результатом распознавания
     if (showResultDialog && recognitionResult != null) {
         RecognitionResultDialog(
             result = recognitionResult!!,
@@ -212,6 +220,50 @@ fun CameraScreen(
             onAddToDatabase = { name, mealType, protein, fat, carbs ->
                 viewModel.addNewFoodToDatabase(name, mealType, protein, fat, carbs)
             }
+        )
+    }
+}
+
+@Composable
+private fun CaptureAreaOverlay(modifier: Modifier = Modifier) {
+    Box(modifier = modifier) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+        ) {
+            drawRect(color = Color.Black.copy(alpha = 0.45f))
+
+            val holeWidth = size.width * 0.72f
+            val holeHeight = size.height * 0.52f
+            val left = (size.width - holeWidth) / 2f
+            val top = (size.height - holeHeight) / 2f
+
+            drawRoundRect(
+                color = Color.Transparent,
+                topLeft = Offset(left, top),
+                size = Size(holeWidth, holeHeight),
+                cornerRadius = CornerRadius(32f, 32f),
+                blendMode = BlendMode.Clear
+            )
+
+            drawRoundRect(
+                color = Color.White.copy(alpha = 0.85f),
+                topLeft = Offset(left, top),
+                size = Size(holeWidth, holeHeight),
+                cornerRadius = CornerRadius(32f, 32f),
+                style = Stroke(width = 4f)
+            )
+        }
+
+        Text(
+            text = "Поместите блюдо в рамку",
+            color = Color.White,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 92.dp)
+                .background(Color.Black.copy(alpha = 0.35f))
+                .padding(horizontal = 12.dp, vertical = 6.dp)
         )
     }
 }

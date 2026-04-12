@@ -8,7 +8,8 @@ data class Product(
     val proteinPer100g: Double,
     val fatPer100g: Double,
     val carbsPer100g: Double,
-    val caloriesPer100g: Double
+    val caloriesPer100g: Double,
+    val keywords: List<String> = emptyList()
 ) {
     fun calculateKbjuForPortion(portionInGrams: Double): KbjuValues {
         val factor = portionInGrams / 100.0

@@ -16,8 +16,16 @@ interface ProductDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertProducts(products: List<ProductDbModel>)
 
-    @Query("SELECT * FROM products WHERE name LIKE '%' || :query || '%' ORDER BY name LIMIT 10")
-    fun searchProducts(query: String): Flow<List<ProductDbModel>>
+    @Query(
+        """
+        SELECT * FROM products
+        WHERE name LIKE '%' || :query || '%'
+           OR searchKeywords LIKE '%' || :normalizedQuery || '%'
+        ORDER BY name
+        LIMIT 20
+        """
+    )
+    fun searchProducts(query: String, normalizedQuery: String): Flow<List<ProductDbModel>>
 
     @Query("SELECT * FROM products WHERE mealType = :mealType ORDER BY name")
     fun getProductsByMealType(mealType: MealType): Flow<List<ProductDbModel>>

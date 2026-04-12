@@ -26,6 +26,28 @@ class RecognizeFoodUseCase @Inject constructor(
         val matchScore: Int
     )
 
+    private val enToRuKeywordMap = mapOf(
+        "oatmeal" to "овсян",
+        "porridge" to "каша",
+        "buckwheat" to "греч",
+        "rice" to "рис",
+        "egg" to "яич",
+        "omelette" to "омлет",
+        "omelet" to "омлет",
+        "chicken" to "кур",
+        "fish" to "рыб",
+        "salad" to "салат",
+        "soup" to "суп",
+        "borscht" to "борщ",
+        "pasta" to "макарон",
+        "potato" to "карто",
+        "cutlet" to "котлет",
+        "pilaf" to "плов",
+        "cottage cheese" to "творог",
+        "yogurt" to "йогурт",
+        "pancake" to "блин"
+    )
+
     suspend operator fun invoke(bitmap: Bitmap): Result {
         return try {
             val image = InputImage.fromBitmap(bitmap, 0)
@@ -37,46 +59,75 @@ class RecognizeFoodUseCase @Inject constructor(
                 return Result.NotFound("Не удалось распознать блюдо")
             }
 
-            val bestLabel = labels.maxByOrNull { it.confidence } ?: return Result.NotFound("Не удалось распознать")
+            val sortedLabels = labels.sortedByDescending { it.confidence }
+            val bestLabel = sortedLabels.first()
+            val variants = buildSearchVariants(bestLabel.text)
 
-            val allProducts = productRepository.searchProducts(bestLabel.text).first()
+            val allProducts = variants.flatMap { query ->
+                productRepository.searchProducts(query).first()
+            }.distinctBy { it.id }
 
             if (allProducts.isEmpty()) {
                 return Result.NotFound(bestLabel.text)
             }
 
-            val exactMatch = allProducts.find {
-                it.name.equals(bestLabel.text, ignoreCase = true)
-            }
+            val scoredMatches = allProducts.map { product ->
+                val score = variants.maxOf { variant ->
+                    val allTokens = listOf(product.name) + product.keywords
+                    allTokens.maxOf { token ->
+                        calculateMatchScore(normalize(variant), normalize(token))
+                    }
+                }
+                ProductMatch(product, bestLabel.confidence, score)
+            }.sortedByDescending { it.matchScore }
 
+            val exactMatch = scoredMatches.firstOrNull { it.matchScore >= 95 }
             if (exactMatch != null) {
-                return Result.Success(exactMatch, bestLabel.confidence)
+                return Result.Success(exactMatch.product, bestLabel.confidence)
             }
 
-            if (allProducts.size > 1) {
-                val matches = allProducts.map { product ->
-                    ProductMatch(product, bestLabel.confidence, calculateMatchScore(bestLabel.text, product.name))
-                }.sortedByDescending { it.matchScore }
-                return Result.MultipleMatches(matches)  // ← matches
+            if (scoredMatches.size > 1) {
+                return Result.MultipleMatches(scoredMatches.take(5))
             }
 
-            Result.Success(allProducts.first(), bestLabel.confidence)
-
+            Result.Success(scoredMatches.first().product, bestLabel.confidence)
         } catch (e: Exception) {
             Result.Error(e.message ?: "Ошибка распознавания")
         }
     }
 
-    private fun calculateMatchScore(recognized: String, dbName: String): Int {
-        val r = recognized.lowercase()
-        val d = dbName.lowercase()
+    private fun buildSearchVariants(label: String): Set<String> {
+        val normalized = normalize(label)
+        val variants = mutableSetOf(normalized)
+        enToRuKeywordMap.forEach { (en, ru) ->
+            if (normalized.contains(en)) {
+                variants += normalized.replace(en, ru)
+                variants += ru
+            }
+        }
+        normalized.split(" ")
+            .filter { it.length >= 3 }
+            .forEach { token ->
+                variants += token
+                enToRuKeywordMap[token]?.let { variants += it }
+            }
+        return variants.filter { it.isNotBlank() }.toSet()
+    }
 
+    private fun normalize(value: String): String {
+        return value.lowercase()
+            .replace(Regex("[^a-zа-я0-9 ]"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+    }
+
+    private fun calculateMatchScore(recognized: String, dbName: String): Int {
         return when {
-            r == d -> 100
-            d.contains(r) -> 80
-            r.contains(d) -> 70
-            r.split(" ").any { d.contains(it) } -> 50
-            else -> 30
+            recognized == dbName -> 100
+            dbName.contains(recognized) -> 80
+            recognized.contains(dbName) -> 70
+            recognized.split(" ").any { dbName.contains(it) && it.length > 2 } -> 50
+            else -> 20
         }
     }
 }
