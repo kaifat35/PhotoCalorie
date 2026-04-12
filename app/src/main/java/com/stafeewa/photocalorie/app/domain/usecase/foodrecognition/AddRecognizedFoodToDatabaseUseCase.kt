@@ -13,7 +13,8 @@ class AddRecognizedFoodToDatabaseUseCase @Inject constructor(
         mealType: MealType,
         proteinPer100g: Double,
         fatPer100g: Double,
-        carbsPer100g: Double
+        carbsPer100g: Double,
+        recognitionKeyword: String? = null
     ): Product {
         val caloriesPer100g = proteinPer100g * 4 + fatPer100g * 9 + carbsPer100g * 4
 
@@ -25,16 +26,24 @@ class AddRecognizedFoodToDatabaseUseCase @Inject constructor(
             fatPer100g = fatPer100g,
             carbsPer100g = carbsPer100g,
             caloriesPer100g = caloriesPer100g,
-            keywords = buildKeywords(name)
+            keywords = buildKeywords(name, recognitionKeyword)
         )
 
         productRepository.addProduct(product)
         return product
     }
 
-    private fun buildKeywords(name: String): List<String> {
+    private fun buildKeywords(name: String, recognitionKeyword: String?): List<String> {
         val normalized = name.lowercase()
         val keywords = mutableSetOf(normalized)
+        val normalizedRecognitionKeyword = recognitionKeyword
+            ?.lowercase()
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+
+        if (normalizedRecognitionKeyword != null) {
+            keywords += normalizedRecognitionKeyword
+        }
 
         if ("салат" in normalized) keywords += "salad"
         if ("суп" in normalized || "борщ" in normalized) keywords += "soup"

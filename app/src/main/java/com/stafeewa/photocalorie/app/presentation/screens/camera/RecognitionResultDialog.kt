@@ -40,7 +40,7 @@ fun RecognitionResultDialog(
     result: RecognitionResult,
     onDismiss: () -> Unit,
     onConfirm: (name: String, mealType: MealType, portion: Double, protein: Double, fat: Double, carbs: Double) -> Unit,
-    onAddToDatabase: (name: String, mealType: MealType, protein: Double, fat: Double, carbs: Double) -> Unit
+    onAddToDatabase: (name: String, mealType: MealType, protein: Double, fat: Double, carbs: Double, recognitionKeyword: String?) -> Unit
 ) {
     var selectedMealType by remember { mutableStateOf(MealType.LUNCH) }
     var portion by remember { mutableStateOf("100") }
@@ -161,7 +161,7 @@ fun RecognitionResultDialog(
 
                     is RecognitionResult.NotFound -> {
                         Text(
-                            text = "Блюдо \"${result.suggestedName}\" не найдено в базе.",
+                            text = "Блюдо не найдено в базе.",
                             color = Color.White
                         )
 
@@ -178,8 +178,6 @@ fun RecognitionResultDialog(
                             Button(
                                 onClick = {
                                     isAddingToDatabase = true
-                                    // Предзаполняем название из распознанного
-                                    manualName = result.suggestedName
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5C5A5A)),
                                 modifier = Modifier.fillMaxWidth()
@@ -284,15 +282,16 @@ fun RecognitionResultDialog(
 
                                 // Добавляем в базу
                                 onAddToDatabase(
-                                    manualName.ifEmpty { result.suggestedName },
+                                    manualName,
                                     selectedMealType,
                                     protein,
                                     fat,
-                                    carbs
+                                    carbs,
+                                    result.suggestedName
                                 )
                                 // Добавляем в дневник
                                 onConfirm(
-                                    manualName.ifEmpty { result.suggestedName },
+                                    manualName,
                                     selectedMealType,
                                     portion.toDoubleOrNull() ?: 100.0,
                                     protein * factor,

@@ -217,8 +217,8 @@ fun CameraScreen(
                 showResultDialog = false
                 viewModel.clearResult()
             },
-            onAddToDatabase = { name, mealType, protein, fat, carbs ->
-                viewModel.addNewFoodToDatabase(name, mealType, protein, fat, carbs)
+            onAddToDatabase = { name, mealType, protein, fat, carbs, recognitionKeyword ->
+                viewModel.addNewFoodToDatabase(name, mealType, protein, fat, carbs, recognitionKeyword)
             }
         )
     }

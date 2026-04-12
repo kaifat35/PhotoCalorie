@@ -108,7 +108,8 @@ class CameraViewModel @Inject constructor(
         mealType: MealType,
         protein: Double,
         fat: Double,
-        carbs: Double
+        carbs: Double,
+        recognitionKeyword: String? = null
     ) {
         viewModelScope.launch {
             try {
@@ -117,7 +118,8 @@ class CameraViewModel @Inject constructor(
                     mealType = mealType,
                     proteinPer100g = protein,
                     fatPer100g = fat,
-                    carbsPer100g = carbs
+                    carbsPer100g = carbs,
+                    recognitionKeyword = recognitionKeyword
                 )
 
                 val expectedCalories = protein * 4 + fat * 9 + carbs * 4
