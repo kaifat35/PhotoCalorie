@@ -5,12 +5,14 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.label.ImageLabeling
 import com.google.mlkit.vision.label.defaults.ImageLabelerOptions
 import com.stafeewa.photocalorie.app.domain.entity.Product
+import com.stafeewa.photocalorie.app.domain.repository.FoodRecognitionRepository
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class RecognizeFoodUseCase @Inject constructor(
+    private val foodRecognitionRepository: FoodRecognitionRepository,
     private val productRepository: ProductRepository
 ) {
     sealed class Result {
@@ -50,17 +52,14 @@ class RecognizeFoodUseCase @Inject constructor(
 
     suspend operator fun invoke(bitmap: Bitmap): Result {
         return try {
-            val image = InputImage.fromBitmap(bitmap, 0)
-            val labeler = ImageLabeling.getClient(ImageLabelerOptions.DEFAULT_OPTIONS)
-            val labels = labeler.process(image).await()
-            labeler.close()
+            val recognizedLabels = recognizeViaLogMeal(bitmap)
+                .ifEmpty { recognizeViaMlKit(bitmap) }
 
-            if (labels.isEmpty()) {
+            if (recognizedLabels.isEmpty()) {
                 return Result.NotFound("Не удалось распознать блюдо")
             }
 
-            val sortedLabels = labels.sortedByDescending { it.confidence }
-            val bestLabel = sortedLabels.first()
+            val bestLabel = recognizedLabels.first()
             val variants = buildSearchVariants(bestLabel.text)
 
             val allProducts = variants.flatMap { query ->
@@ -95,6 +94,29 @@ class RecognizeFoodUseCase @Inject constructor(
             Result.Error(e.message ?: "Ошибка распознавания")
         }
     }
+
+    private suspend fun recognizeViaLogMeal(bitmap: Bitmap): List<RecognizedLabel> {
+        return foodRecognitionRepository.recognizeFoodCandidates(bitmap)
+            .map { RecognizedLabel(text = it.name, confidence = it.confidence) }
+            .sortedByDescending { it.confidence }
+    }
+
+    private suspend fun recognizeViaMlKit(bitmap: Bitmap): List<RecognizedLabel> {
+        val image = InputImage.fromBitmap(bitmap, 0)
+        val labeler = ImageLabeling.getClient(ImageLabelerOptions.DEFAULT_OPTIONS)
+        return try {
+            labeler.process(image).await()
+                .map { RecognizedLabel(text = it.text, confidence = it.confidence) }
+                .sortedByDescending { it.confidence }
+        } finally {
+            labeler.close()
+        }
+    }
+
+    private data class RecognizedLabel(
+        val text: String,
+        val confidence: Float
+    )
 
     private fun buildSearchVariants(label: String): Set<String> {
         val normalized = normalize(label)

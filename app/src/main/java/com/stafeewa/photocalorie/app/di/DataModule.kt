@@ -10,9 +10,11 @@ import com.stafeewa.photocalorie.app.data.remote.LogMealApiService
 import com.stafeewa.photocalorie.app.data.remote.RecipesApiService
 import com.stafeewa.photocalorie.app.data.repository.PhotoCalorieRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.FoodIntakeRepositoryImpl
+import com.stafeewa.photocalorie.app.data.repository.LogMealFoodRecognitionRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.ProductRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.SettingsRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.UserProfileRepositoryImpl
+import com.stafeewa.photocalorie.app.domain.repository.FoodRecognitionRepository
 import com.stafeewa.photocalorie.app.domain.repository.FoodIntakeRepository
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.repository.RecipeRepository
@@ -66,6 +68,12 @@ interface DataModule {
     fun bindFoodIntakeRepository(
         impl: FoodIntakeRepositoryImpl
     ): FoodIntakeRepository
+
+    @Binds
+    @Singleton
+    fun bindFoodRecognitionRepository(
+        impl: LogMealFoodRecognitionRepositoryImpl
+    ): FoodRecognitionRepository
 
     companion object {
 
@@ -160,4 +168,3 @@ interface DataModule {
         ): ProductDao = database.productDao()
     }
 }
-
