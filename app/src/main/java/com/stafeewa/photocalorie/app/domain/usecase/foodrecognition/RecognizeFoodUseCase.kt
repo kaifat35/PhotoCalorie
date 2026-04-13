@@ -1,25 +1,17 @@
 package com.stafeewa.photocalorie.app.domain.usecase.foodrecognition
 
 import android.graphics.Bitmap
-import com.stafeewa.photocalorie.app.BuildConfig
-import com.stafeewa.photocalorie.app.data.remote.LogMealApiService
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.label.ImageLabeling
+import com.google.mlkit.vision.label.defaults.ImageLabelerOptions
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import kotlinx.coroutines.flow.first
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.floatOrNull
-import kotlinx.serialization.json.contentOrNull
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.toRequestBody
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class RecognizeFoodUseCase @Inject constructor(
-    private val productRepository: ProductRepository,
-    private val logMealApiService: LogMealApiService
+    private val productRepository: ProductRepository
 ) {
     sealed class Result {
         data class Success(val product: Product, val confidence: Float) : Result()
@@ -57,17 +49,18 @@ class RecognizeFoodUseCase @Inject constructor(
     )
 
     suspend operator fun invoke(bitmap: Bitmap): Result {
-        if (BuildConfig.LOGMEAL_API_TOKEN.isBlank()) {
-            return Result.Error("LOGMEAL_API_TOKEN не настроен")
-        }
-
         return try {
-            val labels = recognizeLabelsWithLogMeal(bitmap)
+            val image = InputImage.fromBitmap(bitmap, 0)
+            val labeler = ImageLabeling.getClient(ImageLabelerOptions.DEFAULT_OPTIONS)
+            val labels = labeler.process(image).await()
+            labeler.close()
+
             if (labels.isEmpty()) {
                 return Result.NotFound("Не удалось распознать блюдо")
             }
 
-            val bestLabel = labels.first()
+            val sortedLabels = labels.sortedByDescending { it.confidence }
+            val bestLabel = sortedLabels.first()
             val variants = buildSearchVariants(bestLabel.text)
 
             val allProducts = variants.flatMap { query ->
@@ -101,66 +94,6 @@ class RecognizeFoodUseCase @Inject constructor(
         } catch (e: Exception) {
             Result.Error(e.message ?: "Ошибка распознавания")
         }
-    }
-
-    private suspend fun recognizeLabelsWithLogMeal(bitmap: Bitmap): List<RecognizedLabel> {
-        val imageBytes = bitmap.toJpegByteArray()
-        val requestBody = imageBytes.toRequestBody("image/jpeg".toMediaType())
-        val imagePart = MultipartBody.Part.createFormData(
-            name = "image",
-            filename = "capture.jpg",
-            body = requestBody
-        )
-
-        val response = logMealApiService.completeSegmentation(
-            authorization = "Bearer ${BuildConfig.LOGMEAL_API_TOKEN}",
-            image = imagePart
-        )
-
-        return extractRecognizedLabels(response)
-            .sortedByDescending { it.confidence }
-            .distinctBy { it.text }
-    }
-
-    private fun Bitmap.toJpegByteArray(): ByteArray {
-        val stream = java.io.ByteArrayOutputStream()
-        compress(Bitmap.CompressFormat.JPEG, 92, stream)
-        return stream.toByteArray()
-    }
-
-    private fun extractRecognizedLabels(root: JsonObject): List<RecognizedLabel> {
-        val labels = mutableListOf<RecognizedLabel>()
-
-        fun traverse(element: JsonElement) {
-            when (element) {
-                is JsonObject -> {
-                    val name = findTextValue(element, listOf("name", "foodName", "label", "dish"))
-                    val confidence = findFloatValue(element, listOf("confidence", "prob", "score", "probability"))
-                    if (!name.isNullOrBlank()) {
-                        labels += RecognizedLabel(name, confidence ?: 0.65f)
-                    }
-                    element.values.forEach(::traverse)
-                }
-
-                is JsonArray -> element.forEach(::traverse)
-                else -> Unit
-            }
-        }
-
-        traverse(root)
-        return labels
-    }
-
-    private fun findTextValue(obj: JsonObject, keys: List<String>): String? {
-        return keys.asSequence()
-            .mapNotNull { key -> (obj[key] as? JsonPrimitive)?.contentOrNull }
-            .firstOrNull { it.isNotBlank() }
-    }
-
-    private fun findFloatValue(obj: JsonObject, keys: List<String>): Float? {
-        return keys.asSequence()
-            .mapNotNull { key -> (obj[key] as? JsonPrimitive)?.floatOrNull }
-            .firstOrNull()
     }
 
     private fun buildSearchVariants(label: String): Set<String> {
@@ -197,9 +130,4 @@ class RecognizeFoodUseCase @Inject constructor(
             else -> 20
         }
     }
-
-    private data class RecognizedLabel(
-        val text: String,
-        val confidence: Float
-    )
 }

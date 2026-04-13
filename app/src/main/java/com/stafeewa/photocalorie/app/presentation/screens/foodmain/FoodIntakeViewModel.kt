@@ -13,6 +13,7 @@ import com.stafeewa.photocalorie.app.domain.usecase.foodintake.GetTodayEntriesUs
 import com.stafeewa.photocalorie.app.domain.usecase.foodintake.RemoveFoodEntryUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.foodintake.UpdateFoodEntryUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.userprofile.ObserveUserProfileUseCase
+import com.stafeewa.photocalorie.app.utils.toUserVisibleFoodName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,7 +57,12 @@ class FoodIntakeViewModel @Inject constructor(
         "pilaf" to "плов",
         "cottage cheese" to "творог",
         "yogurt" to "йогурт",
-        "pancake" to "блин"
+        "pancake" to "блин",
+        "cheese" to "сыр",
+        "meat" to "мясо",
+        "beef" to "говядин",
+        "pork" to "свин",
+        "turkey" to "индейк"
     )
 
     private val _calorieGoal = MutableStateFlow(2000.0)
@@ -143,11 +149,12 @@ class FoodIntakeViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             val result = runCatching {
-                val resolvedProduct = resolveMlKitProduct(name)
+                val cleanName = name.toUserVisibleFoodName()
+                val resolvedProduct = resolveMlKitProduct(cleanName)
                 if (resolvedProduct != null && protein == 0.0 && fat == 0.0 && carbs == 0.0) {
                     val kbju = resolvedProduct.calculateKbjuForPortion(portion)
                     addFoodEntryWithValidationUseCase(
-                        name = resolvedProduct.name,
+                        name = resolvedProduct.name.toUserVisibleFoodName(),
                         mealType = mealType,
                         portion = portion,
                         protein = kbju.protein,
@@ -156,7 +163,7 @@ class FoodIntakeViewModel @Inject constructor(
                     )
                 } else {
                     addFoodEntryWithValidationUseCase(
-                        name = name,
+                        name = cleanName,
                         mealType = mealType,
                         portion = portion,
                         protein = protein,
@@ -171,9 +178,11 @@ class FoodIntakeViewModel @Inject constructor(
                 .onSuccess { response ->
                     when (response) {
                         is AddFoodEntryWithValidationUseCase.Result.Success -> {
-                            _successMessage.value = "${response.entry.name} добавлен"
+                            _successMessage.value =
+                                "${response.entry.name.toUserVisibleFoodName()} добавлен"
                             clearSuccessMessageAfterDelay()
                         }
+
 
                         is AddFoodEntryWithValidationUseCase.Result.Error -> {
                             _errorMessage.value = response.message
@@ -198,7 +207,7 @@ class FoodIntakeViewModel @Inject constructor(
 
         if (candidates.isEmpty()) return null
 
-        val normalizedVariants = variants.map { normalizeLabel(it) }
+        val normalizedVariants = variants.map(::normalizeLabel)
         return candidates.maxByOrNull { product ->
             val productTokens = listOf(product.name) + product.keywords
             val normalizedProductTokens = productTokens.map(::normalizeLabel)
@@ -240,14 +249,50 @@ class FoodIntakeViewModel @Inject constructor(
     }
 
     private fun calculateMatchScore(recognized: String, dbName: String): Int {
+        val overlap = tokenOverlapScore(recognized, dbName)
+        val typoBonus = (1.0 - normalizedLevenshteinDistance(recognized, dbName)).coerceAtLeast(0.0)
+        val typoScore = (typoBonus * 35).toInt()
+
         return when {
             recognized == dbName -> 100
-            dbName.contains(recognized) -> 80
-            recognized.contains(dbName) -> 70
-            recognized.split(" ").any { it.length > 2 && dbName.contains(it) } -> 50
-            else -> 10
+            dbName.contains(recognized) -> 85 + overlap
+            recognized.contains(dbName) -> 75 + overlap
+            overlap > 0 -> 40 + overlap + typoScore
+            else -> 10 + typoScore
         }
     }
+
+    private fun tokenOverlapScore(left: String, right: String): Int {
+        val leftTokens = left.split(" ").filter { it.length > 2 }.toSet()
+        val rightTokens = right.split(" ").filter { it.length > 2 }.toSet()
+        if (leftTokens.isEmpty() || rightTokens.isEmpty()) return 0
+        val intersection = leftTokens.intersect(rightTokens).size
+        return ((intersection.toDouble() / maxOf(leftTokens.size, rightTokens.size)) * 30).toInt()
+    }
+
+    private fun normalizedLevenshteinDistance(left: String, right: String): Double {
+        if (left.isEmpty() && right.isEmpty()) return 0.0
+        val distance = levenshtein(left, right)
+        return distance.toDouble() / maxOf(left.length, right.length)
+    }
+
+    private fun levenshtein(left: String, right: String): Int {
+        val dp = Array(left.length + 1) { IntArray(right.length + 1) }
+        for (i in 0..left.length) dp[i][0] = i
+        for (j in 0..right.length) dp[0][j] = j
+        for (i in 1..left.length) {
+            for (j in 1..right.length) {
+                val cost = if (left[i - 1] == right[j - 1]) 0 else 1
+                dp[i][j] = minOf(
+                    dp[i - 1][j] + 1,
+                    dp[i][j - 1] + 1,
+                    dp[i - 1][j - 1] + cost
+                )
+            }
+        }
+        return dp[left.length][right.length]
+    }
+
 
     fun removeFoodEntry(entryId: Long) {
         viewModelScope.launch {

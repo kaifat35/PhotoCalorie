@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
+import com.stafeewa.photocalorie.app.utils.toUserVisibleFoodName
 
 @Composable
 fun AddFoodDialog(
@@ -235,7 +236,7 @@ fun AddFoodDialog(
                                         product = product,
                                         onClick = {
                                             selectedProduct = product
-                                            searchQuery = product.name
+                                            searchQuery = product.name.toUserVisibleFoodName()
                                             showProductList = false
                                             portion = product.defaultPortion.toInt().toString()
                                         }
@@ -435,14 +436,4 @@ private fun getMealTypeName(mealType: MealType): String {
         MealType.DINNER -> "ужин"
         MealType.SNACK -> "перекус"
     }
-}
-
-private fun String.toUserVisibleFoodName(): String {
-    val normalized = trim()
-    val keywordPattern = Regex(
-        """\s*(?:[|•—–-]\s*)?(?:keywords?|ключ(?:ев(?:ое|ые))?\s*слов(?:о|а)?)\s*[:=]?\s*.*$""",
-        RegexOption.IGNORE_CASE
-    )
-    val withoutKeyword = normalized.replace(keywordPattern, "").trim()
-    return withoutKeyword.ifEmpty { normalized }
 }

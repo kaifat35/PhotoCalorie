@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.RecognizeFoodUseCase
+import com.stafeewa.photocalorie.app.utils.toUserVisibleFoodName
 
 
 @Composable
@@ -82,7 +83,8 @@ fun RecognitionResultDialog(
                 when (result) {
                     is RecognitionResult.Success -> {
                         Text(
-                            text = "${result.product.name} (${(result.confidence * 100).toInt()}%)",
+                            text = "${result.product.name.toUserVisibleFoodName()} " +
+                                    "(${(result.confidence * 100).toInt()}%)",
                             color = Color(0xFF009E1D),
                             fontSize = 18.sp,
                             fontFamily = FontFamily(Font(R.font.jura))
@@ -132,7 +134,7 @@ fun RecognitionResultDialog(
                                 TextButton(
                                     onClick = {
                                         onConfirm(
-                                            match.product.name,
+                                            match.product.name.toUserVisibleFoodName(),
                                             selectedMealType,
                                             portion.toDoubleOrNull() ?: 100.0,
                                             match.product.proteinPer100g * (portion.toDoubleOrNull()?.div(100) ?: 1.0),
@@ -145,7 +147,7 @@ fun RecognitionResultDialog(
                                 ) {
                                     Column {
                                         Text(
-                                            text = match.product.name,
+                                            text = match.product.name.toUserVisibleFoodName(),
                                             color = Color.White
                                         )
                                         Text(
@@ -162,7 +164,7 @@ fun RecognitionResultDialog(
 
                     is RecognitionResult.NotFound -> {
                         Text(
-                            text = "Блюдо \"${result.suggestedName}\" не найдено в базе.",
+                            text = "Блюдо \"${result.suggestedName.toUserVisibleFoodName()}\" не найдено в базе.",
                             color = Color.White
                         )
 
@@ -180,7 +182,7 @@ fun RecognitionResultDialog(
                                 onClick = {
                                     isAddingToDatabase = true
                                     // Предзаполняем название из распознанного
-                                    manualName = result.suggestedName
+                                    manualName = result.suggestedName.toUserVisibleFoodName()
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5C5A5A)),
                                 modifier = Modifier.fillMaxWidth()
@@ -194,7 +196,7 @@ fun RecognitionResultDialog(
                             )
 
                             OutlinedTextField(
-                                value = manualName.ifEmpty { result.suggestedName },
+                                value = manualName.ifEmpty { result.suggestedName.toUserVisibleFoodName() },
                                 onValueChange = { manualName = it },
                                 label = { Text("Название", color = Color.White.copy(alpha = 0.7f)) },
                                 modifier = Modifier.fillMaxWidth(),
