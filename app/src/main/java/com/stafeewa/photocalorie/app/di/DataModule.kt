@@ -6,6 +6,7 @@ import androidx.work.WorkManager
 import com.stafeewa.photocalorie.app.data.local.PhotoCalorieDao
 import com.stafeewa.photocalorie.app.data.local.PhotoCalorieDatabase
 import com.stafeewa.photocalorie.app.data.local.ProductDao
+import com.stafeewa.photocalorie.app.data.remote.LogMealApiService
 import com.stafeewa.photocalorie.app.data.remote.RecipesApiService
 import com.stafeewa.photocalorie.app.data.repository.PhotoCalorieRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.FoodIntakeRepositoryImpl
@@ -29,6 +30,7 @@ import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.create
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -94,7 +96,8 @@ interface DataModule {
 
         @Provides
         @Singleton
-        fun providesRetrofit(
+        @Named("SpoonacularRetrofit")
+        fun providesSpoonacularRetrofit(
             converterFactory: Converter.Factory
         ): Retrofit {
             return Retrofit.Builder()
@@ -105,9 +108,29 @@ interface DataModule {
 
         @Provides
         @Singleton
+        @Named("LogMealRetrofit")
+        fun providesLogMealRetrofit(
+            converterFactory: Converter.Factory
+        ): Retrofit {
+            return Retrofit.Builder()
+                .baseUrl("https://api.logmeal.com/")
+                .addConverterFactory(converterFactory)
+                .build()
+        }
+
+        @Provides
+        @Singleton
         fun provideApiService(
-            retrofit: Retrofit
+            @Named("SpoonacularRetrofit") retrofit: Retrofit
         ): RecipesApiService {
+            return retrofit.create()
+        }
+
+        @Provides
+        @Singleton
+        fun provideLogMealApiService(
+            @Named("LogMealRetrofit") retrofit: Retrofit
+        ): LogMealApiService {
             return retrofit.create()
         }
 

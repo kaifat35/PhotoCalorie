@@ -15,6 +15,7 @@ private val keystoreProperties = keystorePropertiesFile.inputStream().use { inpu
     }
 }
 private val apiKey = keystoreProperties.getProperty("SPONACULAR_API_KEY")
+private val logMealApiToken = keystoreProperties.getProperty("LOGMEAL_API_TOKEN")
 
 android {
     namespace = "com.stafeewa.photocalorie.app"
@@ -33,6 +34,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "SPONACULAR_API_KEY", apiKey)
+        buildConfigField("String", "LOGMEAL_API_TOKEN", logMealApiToken)
     }
 
     buildTypes {
@@ -119,15 +121,5 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.logging.interceptor)
 
-    //Google ML Kit
-    implementation (libs.image.labeling)
-    implementation (libs.object1.detection)
     implementation(libs.accompanist.permissions)
-    implementation(libs.kotlinx.coroutines.play.services)
-
-    // ML Kit для распознавания текста (опционально)
-    implementation(libs.text.recognition)
-
-    //Google Vision
-    implementation (libs.play.services.vision)
 }
