@@ -515,7 +515,10 @@ fun NutrientBadge(
 
 private fun String.toUserVisibleFoodName(): String {
     val normalized = trim()
-    val keywordPattern = Regex("""\s*(?:[|•—–-]\s*)?(?:keyword|ключ(?:евое)?\s*слово)\s*[:=].*$""", RegexOption.IGNORE_CASE)
+    val keywordPattern = Regex(
+        """\s*(?:[|•—–-]\s*)?(?:keywords?|ключ(?:ев(?:ое|ые))?\s*слов(?:о|а)?)\s*[:=]?\s*.*$""",
+        RegexOption.IGNORE_CASE
+    )
     val withoutKeyword = normalized.replace(keywordPattern, "").trim()
     return withoutKeyword.ifEmpty { normalized }
 }

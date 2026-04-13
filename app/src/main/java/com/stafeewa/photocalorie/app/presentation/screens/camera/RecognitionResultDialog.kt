@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
@@ -334,7 +335,6 @@ fun RecognitionResultDialog(
     )
 }
 
-// Остальные функции остаются без изменений
 @Composable
 fun MealTypeSelector(
     selectedMealType: MealType,
@@ -342,21 +342,24 @@ fun MealTypeSelector(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         MealTypeButton(
             title = "Завтрак",
             isSelected = selectedMealType == MealType.BREAKFAST,
+            modifier = Modifier.weight(1.2f),
             onClick = { onMealTypeSelected(MealType.BREAKFAST) }
         )
         MealTypeButton(
             title = "Обед",
             isSelected = selectedMealType == MealType.LUNCH,
+            modifier = Modifier.weight(1f),
             onClick = { onMealTypeSelected(MealType.LUNCH) }
         )
         MealTypeButton(
             title = "Ужин",
             isSelected = selectedMealType == MealType.DINNER,
+            modifier = Modifier.weight(1f),
             onClick = { onMealTypeSelected(MealType.DINNER) }
         )
     }
@@ -366,6 +369,7 @@ fun MealTypeSelector(
 fun MealTypeButton(
     title: String,
     isSelected: Boolean,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Button(
@@ -373,12 +377,13 @@ fun MealTypeButton(
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) Color(0xFF009E1D) else Color(0xFF5C5A5A)
         ),
-        modifier = Modifier
-            .padding(horizontal = 4.dp)
+        modifier = modifier
+            .widthIn(min = 0.dp)
+            .padding(horizontal = 1.dp)
     ) {
         Text(
             text = title,
-            fontSize = 14.sp,
+            fontSize = 10.sp,
             color = Color.White
         )
     }
