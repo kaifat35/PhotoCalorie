@@ -2,15 +2,16 @@ package com.stafeewa.photocalorie.app.ml
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.google.mlkit.common.model.LocalModel
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.label.custom.CustomImageLabeler
+import com.google.mlkit.vision.label.ImageLabeler
+import com.google.mlkit.vision.label.ImageLabeling
 import com.google.mlkit.vision.label.custom.CustomImageLabelerOptions
-import com.google.mlkit.vision.label.custom.LocalModel
 import kotlinx.coroutines.tasks.await
 
 class FoodClassifier(private val context: Context) {
 
-    private val imageLabeler: CustomImageLabeler
+    private val imageLabeler: ImageLabeler
 
     init {
         val localModel = LocalModel.Builder()
@@ -19,7 +20,7 @@ class FoodClassifier(private val context: Context) {
         val options = CustomImageLabelerOptions.Builder(localModel)
             .setConfidenceThreshold(0.6f)
             .build()
-        imageLabeler = CustomImageLabeler.getClient(options)
+        imageLabeler = ImageLabeling.getClient(options)
     }
 
     suspend fun recognizeFood(bitmap: Bitmap): List<LabelResult> {

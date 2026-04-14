@@ -5,12 +5,13 @@ import android.graphics.Bitmap
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.ml.FoodClassifier
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 class RecognizeFoodUseCase @Inject constructor(
     private val productRepository: ProductRepository,
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) {
     private val foodClassifier by lazy { FoodClassifier(context) }
 
