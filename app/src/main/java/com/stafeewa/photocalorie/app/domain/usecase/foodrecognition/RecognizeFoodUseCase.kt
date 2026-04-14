@@ -2,6 +2,7 @@ package com.stafeewa.photocalorie.app.domain.usecase.foodrecognition
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.ml.FoodClassifier
@@ -38,8 +39,12 @@ class RecognizeFoodUseCase @Inject constructor(
             val best = results.first()
             val bestLabel = best.label.lowercase().trim()
 
-            // 2. Ищем в локальной БД все продукты
-            val allProducts = productRepository.searchProducts("").first() // получаем все продукты
+            // 2. Ищем в локальной БД все продукты.
+            // Важно: searchProducts("") в DAO ограничен LIMIT 20, поэтому для распознавания
+            // собираем полный список по всем типам приёмов пищи.
+            val allProducts = MealType.entries.flatMap { mealType ->
+                productRepository.getProductsByMealType(mealType).first()
+            }.distinctBy { it.id }
             if (allProducts.isEmpty()) {
                 return Result.NotFound(bestLabel)
             }

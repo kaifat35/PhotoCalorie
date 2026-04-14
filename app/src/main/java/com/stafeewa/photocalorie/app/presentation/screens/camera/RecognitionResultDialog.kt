@@ -35,7 +35,10 @@ import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.RecognizeFoodUseCase
 
-
+private enum class ManualAddMode {
+    SAVE_AND_ADD,
+    ADD_ONLY
+}
 @Composable
 fun RecognitionResultDialog(
     result: RecognitionResult,
@@ -46,6 +49,7 @@ fun RecognitionResultDialog(
     var selectedMealType by remember { mutableStateOf(MealType.LUNCH) }
     var portion by remember { mutableStateOf("100") }
     var isAddingToDatabase by remember { mutableStateOf(false) }
+    var manualAddMode by remember { mutableStateOf(ManualAddMode.SAVE_AND_ADD) }
 
     // Поля для ручного добавления
     var manualName by remember { mutableStateOf("") }
@@ -168,7 +172,11 @@ fun RecognitionResultDialog(
 
                         if (!isAddingToDatabase) {
                             Button(
-                                onClick = { isAddingToDatabase = true },
+                                onClick = {
+                                    isAddingToDatabase = true
+                                    manualAddMode = ManualAddMode.SAVE_AND_ADD
+                                    manualName = result.suggestedName
+                                },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009E1D)),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
@@ -179,6 +187,7 @@ fun RecognitionResultDialog(
                             Button(
                                 onClick = {
                                     isAddingToDatabase = true
+                                    manualAddMode = ManualAddMode.ADD_ONLY
                                     // Предзаполняем название из распознанного
                                     manualName = result.suggestedName
                                 },
@@ -194,7 +203,7 @@ fun RecognitionResultDialog(
                             )
 
                             OutlinedTextField(
-                                value = manualName.ifEmpty { result.suggestedName },
+                                value = manualName,
                                 onValueChange = { manualName = it },
                                 label = { Text("Название", color = Color.White.copy(alpha = 0.7f)) },
                                 modifier = Modifier.fillMaxWidth(),
@@ -283,17 +292,21 @@ fun RecognitionResultDialog(
                                 val carbs = manualCarbs.toDoubleOrNull() ?: 0.0
                                 val factor = portion.toDoubleOrNull()?.div(100) ?: 1.0
 
-                                // Добавляем в базу
-                                onAddToDatabase(
-                                    manualName.ifEmpty { result.suggestedName },
-                                    selectedMealType,
-                                    protein,
-                                    fat,
-                                    carbs
-                                )
+                                val finalName = manualName.ifBlank { result.suggestedName }
+
+                                if (manualAddMode == ManualAddMode.SAVE_AND_ADD) {
+                                    // Добавляем в базу только в режиме "сохранить и добавить"
+                                    onAddToDatabase(
+                                        finalName,
+                                        selectedMealType,
+                                        protein,
+                                        fat,
+                                        carbs
+                                    )
+                                }
                                 // Добавляем в дневник
                                 onConfirm(
-                                    manualName.ifEmpty { result.suggestedName },
+                                    finalName,
                                     selectedMealType,
                                     portion.toDoubleOrNull() ?: 100.0,
                                     protein * factor,
@@ -305,7 +318,14 @@ fun RecognitionResultDialog(
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009E1D)),
                             enabled = isManualFormValid
                         ) {
-                            Text("💾 Сохранить и добавить", color = Color.White)
+                            Text(
+                                text = if (manualAddMode == ManualAddMode.SAVE_AND_ADD) {
+                                    "💾 Сохранить и добавить"
+                                } else {
+                                    "📝 Добавить в дневник"
+                                },
+                                color = Color.White
+                            )
                         }
                     }
                 }
