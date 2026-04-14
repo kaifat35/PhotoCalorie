@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.gpu.GpuDelegate
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -24,16 +23,9 @@ class TFLiteClassifier(private val context: Context) {
         try {
             val modelFile = copyModelToCache()
             val options = Interpreter.Options()
-            try {
-                val gpuDelegate = GpuDelegate()
-                options.addDelegate(gpuDelegate)
-                Log.d(tag, "GPU delegate added")
-            } catch (e: Exception) {
-                Log.w(tag, "GPU not supported, using CPU")
-            }
+            // Используем только CPU (GPU delegate отключён для избежания ошибок)
             interpreter = Interpreter(modelFile, options)
-            Log.d(tag, "Model loaded successfully")
-            // Проверим выходную форму
+            Log.d(tag, "Model loaded successfully (CPU)")
             val outputShape = interpreter?.getOutputTensor(0)?.shape()
             Log.d(tag, "Output shape: ${outputShape?.joinToString()}")
         } catch (e: Exception) {
@@ -45,24 +37,27 @@ class TFLiteClassifier(private val context: Context) {
     private fun copyModelToCache(): File {
         val cacheFile = File(context.cacheDir, modelFileName)
         if (cacheFile.exists()) {
-            Log.d(tag, "Model already in cache: ${cacheFile.absolutePath}")
+            Log.d(tag, "Model already in cache")
             return cacheFile
         }
-        context.assets.open(modelFileName).use { input ->
-            cacheFile.outputStream().use { output ->
-                input.copyTo(output)
+        try {
+            context.assets.open(modelFileName).use { input ->
+                cacheFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
             }
+            Log.d(tag, "Model copied to cache")
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to copy model from assets", e)
+            throw e
         }
-        Log.d(tag, "Model copied to cache: ${cacheFile.absolutePath}")
         return cacheFile
     }
 
     suspend fun recognizeFood(bitmap: Bitmap): List<LabelResult> {
         return try {
-            Log.d(tag, "Starting recognition, bitmap size: ${bitmap.width}x${bitmap.height}")
+            Log.d(tag, "Recognizing...")
             val scaledBitmap = Bitmap.createScaledBitmap(bitmap, inputSize, inputSize, true)
-            Log.d(tag, "Bitmap scaled to ${scaledBitmap.width}x${scaledBitmap.height}")
-
             val inputBuffer = ByteBuffer.allocateDirect(1 * inputSize * inputSize * 3 * 4)
             inputBuffer.order(ByteOrder.nativeOrder())
 
@@ -80,11 +75,10 @@ class TFLiteClassifier(private val context: Context) {
             inputBuffer.rewind()
 
             val outputSize = getNumClasses()
-            Log.d(tag, "Number of classes: $outputSize")
             val outputBuffer = Array(1) { FloatArray(outputSize) }
 
             interpreter?.run(inputBuffer, outputBuffer)
-            Log.d(tag, "Inference completed")
+            Log.d(tag, "All outputs: ${outputBuffer[0].mapIndexed { i, s -> "$i:$s" }.take(10)}")
 
             val results = outputBuffer[0].mapIndexed { index, score ->
                 LabelResult(getLabelForIndex(index), score)
@@ -103,7 +97,7 @@ class TFLiteClassifier(private val context: Context) {
             val outputShape = interpreter?.getOutputTensor(0)?.shape() ?: return 0
             outputShape[1]
         } catch (e: Exception) {
-            Log.e(tag, "Failed to get number of classes", e)
+            Log.e(tag, "Failed to get classes count", e)
             0
         }
     }

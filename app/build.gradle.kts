@@ -134,5 +134,5 @@ dependencies {
     implementation(libs.tensorflow.lite)
 
     // Для поддержки GPU (опционально, ускоряет инференс)
-    implementation(libs.tensorflow.lite.gpu)
+    //implementation(libs.tensorflow.lite.gpu)
 }
