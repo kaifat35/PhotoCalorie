@@ -81,6 +81,7 @@ dependencies {
     implementation (libs.androidx.lifecycle.viewmodel.compose)
     implementation (libs.material3)
     implementation (libs.ui.graphics)
+    implementation(libs.accompanist.permissions)
 
     // CameraX
     implementation(libs.androidx.camera.core)
@@ -122,17 +123,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.logging.interceptor)
 
-    //Google ML Kit
-    implementation(libs.accompanist.permissions)
-    //implementation(libs.kotlinx.coroutines.play.services)
-    //implementation(libs.image.labeling.custom)
-
-    // ML Kit для распознавания текста (опционально)
-    //implementation(libs.text.recognition)
-
     //  TensorFlow Lite
     implementation(libs.tensorflow.lite)
-
-    // Для поддержки GPU (опционально, ускоряет инференс)
-    //implementation(libs.tensorflow.lite.gpu)
 }
