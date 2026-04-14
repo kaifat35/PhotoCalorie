@@ -124,9 +124,15 @@ dependencies {
 
     //Google ML Kit
     implementation(libs.accompanist.permissions)
-    implementation(libs.kotlinx.coroutines.play.services)
-    implementation(libs.image.labeling.custom)
+    //implementation(libs.kotlinx.coroutines.play.services)
+    //implementation(libs.image.labeling.custom)
 
     // ML Kit для распознавания текста (опционально)
-    implementation(libs.text.recognition)
+    //implementation(libs.text.recognition)
+
+    //  TensorFlow Lite
+    implementation(libs.tensorflow.lite)
+
+    // Для поддержки GPU (опционально, ускоряет инференс)
+    implementation(libs.tensorflow.lite.gpu)
 }
