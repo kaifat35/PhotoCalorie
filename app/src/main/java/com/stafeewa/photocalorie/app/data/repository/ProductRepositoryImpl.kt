@@ -115,6 +115,7 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     private val BREAKFAST_DISHES: List<String> = listOf(
+        "Картошка фри",
         "Овсяная каша на молоке",
         "Овсяная каша на воде",
         "Гречневая каша",
