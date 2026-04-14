@@ -1,18 +1,19 @@
 package com.stafeewa.photocalorie.app.domain.usecase.foodrecognition
 
+import android.content.Context
 import android.graphics.Bitmap
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.label.ImageLabeling
-import com.google.mlkit.vision.label.defaults.ImageLabelerOptions
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
+import com.stafeewa.photocalorie.app.ml.FoodClassifier
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class RecognizeFoodUseCase @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val context: Context
 ) {
+    private val foodClassifier by lazy { FoodClassifier(context) }
+
     sealed class Result {
         data class Success(val product: Product, val confidence: Float) : Result()
         data class MultipleMatches(val products: List<ProductMatch>) : Result()
@@ -26,108 +27,48 @@ class RecognizeFoodUseCase @Inject constructor(
         val matchScore: Int
     )
 
-    private val enToRuKeywordMap = mapOf(
-        "oatmeal" to "овсян",
-        "porridge" to "каша",
-        "buckwheat" to "греч",
-        "rice" to "рис",
-        "egg" to "яич",
-        "omelette" to "омлет",
-        "omelet" to "омлет",
-        "chicken" to "кур",
-        "fish" to "рыб",
-        "salad" to "салат",
-        "soup" to "суп",
-        "borscht" to "борщ",
-        "pasta" to "макарон",
-        "potato" to "карто",
-        "cutlet" to "котлет",
-        "pilaf" to "плов",
-        "cottage cheese" to "творог",
-        "yogurt" to "йогурт",
-        "pancake" to "блин"
-    )
-
     suspend operator fun invoke(bitmap: Bitmap): Result {
         return try {
-            val image = InputImage.fromBitmap(bitmap, 0)
-            val labeler = ImageLabeling.getClient(ImageLabelerOptions.DEFAULT_OPTIONS)
-            val labels = labeler.process(image).await()
-            labeler.close()
-
-            if (labels.isEmpty()) {
+            // 1. Распознаём метки с помощью кастомной модели
+            val results = foodClassifier.recognizeFood(bitmap)
+            if (results.isEmpty()) {
                 return Result.NotFound("Не удалось распознать блюдо")
             }
+            val best = results.first()
+            val bestLabel = best.label
 
-            val sortedLabels = labels.sortedByDescending { it.confidence }
-            val bestLabel = sortedLabels.first()
-            val variants = buildSearchVariants(bestLabel.text)
-
-            val allProducts = variants.flatMap { query ->
-                productRepository.searchProducts(query).first()
-            }.distinctBy { it.id }
-
-            if (allProducts.isEmpty()) {
-                return Result.NotFound(bestLabel.text)
+            // 2. Ищем в локальной БД точное совпадение по названию
+            val products = productRepository.searchProducts(bestLabel).first()
+            if (products.isEmpty()) {
+                return Result.NotFound(bestLabel)
             }
 
-            val scoredMatches = allProducts.map { product ->
-                val score = variants.maxOf { variant ->
-                    val allTokens = listOf(product.name) + product.keywords
-                    allTokens.maxOf { token ->
-                        calculateMatchScore(normalize(variant), normalize(token))
-                    }
-                }
-                ProductMatch(product, bestLabel.confidence, score)
+            // 3. Если нашлось одно – возвращаем его
+            if (products.size == 1) {
+                return Result.Success(products.first(), best.confidence)
+            }
+
+            // 4. Если несколько – показываем выбор (сортировка по релевантности)
+            val matches = products.map { product ->
+                ProductMatch(product, best.confidence, calculateMatchScore(bestLabel, product.name))
             }.sortedByDescending { it.matchScore }
 
-            val exactMatch = scoredMatches.firstOrNull { it.matchScore >= 95 }
-            if (exactMatch != null) {
-                return Result.Success(exactMatch.product, bestLabel.confidence)
-            }
-
-            if (scoredMatches.size > 1) {
-                return Result.MultipleMatches(scoredMatches.take(5))
-            }
-
-            Result.Success(scoredMatches.first().product, bestLabel.confidence)
+            Result.MultipleMatches(matches.take(5))
         } catch (e: Exception) {
             Result.Error(e.message ?: "Ошибка распознавания")
+        } finally {
+            foodClassifier.close()
         }
-    }
-
-    private fun buildSearchVariants(label: String): Set<String> {
-        val normalized = normalize(label)
-        val variants = mutableSetOf(normalized)
-        enToRuKeywordMap.forEach { (en, ru) ->
-            if (normalized.contains(en)) {
-                variants += normalized.replace(en, ru)
-                variants += ru
-            }
-        }
-        normalized.split(" ")
-            .filter { it.length >= 3 }
-            .forEach { token ->
-                variants += token
-                enToRuKeywordMap[token]?.let { variants += it }
-            }
-        return variants.filter { it.isNotBlank() }.toSet()
-    }
-
-    private fun normalize(value: String): String {
-        return value.lowercase()
-            .replace(Regex("[^a-zа-я0-9 ]"), " ")
-            .replace(Regex("\\s+"), " ")
-            .trim()
     }
 
     private fun calculateMatchScore(recognized: String, dbName: String): Int {
+        val r = recognized.lowercase().trim()
+        val d = dbName.lowercase().trim()
         return when {
-            recognized == dbName -> 100
-            dbName.contains(recognized) -> 80
-            recognized.contains(dbName) -> 70
-            recognized.split(" ").any { dbName.contains(it) && it.length > 2 } -> 50
-            else -> 20
+            r == d -> 100
+            d.contains(r) -> 85
+            r.contains(d) -> 70
+            else -> 30
         }
     }
 }

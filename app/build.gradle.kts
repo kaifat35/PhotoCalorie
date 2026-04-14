@@ -23,6 +23,9 @@ android {
             minorApiLevel = 1
         }
     }
+    aaptOptions {
+        noCompress ("tflite")
+    }
 
     defaultConfig {
         applicationId = "com.stafeewa.photocalorie.app"
@@ -120,14 +123,15 @@ dependencies {
     implementation(libs.logging.interceptor)
 
     //Google ML Kit
-    implementation (libs.image.labeling)
-    implementation (libs.object1.detection)
+    //implementation (libs.image.labeling)
+    //implementation (libs.object1.detection)
     implementation(libs.accompanist.permissions)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.image.labeling.custom)
 
     // ML Kit для распознавания текста (опционально)
     implementation(libs.text.recognition)
 
     //Google Vision
-    implementation (libs.play.services.vision)
+    //implementation (libs.play.services.vision)
 }
