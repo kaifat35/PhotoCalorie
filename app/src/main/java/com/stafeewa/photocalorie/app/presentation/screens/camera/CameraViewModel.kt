@@ -140,6 +140,10 @@ class CameraViewModel @Inject constructor(
     fun clearResult() {
         _recognitionResult.value = null
     }
+    override fun onCleared() {
+        recognizeFoodUseCase.close()
+        super.onCleared()
+    }
 }
 
 sealed class RecognitionResult {

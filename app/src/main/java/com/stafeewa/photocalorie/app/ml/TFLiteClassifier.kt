@@ -57,6 +57,15 @@ class TFLiteClassifier(private val context: Context) {
     suspend fun recognizeFood(bitmap: Bitmap): List<LabelResult> {
         return try {
             Log.d(tag, "Recognizing...")
+            val outputSize = getNumClasses()
+            if (outputSize <= 1) {
+                Log.w(
+                    tag,
+                    "Model has $outputSize class. Multi-food recognition requires at least 2 labels."
+                )
+                return emptyList()
+            }
+
             val scaledBitmap = Bitmap.createScaledBitmap(bitmap, inputSize, inputSize, true)
             val inputBuffer = ByteBuffer.allocateDirect(1 * inputSize * inputSize * 3 * 4)
             inputBuffer.order(ByteOrder.nativeOrder())
@@ -74,7 +83,6 @@ class TFLiteClassifier(private val context: Context) {
             }
             inputBuffer.rewind()
 
-            val outputSize = getNumClasses()
             val outputBuffer = Array(1) { FloatArray(outputSize) }
 
             interpreter?.run(inputBuffer, outputBuffer)

@@ -74,9 +74,10 @@ class RecognizeFoodUseCase @Inject constructor(
             Result.Success(scoredMatches.first().product, best.confidence)
         } catch (e: Exception) {
             Result.Error(e.message ?: "Ошибка распознавания")
-        } finally {
-            foodClassifier.close()
         }
+    }
+    fun close() {
+        foodClassifier.close()
     }
 
     private fun calculateMatchScore(recognized: String, dbName: String): Int {
