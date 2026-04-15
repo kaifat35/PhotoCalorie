@@ -67,4 +67,16 @@
     <string name="add_manually_without_saving">Добавить вручную (без сохранения)</string>
     <string name="choose_dish">Выберите блюдо</string>
     <string name="similar_dishes_found">Найдено несколько похожих блюд</string>
+    <string name="interval_15_minutes">15 минут</string>
+    <string name="interval_30_minutes">30 минут</string>
+    <string name="interval_1_hour">1 час</string>
+    <string name="interval_2_hours">2 часа</string>
+    <string name="interval_4_hours">4 часа</string>
+    <string name="interval_8_hours">8 часов</string>
+    <string name="interval_24_hours">24 часа</string>
+    <string name="nav_home">Главная</string>
+    <string name="nav_camera">Камера</string>
+    <string name="nav_recipes">Рецепты</string>
+    <string name="nav_profile">Профиль</string>
+    <string name="nav_settings">Настройки</string>
 </resources>

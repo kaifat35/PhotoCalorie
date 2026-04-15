@@ -83,6 +83,7 @@ dependencies {
     implementation (libs.material3)
     implementation (libs.ui.graphics)
     implementation(libs.accompanist.permissions)
+    implementation(libs.androidx.appcompat)
 
     // CameraX
     implementation(libs.androidx.camera.core)

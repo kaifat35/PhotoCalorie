@@ -1,6 +1,7 @@
 package com.stafeewa.photocalorie.app.presentation.navigation
 
 import android.os.Bundle
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
@@ -22,6 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -32,6 +34,7 @@ import com.stafeewa.photocalorie.app.presentation.screens.profile.ProfileScreen
 import com.stafeewa.photocalorie.app.presentation.screens.recipes.RecipeScreen
 import com.stafeewa.photocalorie.app.presentation.screens.settings.SettingsScreen
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.stafeewa.photocalorie.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,15 +99,15 @@ fun NavGraph(
 
 enum class Destination(
     val route: String,
-    val label: String,
+    @StringRes val labelRes: Int,
     val icon: ImageVector,
-    val contentDescription: String
+    @StringRes val contentDescriptionRes: Int
 ) {
-    HOME("home", "Главная", Icons.Default.Home, "Главная"),
-    CAMERA("camera", "Камера", Icons.Default.CameraAlt, "Камера"),
-    RECIPES("recipes", "Рецепты", Icons.Default.Search, "Рецепты"),
-    PROFILE("profile", "Профиль", Icons.Default.Person, "Профиль"),
-    SETTINGS("settings", "Настройки", Icons.Default.Settings, "Настройки"),
+    HOME("home", R.string.nav_home, Icons.Default.Home, R.string.nav_home),
+    CAMERA("camera", R.string.nav_camera, Icons.Default.CameraAlt, R.string.nav_camera),
+    RECIPES("recipes", R.string.nav_recipes, Icons.Default.Search, R.string.nav_recipes),
+    PROFILE("profile", R.string.nav_profile, Icons.Default.Person, R.string.nav_profile),
+    SETTINGS("settings", R.string.nav_settings, Icons.Default.Settings, R.string.nav_settings),
 }
 
 @Composable
@@ -117,8 +120,7 @@ fun NavigationBarExample(modifier: Modifier = Modifier) {
         modifier = modifier,
         bottomBar = {
             NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
-                // Показываем только нужные пункты (без настроек)
-                listOf(Destination.HOME, Destination.CAMERA, Destination.RECIPES, Destination.PROFILE).forEachIndexed { index, destination ->
+                listOf(Destination.HOME, Destination.CAMERA, Destination.RECIPES, Destination.PROFILE).forEach { destination ->
                     NavigationBarItem(
                         selected = selectedDestination == destination.ordinal,
                         onClick = {
@@ -136,10 +138,10 @@ fun NavigationBarExample(modifier: Modifier = Modifier) {
                         icon = {
                             Icon(
                                 destination.icon,
-                                contentDescription = destination.contentDescription
+                                contentDescription = stringResource(destination.contentDescriptionRes)
                             )
                         },
-                        label = { Text(destination.label) }
+                        label = { Text(stringResource(destination.labelRes)) }
                     )
                 }
             }

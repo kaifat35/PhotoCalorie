@@ -19,8 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -271,27 +269,6 @@ fun FoodIntakeScreen(
 
                     item { Spacer(modifier = Modifier.height(12.dp)) }
 
-//                    item {
-//                        Button(
-//                            onClick = {
-//                                navController.navigate("camera")
-//                            },
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(horizontal = 24.dp, vertical = 8.dp),
-//                            shape = RoundedCornerShape(30.dp),
-//                            colors = ButtonDefaults.buttonColors(
-//                                containerColor = Color(0xFF009E1D)
-//                            )
-//                        ) {
-//                            Text(
-//                                "Распознать еду по фото",
-//                                fontFamily = FontFamily(Font(R.font.jura)),
-//                                fontSize = 18.sp,
-//                                color = Color.White
-//                            )
-//                        }
-//                    }
                 }
 
                 // Индикатор загрузки
@@ -321,8 +298,6 @@ fun FoodIntakeScreen(
         )
     }
 }
-
-// Остальные функции (MealSection, FoodItemRow, NutrientBadge) остаются без изменений
 @Composable
 fun MealSection(
     title: String,
