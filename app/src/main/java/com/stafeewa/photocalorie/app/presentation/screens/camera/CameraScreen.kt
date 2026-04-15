@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -164,7 +165,7 @@ fun CameraScreen(
                     ) {
                         CircularProgressIndicator(color = Color(0xFF009E1D))
                         Text(
-                            text = "Распознаём...",
+                            text = stringResource(R.string.We_recognize_it),
                             color = Color.White,
                             modifier = Modifier.padding(top = 60.dp)
                         )
@@ -176,14 +177,14 @@ fun CameraScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Нет доступа к камере",
+                        text = stringResource(R.string.There_is_no_access_to_the_camera),
                         color = Color.White
                     )
                     Button(
                         onClick = { cameraPermissionState.launchPermissionRequest() },
                         modifier = Modifier.padding(top = 60.dp)
                     ) {
-                        Text("Запросить разрешение")
+                        Text(stringResource(R.string.Request_permission))
                     }
                 }
             }
@@ -242,7 +243,7 @@ private fun CaptureAreaOverlay(modifier: Modifier = Modifier) {
         }
 
         Text(
-            text = "Поместите блюдо в рамку",
+            text = stringResource(R.string.Place_the_dish_in_the_frame),
             color = Color.White,
             modifier = Modifier
                 .align(Alignment.TopCenter)

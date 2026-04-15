@@ -69,7 +69,8 @@ fun RecipeScreen(
     viewModel: RecipesViewModel = hiltViewModel()
 ) {
     Scaffold(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .padding(bottom = 80.dp),
         containerColor = Color(0xFF313131),
         topBar = {
@@ -119,7 +120,7 @@ fun RecipeScreen(
                     }
                     item {
                         Text(
-                            text = "Recipes (${state.recipes.size})",
+                            text = stringResource(R.string.Recipes, state.recipes.size),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -275,7 +276,7 @@ private fun Subscriptions(
                     Box(modifier = Modifier.fillMaxWidth()) {
                         if (query.isEmpty()) {
                             Text(
-                                "Поиск...",
+                                stringResource(R.string.Search),
                                 color = Color.White.copy(alpha = 0.7f),
                                 fontSize = 24.sp,
                                 fontFamily = FontFamily(Font(R.font.jura))
@@ -467,10 +468,10 @@ private fun NutritionInfoDisplay(
             nutrition.fat.isNotEmpty() ||
             nutrition.carbs.isNotEmpty()
         ) {
-            NutritionRow(label = "Calories:", value = nutrition.calories)
-            NutritionRow(label = "Protein:", value = nutrition.protein)
-            NutritionRow(label = "Fat:", value = nutrition.fat)
-            NutritionRow(label = "Carbs:", value = nutrition.carbs)
+            NutritionRow(label = stringResource(R.string.Calories), value = nutrition.calories)
+            NutritionRow(label = stringResource(R.string.Protein), value = nutrition.protein)
+            NutritionRow(label = stringResource(R.string.Fat), value = nutrition.fat)
+            NutritionRow(label = stringResource(R.string.Carbs), value = nutrition.carbs)
         }
     }
 }

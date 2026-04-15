@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
@@ -79,7 +80,7 @@ fun ProfileScreen(
     val context = LocalContext.current
 
     var bmrMenu by rememberSaveable { mutableStateOf(false) }
-    val genderLevels = listOf("Мужской", "Женский")
+    val genderLevels = listOf(stringResource(R.string.Male), stringResource(R.string.Female))
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -132,7 +133,7 @@ fun ProfileScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Настройки",
+                        stringResource(R.string.Settings),
                         style = MaterialTheme.typography.headlineMedium.copy(
                             color = Color.White
                         ),
@@ -182,7 +183,7 @@ fun ProfileScreen(
                     ) {
 
                         Text(
-                            text = "Ваш профиль",
+                            text = stringResource(R.string.Your_profile),
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 color = Color.White
                             ),
@@ -243,7 +244,7 @@ fun ProfileScreen(
                             )
                         ) {
                             Text(
-                                "Добавить фото",
+                                stringResource(R.string.Add_a_photo),
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
                                 modifier = Modifier.padding(horizontal = 24.dp)
@@ -252,7 +253,7 @@ fun ProfileScreen(
 
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
-                                text = "Логин",
+                                text = stringResource(R.string.Login),
                                 color = Color.White,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
@@ -276,7 +277,7 @@ fun ProfileScreen(
                         // Кнопка "Пол"
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
-                                text = "Пол",
+                                text = stringResource(R.string.Gender),
                                 color = Color.White,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
@@ -297,7 +298,7 @@ fun ProfileScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Text(
-                                        editableProfile.gender ?: "Выберите пол",
+                                        editableProfile.gender ?: stringResource(R.string.Choose_a_gender),
                                         fontFamily = FontFamily(Font(R.font.jura)),
                                         fontSize = 24.sp
                                     )
@@ -352,7 +353,7 @@ fun ProfileScreen(
 
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
-                                text = "Рост, м",
+                                text = stringResource(R.string.Height_m),
                                 color = Color.White,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
@@ -378,7 +379,7 @@ fun ProfileScreen(
 
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
-                                text = "Вес, кг",
+                                text = stringResource(R.string.Weight_kg),
                                 color = Color.White,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
@@ -403,7 +404,7 @@ fun ProfileScreen(
 
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
-                                text = "Возраст",
+                                text = stringResource(R.string.Age),
                                 color = Color.White,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
@@ -428,7 +429,7 @@ fun ProfileScreen(
 
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
-                                text = "Почта",
+                                text = stringResource(R.string.Mail),
                                 color = Color.White,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
@@ -504,7 +505,7 @@ fun ButtonSaveProfile(
         )
     ) {
         Text(
-            "Сохранить",
+            stringResource(R.string.Save),
             fontFamily = FontFamily(Font(R.font.jura)),
             fontSize = 24.sp,
             modifier = Modifier.padding(horizontal = 24.dp)
@@ -530,7 +531,7 @@ fun ButtonCalculateRate(
         )
     ) {
         Text(
-            "Рассчитать норму",
+            stringResource(R.string.Calculate_the_rate),
             fontFamily = FontFamily(Font(R.font.jura)),
             fontSize = 20.sp,
             modifier = Modifier.padding(horizontal = 24.dp)

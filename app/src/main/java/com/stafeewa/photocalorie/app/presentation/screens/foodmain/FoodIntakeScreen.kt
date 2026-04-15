@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -131,7 +132,7 @@ fun FoodIntakeScreen(
                 ) {
                     item {
                         Text(
-                            text = "Калории на сегодня",
+                            text = stringResource(R.string.calories_for_today),
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 color = Color.White
                             ),
@@ -142,7 +143,10 @@ fun FoodIntakeScreen(
 
                     item {
                         Text(
-                            text = "Ваша норма: ${calorieGoal?.toInt() ?: 0} ккал",
+                            text = stringResource(
+                                R.string.your_normal_kcal,
+                                calorieGoal?.toInt() ?: 0
+                            ),
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 color = Color.White
                             ),
@@ -185,7 +189,10 @@ fun FoodIntakeScreen(
                                     fontSize = 30.sp
                                 )
                                 Text(
-                                    text = "Осталось: ${remainingCalories.toInt()} ккал",
+                                    text = stringResource(
+                                        R.string.There_are_kcal,
+                                        remainingCalories.toInt()
+                                    ),
                                     color = if (remainingCalories < 0) Color.Red else Color.White.copy(
                                         alpha = 0.7f
                                     ),
@@ -201,7 +208,7 @@ fun FoodIntakeScreen(
                     // Завтрак
                     item {
                         MealSection(
-                            title = "Завтрак",
+                            title = stringResource(R.string.breakfast),
                             mealType = MealType.BREAKFAST,
                             items = breakfastEntries,
                             onAddClick = {
@@ -219,7 +226,7 @@ fun FoodIntakeScreen(
                     // Обед
                     item {
                         MealSection(
-                            title = "Обед",
+                            title = stringResource(R.string.lunch),
                             mealType = MealType.LUNCH,
                             items = lunchEntries,
                             onAddClick = {
@@ -237,7 +244,7 @@ fun FoodIntakeScreen(
                     // Ужин
                     item {
                         MealSection(
-                            title = "Ужин",
+                            title = stringResource(R.string.dinner),
                             mealType = MealType.DINNER,
                             items = dinnerEntries,
                             onAddClick = {
@@ -254,7 +261,7 @@ fun FoodIntakeScreen(
                     // Перекус
                     item {
                         MealSection(
-                            title = "Перекус",
+                            title = stringResource(R.string.snack),
                             mealType = MealType.SNACK,
                             items = dinnerEntries,
                             onAddClick = {
@@ -368,19 +375,19 @@ fun MealSection(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Text(
-                    text = "🥩 Б: ${totalProtein.toInt()}г",
+                    text = stringResource(R.string.S_g, totalProtein.toInt()),
                     color = Color(0xFF4CAF50),
                     fontFamily = FontFamily(Font(R.font.jura)),
                     fontSize = 14.sp
                 )
                 Text(
-                    text = "🧈 Ж: ${totalFat.toInt()}г",
+                    text = stringResource(R.string.F_g, totalFat.toInt()),
                     color = Color(0xFFFF9800),
                     fontFamily = FontFamily(Font(R.font.jura)),
                     fontSize = 14.sp
                 )
                 Text(
-                    text = "🍚 У: ${totalCarbs.toInt()}г",
+                    text = stringResource(R.string.C_g, totalCarbs.toInt()),
                     color = Color(0xFF2196F3),
                     fontFamily = FontFamily(Font(R.font.jura)),
                     fontSize = 14.sp
@@ -388,7 +395,7 @@ fun MealSection(
             }
         } else {
             Text(
-                text = "Нет добавленных блюд",
+                text = stringResource(R.string.There_are_no_added_dishes),
                 color = Color.White.copy(alpha = 0.5f),
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 14.sp,
@@ -401,7 +408,7 @@ fun MealSection(
 
             if (items.isEmpty()) {
                 Text(
-                    text = "Нет добавленных блюд",
+                    text = stringResource(R.string.There_are_no_added_dishes),
                     color = Color.White.copy(alpha = 0.5f),
                     fontFamily = FontFamily(Font(R.font.jura)),
                     fontSize = 16.sp,
@@ -427,7 +434,7 @@ fun MealSection(
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Добавить еду",
+                    contentDescription = stringResource(R.string.Add_food),
                     tint = Color.White,
                     modifier = Modifier
                         .size(32.dp)
@@ -459,7 +466,7 @@ fun FoodItemRow(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "${item.portion.toInt()} г • ${item.calories.toInt()} ккал",
+                text = stringResource(R.string.g_ckal, item.portion.toInt(), item.calories.toInt()),
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 14.sp,
                 color = Color.White.copy(alpha = 0.7f)
@@ -470,14 +477,14 @@ fun FoodItemRow(
             modifier = Modifier.weight(1.5f),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            NutrientBadge("Б", item.protein.toInt(), Color(0xFF4CAF50))
-            NutrientBadge("Ж", item.fat.toInt(), Color(0xFFFF9800))
-            NutrientBadge("У", item.carbs.toInt(), Color(0xFF2196F3))
+            NutrientBadge(stringResource(R.string.S), item.protein.toInt(), Color(0xFF4CAF50))
+            NutrientBadge(stringResource(R.string.F), item.fat.toInt(), Color(0xFFFF9800))
+            NutrientBadge(stringResource(R.string.C), item.carbs.toInt(), Color(0xFF2196F3))
         }
 
         Icon(
             painter = painterResource(id = R.drawable.bin),
-            contentDescription = "Удалить",
+            contentDescription = stringResource(R.string.delete),
             tint = Color.Red.copy(alpha = 0.7f),
             modifier = Modifier
                 .size(24.dp)
