@@ -3,6 +3,7 @@ package com.stafeewa.photocalorie.app.presentation.navigation
 import android.os.Bundle
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -43,34 +44,14 @@ fun NavGraph(
         navController = navController,
         startDestination = startDestination
     ) {
-        // Основные экраны
+        // Главная
         composable(Destination.HOME.route) {
-            FoodIntakeScreen(
-                navController = navController  // ← передаём NavController
-            )
+            FoodIntakeScreen(navController = navController)
         }
 
-        composable(Destination.RECIPES.route) {
-            RecipeScreen()
-        }
-
-        composable(Destination.PROFILE.route) {
-            ProfileScreen(
-                onSaveProfile = {},
-                onCalculateRate = {}
-            )
-        }
-
-        composable(Destination.SETTINGS.route) {
-            SettingsScreen()
-        }
-
-        // Экран камеры
-        composable("camera") {
+        // Камера
+        composable(Destination.CAMERA.route) {
             CameraScreen(
-                onBack = {
-                    navController.popBackStack()
-                },
                 onFoodRecognized = { name, mealType, portion, protein, fat, carbs ->
                     val resultBundle = Bundle().apply {
                         putString("name", name)
@@ -85,6 +66,31 @@ fun NavGraph(
                 }
             )
         }
+
+        // Рецепты
+        composable(Destination.RECIPES.route) {
+            RecipeScreen()
+        }
+
+        // Профиль
+        composable(Destination.PROFILE.route) {
+            ProfileScreen(
+                onSaveProfile = {},
+                onCalculateRate = {},
+                onNavigateToSettings = {
+                    navController.navigate(Destination.SETTINGS.route)
+                }
+            )
+        }
+
+        // Настройки (скрыты из нижней навигации)
+        composable(Destination.SETTINGS.route) {
+            SettingsScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+            )
+        }
     }
 }
 
@@ -94,10 +100,11 @@ enum class Destination(
     val icon: ImageVector,
     val contentDescription: String
 ) {
-    HOME("home", "Главная", Icons.Default.Home, "Home"),
-    RECIPES("recipes", "Рецепты", Icons.Default.Search, "Recipes"),
-    SETTINGS("settings", "Настройки", Icons.Default.Settings, "Settings"),
-    PROFILE("profile", "Профиль", Icons.Default.Person, "Profile"),
+    HOME("home", "Главная", Icons.Default.Home, "Главная"),
+    CAMERA("camera", "Камера", Icons.Default.CameraAlt, "Камера"),
+    RECIPES("recipes", "Рецепты", Icons.Default.Search, "Рецепты"),
+    PROFILE("profile", "Профиль", Icons.Default.Person, "Профиль"),
+    SETTINGS("settings", "Настройки", Icons.Default.Settings, "Настройки"),
 }
 
 @Composable
@@ -110,11 +117,12 @@ fun NavigationBarExample(modifier: Modifier = Modifier) {
         modifier = modifier,
         bottomBar = {
             NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
-                Destination.entries.forEachIndexed { index, destination ->
+                // Показываем только нужные пункты (без настроек)
+                listOf(Destination.HOME, Destination.CAMERA, Destination.RECIPES, Destination.PROFILE).forEachIndexed { index, destination ->
                     NavigationBarItem(
-                        selected = selectedDestination == index,
+                        selected = selectedDestination == destination.ordinal,
                         onClick = {
-                            if (selectedDestination != index) {
+                            if (selectedDestination != destination.ordinal) {
                                 navController.navigate(route = destination.route) {
                                     launchSingleTop = true
                                     popUpTo(navController.graph.findStartDestination().id) {
@@ -122,7 +130,7 @@ fun NavigationBarExample(modifier: Modifier = Modifier) {
                                     }
                                     restoreState = true
                                 }
-                                selectedDestination = index
+                                selectedDestination = destination.ordinal
                             }
                         },
                         icon = {

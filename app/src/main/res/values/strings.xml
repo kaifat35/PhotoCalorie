@@ -1,4 +1,5 @@
 <resources>
+    <!-- English language (values/strings.xml) -->
     <string name="app_name">PhotoCalorie</string>
     <string name="subscriptions_title">My Recipes</string>
     <string name="update_recipes">Update Articles</string>
@@ -10,7 +11,7 @@
     <string name="add_subscription_button">Add Subscription</string>
     <string name="subscriptions_label">Subscriptions (%1$d)</string>
     <string name="no_subscriptions">No subscriptions</string>
-    <string name="image_for_recipe">Image for recipe (%1$s</string>
+    <string name="image_for_recipe">Image for recipe (%1$s)</string>
     <string name="read">Read</string>
     <string name="share_recipe">Share recipe</string>
     <string name="share">Share</string>
@@ -23,15 +24,47 @@
     <string name="back">Back</string>
     <string name="select_language_for_recipes_search">Select language for recipes search</string>
     <string name="english">English</string>
-    <string name="russian">Русский</string>
-    <string name="francais">Francais</string>
-    <string name="deutsch">Deutsch</string>
+    <string name="russian">Russian</string>
     <string name="update_interval">Update interval</string>
     <string name="how_often_to_update_recipe">How often to update recipe</string>
     <string name="notifications">Notifications</string>
     <string name="show_notifications_about_new_recipes">Show notifications about new recipes</string>
     <string name="update_only_via_wi_fi">Update only via Wi-Fi</string>
     <string name="save_mobile_data">Save mobile data</string>
-    <string name="profile_screen">profile_screen</string>
-    <string name="food_intake_screen">food_intake_screen</string>
+    <string name="profile_screen">profile screen</string>
+    <string name="food_intake_screen">food intake screen</string>
+    <string name="calories_per_day">Calories per day</string>
+    <string name="your_norm">Your norm</string>
+    <string name="remaining">Remaining</string>
+    <string name="breakfast">Breakfast</string>
+    <string name="lunch">Lunch</string>
+    <string name="dinner">Dinner</string>
+    <string name="snack">Snack</string>
+    <string name="no_food_added">No food added</string>
+    <string name="add_food">Add food</string>
+    <string name="recognize_food_by_photo">Recognize food by photo</string>
+    <string name="add_manually">Add manually</string>
+    <string name="search">Search</string>
+    <string name="not_found">Nothing found</string>
+    <string name="add_to_database">Add to database</string>
+    <string name="save_and_add">Save and add</string>
+    <string name="cancel">Cancel</string>
+    <string name="add">Add</string>
+    <string name="delete">Delete</string>
+    <string name="weight_grams">Weight (g)</string>
+    <string name="proteins">Proteins</string>
+    <string name="fats">Fats</string>
+    <string name="carbohydrates">Carbohydrates</string>
+    <string name="calories">Calories</string>
+    <string name="dish_name">Dish name</string>
+    <string name="camera_permission_required">Camera permission required</string>
+    <string name="request_permission">Request permission</string>
+    <string name="place_food_in_frame">Place the dish in the frame</string>
+    <string name="recognizing">Recognizing...</string>
+    <string name="dish_recognized">Dish recognized</string>
+    <string name="dish_not_found">Dish not found</string>
+    <string name="error">Error</string>
+    <string name="add_manually_without_saving">Add manually (without saving)</string>
+    <string name="choose_dish">Choose dish</string>
+    <string name="similar_dishes_found">Several similar dishes found</string>
 </resources>

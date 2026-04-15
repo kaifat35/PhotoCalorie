@@ -74,7 +74,8 @@ fun FoodIntakeScreen(
 
     // Получаем результат из камеры через NavController
     LaunchedEffect(navController) {
-        val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle ?: return@LaunchedEffect
+        val savedStateHandle =
+            navController.currentBackStackEntry?.savedStateHandle ?: return@LaunchedEffect
         savedStateHandle.getStateFlow<Bundle?>("food_result", null).collect { bundle ->
             bundle ?: return@collect
 
@@ -187,7 +188,9 @@ fun FoodIntakeScreen(
                                 )
                                 Text(
                                     text = "Осталось: ${remainingCalories.toInt()} ккал",
-                                    color = if (remainingCalories < 0) Color.Red else Color.White.copy(alpha = 0.7f),
+                                    color = if (remainingCalories < 0) Color.Red else Color.White.copy(
+                                        alpha = 0.7f
+                                    ),
                                     fontFamily = FontFamily(Font(R.font.jura)),
                                     fontSize = 14.sp
                                 )
@@ -195,7 +198,7 @@ fun FoodIntakeScreen(
                         }
                     }
 
-                    item { Spacer(modifier = Modifier.height(24.dp)) }
+                    item { Spacer(modifier = Modifier.height(12.dp)) }
 
                     // Завтрак
                     item {
@@ -213,7 +216,7 @@ fun FoodIntakeScreen(
                         )
                     }
 
-                    item { Spacer(modifier = Modifier.height(24.dp)) }
+                    item { Spacer(modifier = Modifier.height(12.dp)) }
 
                     // Обед
                     item {
@@ -231,7 +234,7 @@ fun FoodIntakeScreen(
                         )
                     }
 
-                    item { Spacer(modifier = Modifier.height(24.dp)) }
+                    item { Spacer(modifier = Modifier.height(12.dp)) }
 
                     // Ужин
                     item {
@@ -249,29 +252,46 @@ fun FoodIntakeScreen(
                         )
                     }
 
-                    item { Spacer(modifier = Modifier.height(24.dp)) }
-
+                    item { Spacer(modifier = Modifier.height(12.dp)) }
+                    // Перекус
                     item {
-                        Button(
-                            onClick = {
-                                navController.navigate("camera")
+                        MealSection(
+                            title = "Перекус",
+                            mealType = MealType.SNACK,
+                            items = dinnerEntries,
+                            onAddClick = {
+                                selectedMealType = MealType.SNACK
+                                showAddDialog = true
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp, vertical = 8.dp),
-                            shape = RoundedCornerShape(30.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF009E1D)
-                            )
-                        ) {
-                            Text(
-                                "Распознать еду по фото",
-                                fontFamily = FontFamily(Font(R.font.jura)),
-                                fontSize = 18.sp,
-                                color = Color.White
-                            )
-                        }
+                            onDeleteClick = { entry ->
+                                viewModel.removeFoodEntry(entry.id)
+                            }
+                        )
                     }
+
+                    item { Spacer(modifier = Modifier.height(12.dp)) }
+
+//                    item {
+//                        Button(
+//                            onClick = {
+//                                navController.navigate("camera")
+//                            },
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(horizontal = 24.dp, vertical = 8.dp),
+//                            shape = RoundedCornerShape(30.dp),
+//                            colors = ButtonDefaults.buttonColors(
+//                                containerColor = Color(0xFF009E1D)
+//                            )
+//                        ) {
+//                            Text(
+//                                "Распознать еду по фото",
+//                                fontFamily = FontFamily(Font(R.font.jura)),
+//                                fontSize = 18.sp,
+//                                color = Color.White
+//                            )
+//                        }
+//                    }
                 }
 
                 // Индикатор загрузки

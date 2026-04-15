@@ -22,6 +22,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Scaffold
@@ -31,6 +33,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -47,19 +52,37 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.stafeewa.photocalorie.app.R
+import com.stafeewa.photocalorie.app.domain.entity.Language
 import com.stafeewa.photocalorie.app.presentation.ui.theme.textFieldColors
 
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
+    onBack: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = {
             viewModel.processCommand(SettingsCommand.SetNotificationEnabled(it))
         }
     )
+    // Следим за изменением языка
+    val state by viewModel.state.collectAsState()
+    var lastLanguage by remember { mutableStateOf<Language?>(null) }
+
+    // При изменении языка перезапускаем Activity
+    LaunchedEffect(state) {
+        if (state is SettingsState.Configuration) {
+            val currentLanguage = (state as SettingsState.Configuration).language
+            if (lastLanguage != null && lastLanguage != currentLanguage) {
+                // Перезапускаем Activity для применения нового языка
+                (context as? androidx.activity.ComponentActivity)?.recreate()
+            }
+            lastLanguage = currentLanguage
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -72,6 +95,18 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(16.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_back),
+                                contentDescription = "Назад",
+                                tint = Color.White
+                            )
+                        }
                         Text(
                             stringResource(R.string.settings),
                             style = MaterialTheme.typography.headlineMedium.copy(
@@ -179,6 +214,9 @@ fun SettingsScreen(
                                     }
                                 )
                             }
+                        }
+                        item {
+                            Spacer(modifier = Modifier.height(32.dp))
                         }
 
                     }

@@ -1,5 +1,7 @@
 package com.stafeewa.photocalorie.app.domain.entity
 
+import java.util.Locale
+
 data class Settings(
     val language: Language,
     val interval: Interval,
@@ -16,8 +18,18 @@ data class Settings(
     }
 }
 
-enum class Language {
-    ENGLISH, RUSSIAN, FRENCH, GERMAN
+enum class Language(val code: String) {
+    ENGLISH("en"),
+    RUSSIAN("ru");
+
+    fun toReadableFormat(): String {
+        return when (this) {
+            ENGLISH -> "English"
+            RUSSIAN -> "Русский"
+        }
+    }
+
+    fun getLocale(): Locale = Locale(code)
 }
 
 enum class Interval(val minutes: Int) {

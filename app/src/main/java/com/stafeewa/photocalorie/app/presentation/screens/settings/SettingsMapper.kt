@@ -1,15 +1,15 @@
 package com.stafeewa.photocalorie.app.presentation.screens.settings
 
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.Interval
 import com.stafeewa.photocalorie.app.domain.entity.Language
 
-
 @Composable
-fun Language.toReadableFormat(): String {
+fun Language.toReadableFormat(context: Context): String {
     return when (this) {
         Language.ENGLISH -> {
             stringResource(R.string.english)
@@ -17,14 +17,6 @@ fun Language.toReadableFormat(): String {
 
         Language.RUSSIAN -> {
             stringResource(R.string.russian)
-        }
-
-        Language.FRENCH -> {
-            stringResource(R.string.francais)
-        }
-
-        Language.GERMAN -> {
-            stringResource(R.string.deutsch)
         }
     }
 }

@@ -53,7 +53,6 @@ import java.util.concurrent.Executors
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun CameraScreen(
-    onBack: () -> Unit,
     onFoodRecognized: (name: String, mealType: MealType, portion: Double, protein: Double, fat: Double, carbs: Double) -> Unit,
     viewModel: CameraViewModel = hiltViewModel()
 ) {
@@ -156,20 +155,6 @@ fun CameraScreen(
                         modifier = Modifier.size(56.dp)
                     )
                 }
-
-                IconButton(
-                    onClick = onBack,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(16.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Назад",
-                        tint = Color.White
-                    )
-                }
-
                 if (isProcessing) {
                     Box(
                         modifier = Modifier
