@@ -3,6 +3,7 @@
 package com.stafeewa.photocalorie.app.presentation.screens.settings
 
 import android.Manifest
+import android.app.Activity
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,6 +34,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
@@ -50,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.stafeewa.photocalorie.app.R
+import com.stafeewa.photocalorie.app.domain.entity.Language
 import com.stafeewa.photocalorie.app.presentation.ui.theme.textFieldColors
 
 @Composable
@@ -64,8 +68,22 @@ fun SettingsScreen(
             viewModel.processCommand(SettingsCommand.SetNotificationEnabled(it))
         }
     )
+    val context = LocalContext.current
     // Следим за изменением языка
     val state by viewModel.state.collectAsState()
+
+    var lastLanguage by remember { mutableStateOf<Language?>(null) }
+
+    // Перезапускаем Activity только когда язык в state действительно изменился
+    LaunchedEffect(state) {
+        if (state is SettingsState.Configuration) {
+            val currentLanguage = (state as SettingsState.Configuration).language
+            if (lastLanguage != null && lastLanguage != currentLanguage) {
+                (context as? Activity)?.recreate()
+            }
+            lastLanguage = currentLanguage
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -108,9 +126,7 @@ fun SettingsScreen(
         },
         content = { contentPadding ->
 
-            val state = viewModel.state.collectAsState()
-
-            when (val currentState = state.value) {
+            when (val currentState = state) {
                 is SettingsState.Configuration -> {
                     LazyColumn(
                         modifier = Modifier
@@ -129,8 +145,8 @@ fun SettingsScreen(
                                 SettingsDropdown(
                                     items = currentState.languages,
                                     selectedItem = currentState.language,
-                                    onItemSelected = {
-                                        viewModel.processCommand(SettingsCommand.SelectLanguage(it))
+                                    onItemSelected = { language ->
+                                        viewModel.processCommand(SettingsCommand.SelectLanguage(language))
                                     },
                                     itemAsString = {
                                         it.toLocalizedName()

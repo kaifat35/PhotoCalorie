@@ -1,7 +1,7 @@
 package com.stafeewa.photocalorie.app.presentation.screens.settings
 
 import android.app.Application
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.domain.entity.Interval
@@ -11,7 +11,6 @@ import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateIntervalUseCa
 import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateLanguageUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateNotificationsEnabledUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateWifiOnlyUseCase
-import com.stafeewa.photocalorie.app.utils.LocaleManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,8 +19,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import androidx.core.content.edit
-import androidx.core.os.LocaleListCompat
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -76,10 +73,6 @@ class SettingsViewModel @Inject constructor(
     private fun saveAndApplyLanguage(language: Language) {
         val prefs = application.getSharedPreferences("app_settings", Application.MODE_PRIVATE)
         prefs.edit { putString("language", language.code) }
-        LocaleManager.setLocale(application, language.code)
-        AppCompatDelegate.setApplicationLocales(
-            LocaleListCompat.forLanguageTags(language.code)
-        )
     }
 }
 

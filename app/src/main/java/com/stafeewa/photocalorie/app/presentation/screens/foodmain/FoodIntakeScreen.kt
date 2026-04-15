@@ -56,7 +56,7 @@ import com.stafeewa.photocalorie.app.domain.entity.MealType
 @Composable
 fun FoodIntakeScreen(
     modifier: Modifier = Modifier,
-    navController: NavController,  // ← добавляем NavController как параметр
+    navController: NavController,
     viewModel: FoodIntakeViewModel = hiltViewModel()
 ) {
     val calorieGoal by viewModel.calorieGoal.collectAsStateWithLifecycle()
