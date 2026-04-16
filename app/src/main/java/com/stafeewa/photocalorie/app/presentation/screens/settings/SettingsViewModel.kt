@@ -93,7 +93,12 @@ class SettingsViewModel @Inject constructor(
     private val updateThemeModeUseCase: (ThemeMode) -> Unit = { themeMode ->
         val prefs = application.getSharedPreferences("app_settings", Application.MODE_PRIVATE)
         prefs.edit { putString("theme_mode", themeMode.name) }
-        // Обновляем state вручную? Лучше перезапустить Activity – theme применится при следующем запуске.
+        _state.update { currentState ->
+            when (currentState) {
+                is SettingsState.Configuration -> currentState.copy(themeMode = themeMode)
+                SettingsState.Initial -> currentState
+            }
+        }
     }
 
 }

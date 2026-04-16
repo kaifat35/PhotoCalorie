@@ -339,7 +339,7 @@ fun MealSection(
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineMedium.copy(
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 ),
                 modifier = Modifier
                     .weight(1f)
@@ -352,7 +352,7 @@ fun MealSection(
             Icon(
                 painter = painterResource(id = if (isExpanded) R.drawable.down else R.drawable.plus),
                 contentDescription = if (isExpanded) "Свернуть" else "Развернуть",
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
                     .size(24.dp)
                     .clickable { isExpanded = !isExpanded }
@@ -433,12 +433,12 @@ fun MealSection(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.Add_food),
-                    tint = Color.White,
+                    painter = painterResource(R.drawable.plus),
+                    contentDescription = "Добавить",
+                    tint = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
-                        .size(32.dp)
-                        .clickable { onAddClick() }
+                        .size(24.dp)
+                        .clickable { onAddClick()}
                 )
             }
         }

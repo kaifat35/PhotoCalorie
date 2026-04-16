@@ -93,7 +93,7 @@ fun SettingsScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize()
             .padding(bottom = 80.dp),
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
         topBar = {
             TopAppBar(
                 title = {
@@ -110,13 +110,13 @@ fun SettingsScreen(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_back),
                                 contentDescription = stringResource(R.string.back),
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                         Text(
                             stringResource(R.string.settings),
                             style = MaterialTheme.typography.headlineMedium.copy(
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             ),
                             fontFamily = FontFamily(Font(R.font.jura)),
                             fontSize = 36.sp,
@@ -124,7 +124,7 @@ fun SettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF313131)
+                    containerColor = MaterialTheme.colorScheme.onSecondaryContainer
                 ),
 
                 )
@@ -220,7 +220,7 @@ fun SettingsScreen(
                         item {
                             SettingsCard(
                                 title = stringResource(R.string.theme),
-                                subtitle = stringResource(R.string.select_theme) // добавьте строку, если нужно
+                                subtitle = stringResource(R.string.select_theme)
                             ) {
                                 SettingsDropdown(
                                     items = currentState.themeModes,

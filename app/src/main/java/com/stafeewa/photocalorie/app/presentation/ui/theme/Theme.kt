@@ -14,38 +14,38 @@ import androidx.compose.ui.platform.LocalContext
 
 // Цвета для светлой темы (почти белый фон, голубые/зелёные акценты)
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF2E7D32),      // тёмно-зелёный для primary
+    primary = Color(0xFF006D3B),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFC8E6C9),
-    onPrimaryContainer = Color(0xFF1B5E20),
-    secondary = Color(0xFF0288D1),    // голубой
+    primaryContainer = Color(0xFF93F7AC),
+    onPrimaryContainer = Color(0xFF00210F),
+    secondary = Color(0xFF0E61A4),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFB3E5FC),
-    onSecondaryContainer = Color(0xFF01579B),
-    tertiary = Color(0xFF4CAF50),     // зелёный
-    background = Color(0xFFF5F5F5),    // почти белый фон
-    onBackground = Color(0xFF212121),
-    surface = Color.White,
-    onSurface = Color(0xFF212121),
-    surfaceVariant = Color(0xFFE0E0E0)
+    secondaryContainer = Color(0xFFD0E4FF),
+    onSecondaryContainer = Color(0xFF001D36),
+    tertiary = Color(0xFF4A6354),
+    background = Color(0xFFFBFDF8),
+    onBackground = Color(0xFF191C19),
+    surface = Color(0xFFFBFDF8),
+    onSurface = Color(0xFF191C19),
+    surfaceVariant = Color(0xFFDDF3E4)
 )
 
 // Тёмная тема – адаптированные тёмные версии
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF81C784),
-    onPrimary = Color(0xFF1B5E20),
-    primaryContainer = Color(0xFF2E7D32),
-    onPrimaryContainer = Color(0xFFC8E6C9),
-    secondary = Color(0xFF4FC3F7),
-    onSecondary = Color(0xFF01579B),
-    secondaryContainer = Color(0xFF0288D1),
-    onSecondaryContainer = Color(0xFFB3E5FC),
-    tertiary = Color(0xFF66BB6A),
-    background = Color(0xFF121212),
-    onBackground = Color(0xFFE0E0E0),
-    surface = Color(0xFF1E1E1E),
-    onSurface = Color(0xFFE0E0E0),
-    surfaceVariant = Color(0xFF2C2C2C)
+    primary = Color(0xFF77DA91),
+    onPrimary = Color(0xFF00391D),
+    primaryContainer = Color(0xFF00522C),
+    onPrimaryContainer = Color(0xFF93F7AC),
+    secondary = Color(0xFFA2C9FF),
+    onSecondary = Color(0xFF00315A),
+    secondaryContainer = Color(0xFF00497E),
+    onSecondaryContainer = Color(0xFFD0E4FF),
+    tertiary = Color(0xFFB0CCB8),
+    background = Color(0xFF111411),
+    onBackground = Color(0xFFE1E3DE),
+    surface = Color(0xFF111411),
+    onSurface = Color(0xFFE1E3DE),
+    surfaceVariant = Color(0xFF3C4940)
 )
 
 @Composable
@@ -77,15 +77,15 @@ fun PhotoCalorieTheme(
 
 @Composable
 fun textFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = Color.White,
-    unfocusedTextColor = Color.White,
-    disabledTextColor = Color.Gray,
+    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
     errorTextColor = Color.Red,
-    cursorColor = Color.White,
-    focusedBorderColor = Color.White,
-    unfocusedBorderColor = Color.Gray,
-    focusedLabelColor = Color.Transparent,
-    unfocusedLabelColor = Color.Transparent,
-    focusedContainerColor = Color(0xFF474646),
-    unfocusedContainerColor = Color(0xFF474646)
+    cursorColor = MaterialTheme.colorScheme.primary,
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+    focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    focusedContainerColor = MaterialTheme.colorScheme.surface,
+    unfocusedContainerColor = MaterialTheme.colorScheme.surface
 )

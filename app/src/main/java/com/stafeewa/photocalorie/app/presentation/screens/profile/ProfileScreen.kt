@@ -150,7 +150,7 @@ fun ProfileScreen(
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Настройки",
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -246,6 +246,7 @@ fun ProfileScreen(
                             Text(
                                 stringResource(R.string.Add_a_photo),
                                 fontFamily = FontFamily(Font(R.font.jura)),
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 24.sp,
                                 modifier = Modifier.padding(horizontal = 24.dp)
                             )
@@ -290,7 +291,7 @@ fun ProfileScreen(
                                     .height(56.dp),
                                 shape = RoundedCornerShape(30.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF5C5A5A)
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                 )
                             ) {
                                 Row(
@@ -298,7 +299,9 @@ fun ProfileScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Text(
-                                        editableProfile.gender ?: stringResource(R.string.Choose_a_gender),
+                                        editableProfile.gender
+                                            ?: stringResource(R.string.Choose_a_gender),
+                                        color = MaterialTheme.colorScheme.onSurface,
                                         fontFamily = FontFamily(Font(R.font.jura)),
                                         fontSize = 24.sp
                                     )
@@ -316,7 +319,8 @@ fun ProfileScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .background(
-                                            MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(30.dp)
+                                            MaterialTheme.colorScheme.surfaceVariant,
+                                            shape = RoundedCornerShape(30.dp)
                                         )
                                         .padding(vertical = 8.dp)
                                 ) {
@@ -333,14 +337,14 @@ fun ProfileScreen(
                                                 .height(44.dp),
                                             shape = RoundedCornerShape(0.dp),
                                             colors = ButtonDefaults.buttonColors(
-                                                containerColor = if (editableProfile.gender == level) Color(
-                                                    0xFF313131
-                                                ) else Color.Transparent,
+                                                containerColor = if (editableProfile.gender == level) MaterialTheme.colorScheme.surfaceVariant
+                                                else Color.Transparent,
                                                 contentColor = Color.White
                                             )
                                         ) {
                                             Text(
                                                 level,
+                                                color = MaterialTheme.colorScheme.onSurface,
                                                 fontFamily = FontFamily(Font(R.font.jura)),
                                                 fontSize = 24.sp,
                                                 modifier = Modifier.fillMaxWidth()
@@ -364,7 +368,11 @@ fun ProfileScreen(
                                 onValueChange = { newValue ->
                                     // Разрешаем ввод только цифр и одной точки
                                     if (newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
-                                        viewModel.processCommand(ProfileCommand.UpdateHeightStr(newValue))
+                                        viewModel.processCommand(
+                                            ProfileCommand.UpdateHeightStr(
+                                                newValue
+                                            )
+                                        )
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
@@ -389,7 +397,11 @@ fun ProfileScreen(
                                 value = editableProfile.weightStr,
                                 onValueChange = { newValue ->
                                     if (newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
-                                        viewModel.processCommand(ProfileCommand.UpdateWeightStr(newValue))
+                                        viewModel.processCommand(
+                                            ProfileCommand.UpdateWeightStr(
+                                                newValue
+                                            )
+                                        )
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
@@ -414,7 +426,11 @@ fun ProfileScreen(
                                 value = editableProfile.ageStr,
                                 onValueChange = { newValue ->
                                     if (newValue.matches(Regex("^\\d*$"))) { // только цифры
-                                        viewModel.processCommand(ProfileCommand.UpdateAgeStr(newValue))
+                                        viewModel.processCommand(
+                                            ProfileCommand.UpdateAgeStr(
+                                                newValue
+                                            )
+                                        )
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
@@ -509,6 +525,7 @@ fun ButtonSaveProfile(
             fontFamily = FontFamily(Font(R.font.jura)),
             fontSize = 24.sp,
             modifier = Modifier.padding(horizontal = 24.dp)
+                .background(MaterialTheme.colorScheme.onSurface,)
         )
     }
 }
@@ -535,6 +552,7 @@ fun ButtonCalculateRate(
             fontFamily = FontFamily(Font(R.font.jura)),
             fontSize = 20.sp,
             modifier = Modifier.padding(horizontal = 24.dp)
+                .background(MaterialTheme.colorScheme.onSurface,)
         )
     }
 }

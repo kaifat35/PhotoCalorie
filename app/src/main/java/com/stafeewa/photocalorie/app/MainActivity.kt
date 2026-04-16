@@ -4,6 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import com.stafeewa.photocalorie.app.domain.entity.ThemeMode
@@ -37,19 +42,43 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val sharedPrefs = getSharedPreferences("app_settings", MODE_PRIVATE)
-            val themeName = sharedPrefs.getString("theme_mode", ThemeMode.DEFAULT.name) ?: ThemeMode.DEFAULT.name
-            val isDark = try {
-                ThemeMode.valueOf(themeName).isDark
-            } catch (e: Exception) {
-                ThemeMode.DEFAULT.isDark
+            val sharedPrefs = remember { getSharedPreferences("app_settings", MODE_PRIVATE) }
+            var themeMode by remember {
+                mutableStateOf(loadThemeMode(sharedPrefs))
             }
+
+            DisposableEffect(sharedPrefs) {
+                val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                    if (key == THEME_MODE_PREF_KEY) {
+                        themeMode = loadThemeMode(sharedPrefs)
+                    }
+                }
+                sharedPrefs.registerOnSharedPreferenceChangeListener(listener)
+                onDispose {
+                    sharedPrefs.unregisterOnSharedPreferenceChangeListener(listener)
+                }
+            }
+
             PhotoCalorieTheme(
-                darkTheme = isDark,   // принудительно
-                dynamicColor = false  // отключаем dynamic color, чтобы не перебивало ручной выбор
+                darkTheme = themeMode.isDark,
+                dynamicColor = false
             ) {
                 NavigationBarExample(modifier = Modifier)
             }
         }
+    }
+
+    private fun loadThemeMode(sharedPrefs: android.content.SharedPreferences): ThemeMode {
+        val themeName = sharedPrefs.getString(THEME_MODE_PREF_KEY, ThemeMode.DEFAULT.name)
+            ?: ThemeMode.DEFAULT.name
+        return try {
+            ThemeMode.valueOf(themeName)
+        } catch (_: IllegalArgumentException) {
+            ThemeMode.DEFAULT
+        }
+    }
+
+    private companion object {
+        const val THEME_MODE_PREF_KEY = "theme_mode"
     }
 }
