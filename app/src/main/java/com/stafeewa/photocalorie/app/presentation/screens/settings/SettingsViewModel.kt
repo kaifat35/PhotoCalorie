@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.domain.entity.Interval
 import com.stafeewa.photocalorie.app.domain.entity.Language
+import com.stafeewa.photocalorie.app.domain.entity.ThemeMode
 import com.stafeewa.photocalorie.app.domain.usecase.settings.GetSettingsUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateIntervalUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateLanguageUseCase
@@ -36,16 +37,27 @@ class SettingsViewModel @Inject constructor(
     init {
         getSettingsUseCase()
             .onEach { settings ->
+                val savedTheme = getSavedThemeMode()
                 _state.update {
                     SettingsState.Configuration(
                         language = settings.language,
                         interval = settings.interval,
                         wifiOnly = settings.wifiOnly,
-                        notificationsEnabled = settings.notificationsEnabled
+                        notificationsEnabled = settings.notificationsEnabled,
+                        themeMode = savedTheme
                     )
                 }
             }
             .launchIn(viewModelScope)
+    }
+    private fun getSavedThemeMode(): ThemeMode {
+        val prefs = application.getSharedPreferences("app_settings", Application.MODE_PRIVATE)
+        val themeName = prefs.getString("theme_mode", ThemeMode.DEFAULT.name) ?: ThemeMode.DEFAULT.name
+        return try {
+            ThemeMode.valueOf(themeName)
+        } catch (e: IllegalArgumentException) {
+            ThemeMode.DEFAULT
+        }
     }
 
     fun processCommand(command: SettingsCommand) {
@@ -67,6 +79,10 @@ class SettingsViewModel @Inject constructor(
                 is SettingsCommand.SetNotificationEnabled -> {
                     updateNotificationsEnabledUseCase(command.enabled)
                 }
+
+                is SettingsCommand.SetThemeMode -> {
+                    updateThemeModeUseCase(command.themeMode)
+                }
             }
         }
     }
@@ -74,6 +90,12 @@ class SettingsViewModel @Inject constructor(
         val prefs = application.getSharedPreferences("app_settings", Application.MODE_PRIVATE)
         prefs.edit { putString("language", language.code) }
     }
+    private val updateThemeModeUseCase: (ThemeMode) -> Unit = { themeMode ->
+        val prefs = application.getSharedPreferences("app_settings", Application.MODE_PRIVATE)
+        prefs.edit { putString("theme_mode", themeMode.name) }
+        // Обновляем state вручную? Лучше перезапустить Activity – theme применится при следующем запуске.
+    }
+
 }
 
 sealed interface SettingsCommand {
@@ -85,6 +107,8 @@ sealed interface SettingsCommand {
     data class SetNotificationEnabled(val enabled: Boolean) : SettingsCommand
 
     data class SeWifiOnly(val wifiOnly: Boolean) : SettingsCommand
+
+    data class SetThemeMode(val themeMode: ThemeMode) : SettingsCommand
 }
 
 
@@ -97,7 +121,9 @@ sealed interface SettingsState {
         val interval: Interval,
         val wifiOnly: Boolean,
         val notificationsEnabled: Boolean,
+        val themeMode: ThemeMode,
         val languages: List<Language> = Language.entries,
-        val intervals: List<Interval> = Interval.entries
+        val intervals: List<Interval> = Interval.entries,
+        val themeModes: List<ThemeMode> = ThemeMode.entries
     ) : SettingsState
 }

@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.Language
+import com.stafeewa.photocalorie.app.domain.entity.ThemeMode
 import com.stafeewa.photocalorie.app.presentation.ui.theme.textFieldColors
 
 @Composable
@@ -73,22 +74,26 @@ fun SettingsScreen(
     val state by viewModel.state.collectAsState()
 
     var lastLanguage by remember { mutableStateOf<Language?>(null) }
+    var lastTheme by remember { mutableStateOf<ThemeMode?>(null) }
 
     // Перезапускаем Activity только когда язык в state действительно изменился
     LaunchedEffect(state) {
         if (state is SettingsState.Configuration) {
             val currentLanguage = (state as SettingsState.Configuration).language
-            if (lastLanguage != null && lastLanguage != currentLanguage) {
+            val currentTheme = (state as SettingsState.Configuration).themeMode
+            if ((lastLanguage != null && lastLanguage != currentLanguage)||
+                    (lastTheme != null && lastTheme != currentTheme)) {
                 (context as? Activity)?.recreate()
             }
             lastLanguage = currentLanguage
+            lastTheme = currentTheme
         }
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
             .padding(bottom = 80.dp),
-        containerColor = Color(0xFF313131),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -213,6 +218,23 @@ fun SettingsScreen(
                             }
                         }
                         item {
+                            SettingsCard(
+                                title = stringResource(R.string.theme),
+                                subtitle = stringResource(R.string.select_theme) // добавьте строку, если нужно
+                            ) {
+                                SettingsDropdown(
+                                    items = currentState.themeModes,
+                                    selectedItem = currentState.themeMode,
+                                    onItemSelected = { themeMode ->
+                                        viewModel.processCommand(SettingsCommand.SetThemeMode(themeMode))
+                                    },
+                                    itemAsString = {
+                                        it.toLocalizedName()
+                                    }
+                                )
+                            }
+                        }
+                        item {
                             Spacer(modifier = Modifier.height(32.dp))
                         }
 
@@ -236,7 +258,7 @@ private fun SettingsCard(
         modifier = modifier
             .fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF5C5A5A)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
@@ -248,7 +270,7 @@ private fun SettingsCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineMedium.copy(
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface,
                 ),
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily(Font(R.font.jura)),
@@ -259,7 +281,7 @@ private fun SettingsCard(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.headlineMedium.copy(
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface,
                 ),
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 24.sp,

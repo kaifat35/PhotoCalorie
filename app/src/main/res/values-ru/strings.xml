@@ -115,4 +115,8 @@
     <string name="Mail">Почта</string>
     <string name="Save">Сохранить</string>
     <string name="Calculate_the_rate">Рассчитать норму</string>
+    <string name="theme">Тема</string>
+    <string name="light_theme">Светлая</string>
+    <string name="dark_theme">Тёмная</string>
+    <string name="select_theme">Выберите тему приложения</string>
 </resources>

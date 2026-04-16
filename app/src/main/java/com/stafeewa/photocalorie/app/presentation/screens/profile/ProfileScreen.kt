@@ -128,14 +128,14 @@ fun ProfileScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = Color(0xFF313131),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         stringResource(R.string.Settings),
                         style = MaterialTheme.typography.headlineMedium.copy(
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         ),
                         fontFamily = FontFamily(Font(R.font.jura)),
                         fontSize = 24.sp,
@@ -143,7 +143,7 @@ fun ProfileScreen(
 
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF474646)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
@@ -240,7 +240,7 @@ fun ProfileScreen(
                                 .height(44.dp),
                             shape = RoundedCornerShape(30.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF474646)
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
                             )
                         ) {
                             Text(
@@ -254,7 +254,7 @@ fun ProfileScreen(
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 text = stringResource(R.string.Login),
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
                                 modifier = Modifier.padding(bottom = 4.dp)
@@ -278,7 +278,7 @@ fun ProfileScreen(
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 text = stringResource(R.string.Gender),
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
                                 modifier = Modifier.padding(bottom = 4.dp)
@@ -316,7 +316,7 @@ fun ProfileScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .background(
-                                            Color(0xFF4E4E4E), shape = RoundedCornerShape(30.dp)
+                                            MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(30.dp)
                                         )
                                         .padding(vertical = 8.dp)
                                 ) {
@@ -354,7 +354,7 @@ fun ProfileScreen(
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 text = stringResource(R.string.Height_m),
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
                                 modifier = Modifier.padding(bottom = 4.dp)
@@ -380,7 +380,7 @@ fun ProfileScreen(
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 text = stringResource(R.string.Weight_kg),
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
                                 modifier = Modifier.padding(bottom = 4.dp)
@@ -405,7 +405,7 @@ fun ProfileScreen(
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 text = stringResource(R.string.Age),
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
                                 modifier = Modifier.padding(bottom = 4.dp)
@@ -430,7 +430,7 @@ fun ProfileScreen(
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 text = stringResource(R.string.Mail),
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
                                 modifier = Modifier.padding(bottom = 4.dp)
@@ -501,7 +501,7 @@ fun ButtonSaveProfile(
             .height(44.dp),
         shape = RoundedCornerShape(30.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF474646)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Text(
@@ -527,7 +527,7 @@ fun ButtonCalculateRate(
             .height(44.dp),
         shape = RoundedCornerShape(30.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF474646)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
         Text(

@@ -72,7 +72,7 @@ fun RecipeScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(bottom = 80.dp),
-        containerColor = Color(0xFF313131),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             SubscriptionTopBar(
                 onRefreshDataClick = {
@@ -165,13 +165,13 @@ private fun SubscriptionTopBar(
     TopAppBar(
         modifier = modifier,
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color(0xFF313131)
+            containerColor = MaterialTheme.colorScheme.background
         ),
         title = {
             Text(
                 stringResource(R.string.subscriptions_title),
                 style = MaterialTheme.typography.headlineMedium.copy(
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.background
                 ),
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 36.sp
@@ -255,7 +255,7 @@ private fun Subscriptions(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(44.dp)
-                .background(Color(0xFF474646), RoundedCornerShape(30.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant,RoundedCornerShape(30.dp))
                 .padding(horizontal = 16.dp),
             contentAlignment = Alignment.CenterStart
         ) {
@@ -267,7 +267,7 @@ private fun Subscriptions(
                     .fillMaxWidth()
                     .padding(end = 5.dp),
                 textStyle = LocalTextStyle.current.copy(
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 16.sp,
                     fontFamily = FontFamily(Font(R.font.jura))
                 ),
@@ -277,7 +277,7 @@ private fun Subscriptions(
                         if (query.isEmpty()) {
                             Text(
                                 stringResource(R.string.Search),
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                                 fontSize = 24.sp,
                                 fontFamily = FontFamily(Font(R.font.jura))
                             )
@@ -322,7 +322,7 @@ private fun Subscriptions(
             Text(
                 text = stringResource(R.string.subscriptions_label, subscriptions.size),
                 style = MaterialTheme.typography.headlineSmall.copy(
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 ),
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 16.sp
@@ -351,7 +351,7 @@ private fun Subscriptions(
                 text = stringResource(R.string.no_subscriptions),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.headlineSmall.copy(
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 ),
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 16.sp
@@ -366,7 +366,7 @@ private fun RecipeCard(
     recipe: Recipe
 ) {
     Card(
-        modifier = Modifier
+        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
             .fillMaxWidth(),
         shape = RoundedCornerShape(30.dp)
     ) {
@@ -374,14 +374,14 @@ private fun RecipeCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF474646))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(16.dp)
             ) {
                 Text(
                     text = recipe.title,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     fontFamily = FontFamily(Font(R.font.jura)),
                     fontSize = 24.sp
@@ -489,13 +489,13 @@ private fun NutritionRow(
         ) {
             Text(
                 text = label,
-                color = Color.White.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 14.sp
             )
             Text(
                 text = value,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold

@@ -6,6 +6,7 @@ import androidx.compose.ui.res.stringResource
 import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.Interval
 import com.stafeewa.photocalorie.app.domain.entity.Language
+import com.stafeewa.photocalorie.app.domain.entity.ThemeMode
 
 @Composable
 fun Language.toLocalizedName(): String {
@@ -25,5 +26,13 @@ fun Interval.toLocalizedName(): String {
         Interval.HOUR_4 -> stringResource(R.string.interval_4_hours)
         Interval.HOUR_8 -> stringResource(R.string.interval_8_hours)
         Interval.HOUR_24 -> stringResource(R.string.interval_24_hours)
+    }
+}
+
+@Composable
+fun ThemeMode.toLocalizedName(): String {
+    return when (this) {
+        ThemeMode.LIGHT -> stringResource(R.string.light_theme)
+        ThemeMode.DARK -> stringResource(R.string.dark_theme)
     }
 }

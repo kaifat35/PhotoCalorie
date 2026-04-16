@@ -115,4 +115,8 @@
     <string name="Mail">Email</string>
     <string name="Save">Save</string>
     <string name="Calculate_the_rate">Calculate the rate</string>
+    <string name="theme">Theme</string>
+    <string name="light_theme">Light</string>
+    <string name="dark_theme">Dark</string>
+    <string name="select_theme">Choose app theme</string>
 </resources>

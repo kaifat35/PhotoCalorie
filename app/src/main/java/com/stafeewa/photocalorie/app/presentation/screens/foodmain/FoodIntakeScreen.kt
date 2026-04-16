@@ -118,7 +118,7 @@ fun FoodIntakeScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = Color(0xFF313131),
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         content = { contentPadding ->
             Box(modifier = Modifier.fillMaxSize()) {
@@ -134,7 +134,7 @@ fun FoodIntakeScreen(
                         Text(
                             text = stringResource(R.string.calories_for_today),
                             style = MaterialTheme.typography.headlineMedium.copy(
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface,
                             ),
                             fontFamily = FontFamily(Font(R.font.jura)),
                             fontSize = 30.sp
@@ -148,7 +148,7 @@ fun FoodIntakeScreen(
                                 calorieGoal?.toInt() ?: 0
                             ),
                             style = MaterialTheme.typography.headlineMedium.copy(
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface,
                             ),
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily(Font(R.font.jura)),
@@ -182,7 +182,7 @@ fun FoodIntakeScreen(
                                 Text(
                                     text = "${totalCalories.toInt()} / ${calorieGoal.toInt()}",
                                     style = MaterialTheme.typography.headlineMedium.copy(
-                                        color = Color.White
+                                        color = MaterialTheme.colorScheme.onSurface,
                                     ),
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = FontFamily(Font(R.font.jura)),
@@ -193,7 +193,7 @@ fun FoodIntakeScreen(
                                         R.string.There_are_kcal,
                                         remainingCalories.toInt()
                                     ),
-                                    color = if (remainingCalories < 0) Color.Red else Color.White.copy(
+                                    color = if (remainingCalories < 0) Color.Red else MaterialTheme.colorScheme.onSurface.copy(
                                         alpha = 0.7f
                                     ),
                                     fontFamily = FontFamily(Font(R.font.jura)),
@@ -326,7 +326,7 @@ fun MealSection(
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
             .background(
-                color = Color(0xFF474646),
+                color = MaterialTheme.colorScheme.surfaceVariant,
                 shape = RoundedCornerShape(30.dp)
             )
             .padding(8.dp),
@@ -396,7 +396,7 @@ fun MealSection(
         } else {
             Text(
                 text = stringResource(R.string.There_are_no_added_dishes),
-                color = Color.White.copy(alpha = 0.5f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 14.sp,
                 modifier = Modifier.padding(vertical = 4.dp)
@@ -409,7 +409,7 @@ fun MealSection(
             if (items.isEmpty()) {
                 Text(
                     text = stringResource(R.string.There_are_no_added_dishes),
-                    color = Color.White.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     fontFamily = FontFamily(Font(R.font.jura)),
                     fontSize = 16.sp,
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -461,7 +461,7 @@ fun FoodItemRow(
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 18.sp,
                 style = MaterialTheme.typography.headlineMedium.copy(
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 ),
                 fontWeight = FontWeight.Bold
             )
@@ -469,7 +469,7 @@ fun FoodItemRow(
                 text = stringResource(R.string.g_ckal, item.portion.toInt(), item.calories.toInt()),
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
         }
 
@@ -509,7 +509,7 @@ fun NutrientBadge(
         Text(
             text = value.toString(),
             fontSize = 14.sp,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             fontFamily = FontFamily(Font(R.font.jura))
         )
     }

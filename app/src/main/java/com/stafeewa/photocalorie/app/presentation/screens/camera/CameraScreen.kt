@@ -16,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -81,7 +82,7 @@ fun CameraScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = Color.Black
+        containerColor = MaterialTheme.colorScheme.background,
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -166,7 +167,7 @@ fun CameraScreen(
                         CircularProgressIndicator(color = Color(0xFF009E1D))
                         Text(
                             text = stringResource(R.string.We_recognize_it),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.padding(top = 60.dp)
                         )
                     }
@@ -178,7 +179,7 @@ fun CameraScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.There_is_no_access_to_the_camera),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onBackground,
                     )
                     Button(
                         onClick = { cameraPermissionState.launchPermissionRequest() },
@@ -244,7 +245,7 @@ private fun CaptureAreaOverlay(modifier: Modifier = Modifier) {
 
         Text(
             text = stringResource(R.string.Place_the_dish_in_the_frame),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 92.dp)
