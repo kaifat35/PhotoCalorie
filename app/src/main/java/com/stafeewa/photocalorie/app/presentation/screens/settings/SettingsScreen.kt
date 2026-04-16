@@ -81,8 +81,9 @@ fun SettingsScreen(
         if (state is SettingsState.Configuration) {
             val currentLanguage = (state as SettingsState.Configuration).language
             val currentTheme = (state as SettingsState.Configuration).themeMode
-            if ((lastLanguage != null && lastLanguage != currentLanguage)||
-                    (lastTheme != null && lastTheme != currentTheme)) {
+            if ((lastLanguage != null && lastLanguage != currentLanguage) ||
+                (lastTheme != null && lastTheme != currentTheme)
+            ) {
                 (context as? Activity)?.recreate()
             }
             lastLanguage = currentLanguage
@@ -91,7 +92,8 @@ fun SettingsScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .padding(bottom = 80.dp),
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
         topBar = {
@@ -124,10 +126,9 @@ fun SettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    containerColor = MaterialTheme.colorScheme.surface
                 ),
-
-                )
+            )
         },
         content = { contentPadding ->
 
@@ -151,7 +152,11 @@ fun SettingsScreen(
                                     items = currentState.languages,
                                     selectedItem = currentState.language,
                                     onItemSelected = { language ->
-                                        viewModel.processCommand(SettingsCommand.SelectLanguage(language))
+                                        viewModel.processCommand(
+                                            SettingsCommand.SelectLanguage(
+                                                language
+                                            )
+                                        )
                                     },
                                     itemAsString = {
                                         it.toLocalizedName()
@@ -226,7 +231,11 @@ fun SettingsScreen(
                                     items = currentState.themeModes,
                                     selectedItem = currentState.themeMode,
                                     onItemSelected = { themeMode ->
-                                        viewModel.processCommand(SettingsCommand.SetThemeMode(themeMode))
+                                        viewModel.processCommand(
+                                            SettingsCommand.SetThemeMode(
+                                                themeMode
+                                            )
+                                        )
                                     },
                                     itemAsString = {
                                         it.toLocalizedName()

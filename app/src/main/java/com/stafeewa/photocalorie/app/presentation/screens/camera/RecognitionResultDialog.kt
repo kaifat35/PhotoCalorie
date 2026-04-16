@@ -33,12 +33,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.MealType
-import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.RecognizeFoodUseCase
 
 private enum class ManualAddMode {
     SAVE_AND_ADD,
     ADD_ONLY
 }
+
 @Composable
 fun RecognitionResultDialog(
     result: RecognitionResult,
@@ -51,13 +51,11 @@ fun RecognitionResultDialog(
     var isAddingToDatabase by remember { mutableStateOf(false) }
     var manualAddMode by remember { mutableStateOf(ManualAddMode.SAVE_AND_ADD) }
 
-    // Поля для ручного добавления
     var manualName by remember { mutableStateOf("") }
     var manualProtein by remember { mutableStateOf("") }
     var manualFat by remember { mutableStateOf("") }
     var manualCarbs by remember { mutableStateOf("") }
 
-    // Проверка, можно ли сохранить блюдо
     val isManualFormValid = manualName.isNotBlank() &&
             (manualProtein.toDoubleOrNull() != null ||
                     manualFat.toDoubleOrNull() != null ||
@@ -73,7 +71,7 @@ fun RecognitionResultDialog(
                     is RecognitionResult.NotFound -> "Блюдо не найдено"
                     is RecognitionResult.Error -> "Ошибка"
                 },
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 24.sp
             )
@@ -87,7 +85,7 @@ fun RecognitionResultDialog(
                     is RecognitionResult.Success -> {
                         Text(
                             text = "${result.product.name} (${(result.confidence * 100).toInt()}%)",
-                            color = Color(0xFF009E1D),
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 18.sp,
                             fontFamily = FontFamily(Font(R.font.jura))
                         )
@@ -96,10 +94,10 @@ fun RecognitionResultDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            NutrientInfoDialog("Калории", "${result.product.caloriesPer100g.toInt()} ккал", Color(0xFFFF9800))
-                            NutrientInfoDialog("Белки", "${result.product.proteinPer100g.toInt()} г", Color(0xFF4CAF50))
-                            NutrientInfoDialog("Жиры", "${result.product.fatPer100g.toInt()} г", Color(0xFF2196F3))
-                            NutrientInfoDialog("Углеводы", "${result.product.carbsPer100g.toInt()} г", Color(0xFF9C27B0))
+                            NutrientInfoDialog("Калории", "${result.product.caloriesPer100g.toInt()} ккал", MaterialTheme.colorScheme.tertiary)
+                            NutrientInfoDialog("Белки", "${result.product.proteinPer100g.toInt()} г", MaterialTheme.colorScheme.secondary)
+                            NutrientInfoDialog("Жиры", "${result.product.fatPer100g.toInt()} г", MaterialTheme.colorScheme.error)
+                            NutrientInfoDialog("Углеводы", "${result.product.carbsPer100g.toInt()} г", Color(0xFF9C27B0)) // оставим фиолетовый как акцент
                         }
 
                         MealTypeSelector(
@@ -110,24 +108,24 @@ fun RecognitionResultDialog(
                         OutlinedTextField(
                             value = portion,
                             onValueChange = { portion = it },
-                            label = { Text("Вес порции (г)", color = Color.White.copy(alpha = 0.7f)) },
+                            label = { Text("Вес порции (г)", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
                         )
 
                         val factor = portion.toDoubleOrNull()?.div(100) ?: 1.0
                         Text(
                             text = "КБЖУ на ${portion.toIntOrNull() ?: 100} г: ${(result.product.caloriesPer100g * factor).toInt()} ккал | Б: ${(result.product.proteinPer100g * factor).toInt()}г | Ж: ${(result.product.fatPer100g * factor).toInt()}г | У: ${(result.product.carbsPer100g * factor).toInt()}г",
                             fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.7f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
                     }
 
                     is RecognitionResult.MultipleMatches -> {
                         Text(
                             text = "Найдено несколько похожих блюд:",
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         LazyColumn(
                             modifier = Modifier.height(200.dp)
@@ -150,16 +148,16 @@ fun RecognitionResultDialog(
                                     Column {
                                         Text(
                                             text = match.product.name,
-                                            color = Color.White
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                         Text(
                                             text = "КБЖУ: ${match.product.caloriesPer100g.toInt()} ккал | Б:${match.product.proteinPer100g.toInt()}г Ж:${match.product.fatPer100g.toInt()}г У:${match.product.carbsPer100g.toInt()}г",
                                             fontSize = 11.sp,
-                                            color = Color.White.copy(alpha = 0.5f)
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                         )
                                     }
                                 }
-                                HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
+                                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
                             }
                         }
                     }
@@ -167,7 +165,7 @@ fun RecognitionResultDialog(
                     is RecognitionResult.NotFound -> {
                         Text(
                             text = "Блюдо \"${result.suggestedName}\" не найдено в базе.",
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         if (!isAddingToDatabase) {
@@ -177,67 +175,64 @@ fun RecognitionResultDialog(
                                     manualAddMode = ManualAddMode.SAVE_AND_ADD
                                     manualName = result.suggestedName
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009E1D)),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("➕ Добавить в базу")
+                                Text("➕ Добавить в базу", color = MaterialTheme.colorScheme.onPrimary)
                             }
 
-                            // Кнопка для ручного добавления без сохранения в базу
                             Button(
                                 onClick = {
                                     isAddingToDatabase = true
                                     manualAddMode = ManualAddMode.ADD_ONLY
-                                    // Предзаполняем название из распознанного
                                     manualName = result.suggestedName
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5C5A5A)),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("📝 Добавить вручную (без сохранения)")
+                                Text("📝 Добавить вручную (без сохранения)", color = MaterialTheme.colorScheme.onSurface)
                             }
                         } else {
                             Text(
                                 text = "Добавьте блюдо вручную:",
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
 
                             OutlinedTextField(
                                 value = manualName,
                                 onValueChange = { manualName = it },
-                                label = { Text("Название", color = Color.White.copy(alpha = 0.7f)) },
+                                label = { Text("Название", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                                 modifier = Modifier.fillMaxWidth(),
-                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
                             )
 
                             OutlinedTextField(
                                 value = manualProtein,
                                 onValueChange = { manualProtein = it },
-                                label = { Text("Белки на 100г", color = Color.White.copy(alpha = 0.7f)) },
+                                label = { Text("Белки на 100г", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
                             )
 
                             OutlinedTextField(
                                 value = manualFat,
                                 onValueChange = { manualFat = it },
-                                label = { Text("Жиры на 100г", color = Color.White.copy(alpha = 0.7f)) },
+                                label = { Text("Жиры на 100г", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
                             )
 
                             OutlinedTextField(
                                 value = manualCarbs,
                                 onValueChange = { manualCarbs = it },
-                                label = { Text("Углеводы на 100г", color = Color.White.copy(alpha = 0.7f)) },
+                                label = { Text("Углеводы на 100г", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
                             )
 
-                            // Предпросмотр КБЖУ
                             val proteinVal = manualProtein.toDoubleOrNull() ?: 0.0
                             val fatVal = manualFat.toDoubleOrNull() ?: 0.0
                             val carbsVal = manualCarbs.toDoubleOrNull() ?: 0.0
@@ -247,7 +242,7 @@ fun RecognitionResultDialog(
                                 Text(
                                     text = "КБЖУ на 100г: ${calories.toInt()} ккал | Б: ${proteinVal.toInt()}г | Ж: ${fatVal.toInt()}г | У: ${carbsVal.toInt()}г",
                                     fontSize = 12.sp,
-                                    color = Color(0xFF009E1D)
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -256,7 +251,7 @@ fun RecognitionResultDialog(
                     is RecognitionResult.Error -> {
                         Text(
                             text = result.message,
-                            color = Color.Red
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -278,9 +273,9 @@ fun RecognitionResultDialog(
                             )
                             onDismiss()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009E1D))
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text("Добавить", color = Color.White)
+                        Text("Добавить", color = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
                 is RecognitionResult.NotFound -> {
@@ -295,7 +290,6 @@ fun RecognitionResultDialog(
                                 val finalName = manualName.ifBlank { result.suggestedName }
 
                                 if (manualAddMode == ManualAddMode.SAVE_AND_ADD) {
-                                    // Добавляем в базу только в режиме "сохранить и добавить"
                                     onAddToDatabase(
                                         finalName,
                                         selectedMealType,
@@ -304,7 +298,6 @@ fun RecognitionResultDialog(
                                         carbs
                                     )
                                 }
-                                // Добавляем в дневник
                                 onConfirm(
                                     finalName,
                                     selectedMealType,
@@ -315,7 +308,7 @@ fun RecognitionResultDialog(
                                 )
                                 onDismiss()
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009E1D)),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                             enabled = isManualFormValid
                         ) {
                             Text(
@@ -324,20 +317,18 @@ fun RecognitionResultDialog(
                                 } else {
                                     "📝 Добавить в дневник"
                                 },
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
                 }
-                is RecognitionResult.MultipleMatches -> {
-                    // Кнопка не нужна
-                }
+                is RecognitionResult.MultipleMatches -> { }
                 is RecognitionResult.Error -> {
                     Button(
                         onClick = onDismiss,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF474646))
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
-                        Text("Закрыть", color = Color.White)
+                        Text("Закрыть", color = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
@@ -345,13 +336,13 @@ fun RecognitionResultDialog(
         dismissButton = {
             if (result !is RecognitionResult.MultipleMatches) {
                 TextButton(onClick = onDismiss) {
-                    Text("Отмена", color = Color.White.copy(alpha = 0.7f))
+                    Text("Отмена", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                 }
             }
         },
-        containerColor = Color(0xFF474646),
-        titleContentColor = Color.White,
-        textContentColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurface
     )
 }
 
@@ -395,7 +386,7 @@ fun MealTypeButton(
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFF009E1D) else Color(0xFF5C5A5A)
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
         ),
         modifier = modifier
             .widthIn(min = 0.dp)
@@ -404,7 +395,7 @@ fun MealTypeButton(
         Text(
             text = title,
             fontSize = 10.sp,
-            color = Color.White
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -417,6 +408,6 @@ fun NutrientInfoDialog(
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = label, fontSize = 11.sp, color = color)
-        Text(text = value, fontSize = 13.sp, color = Color.White)
+        Text(text = value, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
     }
 }

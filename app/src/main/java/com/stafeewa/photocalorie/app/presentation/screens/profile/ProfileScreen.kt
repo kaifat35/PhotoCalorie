@@ -185,7 +185,7 @@ fun ProfileScreen(
                         Text(
                             text = stringResource(R.string.Your_profile),
                             style = MaterialTheme.typography.headlineMedium.copy(
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface,
                             ),
                             fontFamily = FontFamily(Font(R.font.jura)),
                             fontSize = 36.sp,
@@ -308,7 +308,8 @@ fun ProfileScreen(
                                     Icon(
                                         painter = painterResource(id = R.drawable.down),
                                         contentDescription = "Пол",
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(24.dp),
+                                        tint = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             }
@@ -524,8 +525,8 @@ fun ButtonSaveProfile(
             stringResource(R.string.Save),
             fontFamily = FontFamily(Font(R.font.jura)),
             fontSize = 24.sp,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 24.dp)
-                .background(MaterialTheme.colorScheme.onSurface,)
         )
     }
 }
@@ -551,8 +552,8 @@ fun ButtonCalculateRate(
             stringResource(R.string.Calculate_the_rate),
             fontFamily = FontFamily(Font(R.font.jura)),
             fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 24.dp)
-                .background(MaterialTheme.colorScheme.onSurface,)
         )
     }
 }

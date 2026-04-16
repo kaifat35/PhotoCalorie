@@ -63,7 +63,6 @@ fun AddFoodDialog(
     var showProductList by remember { mutableStateOf(false) }
     var isManualMode by remember { mutableStateOf(false) }
 
-    // Поля для ручного ввода
     var manualName by remember { mutableStateOf("") }
     var manualProtein by remember { mutableStateOf("") }
     var manualFat by remember { mutableStateOf("") }
@@ -71,7 +70,6 @@ fun AddFoodDialog(
 
     val searchResults by viewModel.productSearchResults.collectAsStateWithLifecycle()
 
-    // Рассчитываем КБЖУ на основе выбранного продукта и порции
     val calculatedKbju = remember(selectedProduct, portion) {
         val portionValue = portion.toDoubleOrNull() ?: 0.0
         selectedProduct?.calculateKbjuForPortion(portionValue)
@@ -98,21 +96,18 @@ fun AddFoodDialog(
                     text = if (isManualMode) "Добавить вручную" else "Добавить ${getMealTypeName(mealType)}",
                     fontFamily = FontFamily(Font(R.font.jura)),
                     fontSize = 24.sp,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
-                // Иконка переключения режима
                 IconButton(
                     onClick = {
                         isManualMode = !isManualMode
                         if (!isManualMode) {
-                            // Очищаем ручные поля при переключении
                             manualName = ""
                             manualProtein = ""
                             manualFat = ""
                             manualCarbs = ""
                         } else {
-                            // Очищаем поиск при переключении
                             searchQuery = ""
                             selectedProduct = null
                             showProductList = false
@@ -124,7 +119,7 @@ fun AddFoodDialog(
                             id = if (isManualMode) R.drawable.ic_search else R.drawable.ic_edit
                         ),
                         contentDescription = if (isManualMode) "Поиск" else "Ручной ввод",
-                        tint = Color(0xFF009E1D),
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -136,53 +131,51 @@ fun AddFoodDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 if (isManualMode) {
-                    // ============ РУЧНОЙ РЕЖИМ ============
                     OutlinedTextField(
                         value = manualName,
                         onValueChange = { manualName = it },
-                        label = { Text("Название блюда", color = Color.White.copy(alpha = 0.7f)) },
+                        label = { Text("Название блюда", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                         modifier = Modifier.fillMaxWidth(),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White),
-                        placeholder = { Text("Например: Мой фирменный салат", color = Color.White.copy(alpha = 0.5f)) }
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                        placeholder = { Text("Например: Мой фирменный салат", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) }
                     )
 
                     OutlinedTextField(
                         value = manualProtein,
                         onValueChange = { manualProtein = it },
-                        label = { Text("Белки (на 100г)", color = Color.White.copy(alpha = 0.7f)) },
+                        label = { Text("Белки (на 100г)", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
                     )
 
                     OutlinedTextField(
                         value = manualFat,
                         onValueChange = { manualFat = it },
-                        label = { Text("Жиры (на 100г)", color = Color.White.copy(alpha = 0.7f)) },
+                        label = { Text("Жиры (на 100г)", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
                     )
 
                     OutlinedTextField(
                         value = manualCarbs,
                         onValueChange = { manualCarbs = it },
-                        label = { Text("Углеводы (на 100г)", color = Color.White.copy(alpha = 0.7f)) },
+                        label = { Text("Углеводы (на 100г)", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
                     )
 
                     OutlinedTextField(
                         value = portion,
                         onValueChange = { portion = it },
-                        label = { Text("Вес порции (г)", color = Color.White.copy(alpha = 0.7f)) },
+                        label = { Text("Вес порции (г)", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
                     )
 
-                    // Показываем рассчитанное КБЖУ для ручного режима
                     val proteinValue = manualProtein.toDoubleOrNull() ?: 0.0
                     val fatValue = manualFat.toDoubleOrNull() ?: 0.0
                     val carbsValue = manualCarbs.toDoubleOrNull() ?: 0.0
@@ -190,10 +183,10 @@ fun AddFoodDialog(
                     val factor = portionValue / 100.0
 
                     if (manualName.isNotBlank() && (proteinValue > 0 || fatValue > 0 || carbsValue > 0)) {
-                        HorizontalDivider(color = Color.White.copy(alpha = 0.3f))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
                         Text(
                             text = "КБЖУ на ${portionValue.toInt()} г:",
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontFamily = FontFamily(Font(R.font.jura)),
                             fontSize = 16.sp
                         )
@@ -201,28 +194,26 @@ fun AddFoodDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            NutrientInfo("Калории", "${((proteinValue * 4 + fatValue * 9 + carbsValue * 4) * factor).toInt()} ккал", Color(0xFFFF9800))
-                            NutrientInfo("Белки", "${(proteinValue * factor).toInt()} г", Color(0xFF4CAF50))
-                            NutrientInfo("Жиры", "${(fatValue * factor).toInt()} г", Color(0xFF2196F3))
+                            NutrientInfo("Калории", "${((proteinValue * 4 + fatValue * 9 + carbsValue * 4) * factor).toInt()} ккал", MaterialTheme.colorScheme.tertiary)
+                            NutrientInfo("Белки", "${(proteinValue * factor).toInt()} г", MaterialTheme.colorScheme.secondary)
+                            NutrientInfo("Жиры", "${(fatValue * factor).toInt()} г", MaterialTheme.colorScheme.error)
                             NutrientInfo("Углеводы", "${(carbsValue * factor).toInt()} г", Color(0xFF9C27B0))
                         }
                     }
 
                 } else {
-                    // ============ РЕЖИМ ПОИСКА ============
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = {
                             searchQuery = it
                             selectedProduct = null
                         },
-                        label = { Text("Название блюда", color = Color.White.copy(alpha = 0.7f)) },
+                        label = { Text("Название блюда", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                         modifier = Modifier.fillMaxWidth(),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White),
-                        placeholder = { Text("Например: Овсяная каша", color = Color.White.copy(alpha = 0.5f)) }
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+                        placeholder = { Text("Например: Овсяная каша", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) }
                     )
 
-                    // Список найденных продуктов
                     if (showProductList && searchResults.isNotEmpty()) {
                         Column(
                             modifier = Modifier
@@ -245,44 +236,40 @@ fun AddFoodDialog(
                         }
                     }
 
-                    // Отображение выбранного продукта и его КБЖУ
                     if (selectedProduct != null) {
-                        HorizontalDivider(color = Color.White.copy(alpha = 0.3f))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
 
                         Text(
                             text = "Выбрано: ${selectedProduct!!.name.toUserVisibleFoodName()}",
-                            color = Color(0xFF009E1D),
+                            color = MaterialTheme.colorScheme.primary,
                             fontFamily = FontFamily(Font(R.font.jura)),
                             fontSize = 16.sp
                         )
 
-                        // КБЖУ на 100г
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            NutrientInfo("Калории", "${selectedProduct!!.caloriesPer100g.toInt()} ккал", Color(0xFFFF9800))
-                            NutrientInfo("Белки", "${selectedProduct!!.proteinPer100g.toInt()} г", Color(0xFF4CAF50))
-                            NutrientInfo("Жиры", "${selectedProduct!!.fatPer100g.toInt()} г", Color(0xFF2196F3))
+                            NutrientInfo("Калории", "${selectedProduct!!.caloriesPer100g.toInt()} ккал", MaterialTheme.colorScheme.tertiary)
+                            NutrientInfo("Белки", "${selectedProduct!!.proteinPer100g.toInt()} г", MaterialTheme.colorScheme.secondary)
+                            NutrientInfo("Жиры", "${selectedProduct!!.fatPer100g.toInt()} г", MaterialTheme.colorScheme.error)
                             NutrientInfo("Углеводы", "${selectedProduct!!.carbsPer100g.toInt()} г", Color(0xFF9C27B0))
                         }
 
-                        // Поле для ввода веса
                         OutlinedTextField(
                             value = portion,
                             onValueChange = { portion = it },
-                            label = { Text("Вес порции (г)", color = Color.White.copy(alpha = 0.7f)) },
+                            label = { Text("Вес порции (г)", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.White)
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
                         )
 
-                        // Рассчитанное КБЖУ для выбранной порции
                         if (calculatedKbju != null && portion.toDoubleOrNull() != null) {
-                            HorizontalDivider(color = Color.White.copy(alpha = 0.3f))
+                            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
                             Text(
                                 text = "КБЖУ на ${portion.toDoubleOrNull()?.toInt()} г:",
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 16.sp
                             )
@@ -290,16 +277,16 @@ fun AddFoodDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                NutrientInfo("Калории", "${calculatedKbju.calories.toInt()} ккал", Color(0xFFFF9800))
-                                NutrientInfo("Белки", "${calculatedKbju.protein.toInt()} г", Color(0xFF4CAF50))
-                                NutrientInfo("Жиры", "${calculatedKbju.fat.toInt()} г", Color(0xFF2196F3))
+                                NutrientInfo("Калории", "${calculatedKbju.calories.toInt()} ккал", MaterialTheme.colorScheme.tertiary)
+                                NutrientInfo("Белки", "${calculatedKbju.protein.toInt()} г", MaterialTheme.colorScheme.secondary)
+                                NutrientInfo("Жиры", "${calculatedKbju.fat.toInt()} г", MaterialTheme.colorScheme.error)
                                 NutrientInfo("Углеводы", "${calculatedKbju.carbs.toInt()} г", Color(0xFF9C27B0))
                             }
                         }
                     } else if (searchQuery.length >= 2 && searchResults.isEmpty()) {
                         Text(
                             text = "Ничего не найдено. Нажмите на иконку руки для ручного ввода",
-                            color = Color.White.copy(alpha = 0.5f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                             fontSize = 14.sp
                         )
                     }
@@ -336,7 +323,6 @@ fun AddFoodDialog(
                             kbju.fat,
                             kbju.carbs
                         )
-
                     }
                 },
                 enabled = if (isManualMode) {
@@ -347,21 +333,22 @@ fun AddFoodDialog(
                 } else {
                     selectedProduct != null
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF009E1D))
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("Добавить", color = Color.White)
+                Text("Добавить", color = MaterialTheme.colorScheme.onPrimary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Отмена", color = Color.White.copy(alpha = 0.7f))
+                Text("Отмена", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             }
         },
-        containerColor = Color(0xFF474646),
-        titleContentColor = Color.White,
-        textContentColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurface
     )
 }
+
 @Composable
 fun ProductSearchItem(
     product: Product,
@@ -375,7 +362,7 @@ fun ProductSearchItem(
     ) {
         Text(
             text = product.name.toUserVisibleFoodName(),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             fontFamily = FontFamily(Font(R.font.jura)),
             fontSize = 18.sp
         )
@@ -384,27 +371,27 @@ fun ProductSearchItem(
         ) {
             Text(
                 text = "${product.caloriesPer100g.toInt()} ккал",
-                color = Color.White.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 fontSize = 12.sp
             )
             Text(
                 text = "Б: ${product.proteinPer100g.toInt()}г",
-                color = Color.White.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 fontSize = 12.sp
             )
             Text(
                 text = "Ж: ${product.fatPer100g.toInt()}г",
-                color = Color.White.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 fontSize = 12.sp
             )
             Text(
                 text = "У: ${product.carbsPer100g.toInt()}г",
-                color = Color.White.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 fontSize = 12.sp
             )
         }
     }
-    HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
+    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
 }
 
 @Composable
@@ -422,7 +409,7 @@ fun NutrientInfo(
         Text(
             text = value,
             fontSize = 14.sp,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             fontFamily = FontFamily(Font(R.font.jura))
         )
     }
