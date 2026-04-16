@@ -48,10 +48,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.stafeewa.photocalorie.app.R
-import com.stafeewa.photocalorie.app.domain.entity.MealType
+import com.stafeewa.photocalorie.app.presentation.screens.foodmain.FoodIntakeViewModel
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import com.stafeewa.photocalorie.app.presentation.screens.foodmain.FoodIntakeViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -196,6 +195,7 @@ fun CameraScreen(
     if (showResultDialog && recognitionResult != null) {
         RecognitionResultDialog(
             result = recognitionResult!!,
+            productRepository = viewModel.productRepository,
             onDismiss = {
                 showResultDialog = false
                 viewModel.clearResult()

@@ -20,6 +20,7 @@ class RecognizeFoodUseCase @Inject constructor(
         data class Success(val product: Product, val confidence: Float) : Result()
         data class MultipleMatches(val products: List<ProductMatch>) : Result()
         data class NotFound(val suggestedName: String) : Result()
+        data class LowConfidence(val suggestedName: String) : Result()   // новый тип
         data class Error(val message: String) : Result()
     }
 
@@ -31,17 +32,20 @@ class RecognizeFoodUseCase @Inject constructor(
 
     suspend operator fun invoke(bitmap: Bitmap): Result {
         return try {
-            // 1. Распознаём метки
             val results = foodClassifier.recognizeFood(bitmap)
             if (results.isEmpty()) {
                 return Result.NotFound("Не удалось распознать блюдо")
             }
             val best = results.first()
             val bestLabel = best.label.lowercase().trim()
+            val confidence = best.confidence
 
-            // 2. Ищем в локальной БД все продукты.
-            // Важно: searchProducts("") в DAO ограничен LIMIT 20, поэтому для распознавания
-            // собираем полный список по всем типам приёмов пищи.
+            // Если уверенность ниже 40% – сразу предлагаем ручной ввод / поиск
+            if (confidence < 0.4f) {
+                return Result.LowConfidence(bestLabel)
+            }
+
+            // Загружаем все продукты из локальной БД
             val allProducts = MealType.entries.flatMap { mealType ->
                 productRepository.getProductsByMealType(mealType).first()
             }.distinctBy { it.id }
@@ -49,39 +53,36 @@ class RecognizeFoodUseCase @Inject constructor(
                 return Result.NotFound(bestLabel)
             }
 
-            // 3. Оцениваем каждый продукт на схожесть с распознанной меткой
+            // Оцениваем схожесть
             val scoredMatches = allProducts.map { product ->
                 val score = calculateMatchScore(bestLabel, product.name.lowercase())
-                ProductMatch(product, best.confidence, score)
+                ProductMatch(product, confidence, score)
             }.filter { it.matchScore > 30 }.sortedByDescending { it.matchScore }
 
             if (scoredMatches.isEmpty()) {
                 return Result.NotFound(bestLabel)
             }
 
-            // 4. Если есть точное совпадение (score >= 95) – возвращаем его
             val exactMatch = scoredMatches.firstOrNull { it.matchScore >= 95 }
             if (exactMatch != null) {
-                return Result.Success(exactMatch.product, best.confidence)
+                return Result.Success(exactMatch.product, confidence)
             }
 
-            // 5. Если несколько вариантов – показываем выбор
             if (scoredMatches.size > 1) {
                 return Result.MultipleMatches(scoredMatches.take(5))
             }
 
-            // 6. Иначе берём первый
-            Result.Success(scoredMatches.first().product, best.confidence)
+            Result.Success(scoredMatches.first().product, confidence)
         } catch (e: Exception) {
             Result.Error(e.message ?: "Ошибка распознавания")
         }
     }
+
     fun close() {
         foodClassifier.close()
     }
 
     private fun calculateMatchScore(recognized: String, dbName: String): Int {
-        // Обработка синонимов
         val synonyms = mapOf(
             "картошка фри" to listOf("картофель фри", "фри"),
             "картофель фри" to listOf("картошка фри", "фри"),
@@ -92,18 +93,15 @@ class RecognizeFoodUseCase @Inject constructor(
             "салат цезарь" to listOf("цезарь")
         )
 
-        // Проверка на синонимы
         for ((key, values) in synonyms) {
             if (recognized == key && values.any { dbName.contains(it) }) return 95
             if (values.contains(recognized) && dbName.contains(key)) return 95
         }
 
-        // Прямое совпадение
         if (recognized == dbName) return 100
         if (dbName.contains(recognized)) return 85
         if (recognized.contains(dbName)) return 70
 
-        // По словам
         val recognizedWords = recognized.split(" ").filter { it.length > 2 }
         val dbWords = dbName.split(" ").filter { it.length > 2 }
         val commonWords = recognizedWords.intersect(dbWords.toSet()).size

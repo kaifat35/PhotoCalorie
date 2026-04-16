@@ -3,6 +3,7 @@ package com.stafeewa.photocalorie.app.presentation.screens.camera
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.MealType
+import com.stafeewa.photocalorie.app.domain.entity.Product
+import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
+import kotlinx.coroutines.flow.first
+import com.stafeewa.photocalorie.app.utils.toUserVisibleFoodName
 
 private enum class ManualAddMode {
     SAVE_AND_ADD,
@@ -42,6 +48,7 @@ private enum class ManualAddMode {
 @Composable
 fun RecognitionResultDialog(
     result: RecognitionResult,
+    productRepository: ProductRepository,
     onDismiss: () -> Unit,
     onConfirm: (name: String, mealType: MealType, portion: Double, protein: Double, fat: Double, carbs: Double) -> Unit,
     onAddToDatabase: (name: String, mealType: MealType, protein: Double, fat: Double, carbs: Double) -> Unit
@@ -56,6 +63,21 @@ fun RecognitionResultDialog(
     var manualFat by remember { mutableStateOf("") }
     var manualCarbs by remember { mutableStateOf("") }
 
+    // Состояние для диалога поиска по локальной БД
+    var showLocalSearchDialog by remember { mutableStateOf(false) }
+    var localSearchQuery by remember { mutableStateOf("") }
+    var localSearchResults by remember { mutableStateOf<List<Product>>(emptyList()) }
+
+    // Загрузка результатов поиска при изменении запроса
+    LaunchedEffect(localSearchQuery) {
+        if (localSearchQuery.isNotBlank()) {
+            val results = productRepository.searchProducts(localSearchQuery).first()
+            localSearchResults = results
+        } else {
+            localSearchResults = emptyList()
+        }
+    }
+
     val isManualFormValid = manualName.isNotBlank() &&
             (manualProtein.toDoubleOrNull() != null ||
                     manualFat.toDoubleOrNull() != null ||
@@ -69,6 +91,7 @@ fun RecognitionResultDialog(
                     is RecognitionResult.Success -> "Распознано блюдо"
                     is RecognitionResult.MultipleMatches -> "Выберите блюдо"
                     is RecognitionResult.NotFound -> "Блюдо не найдено"
+                    is RecognitionResult.LowConfidence -> "Низкая уверенность распознавания"
                     is RecognitionResult.Error -> "Ошибка"
                 },
                 color = MaterialTheme.colorScheme.onSurface,
@@ -83,6 +106,7 @@ fun RecognitionResultDialog(
             ) {
                 when (result) {
                     is RecognitionResult.Success -> {
+                        // ... (без изменений, как в оригинале)
                         Text(
                             text = "${result.product.name} (${(result.confidence * 100).toInt()}%)",
                             color = MaterialTheme.colorScheme.primary,
@@ -97,7 +121,7 @@ fun RecognitionResultDialog(
                             NutrientInfoDialog("Калории", "${result.product.caloriesPer100g.toInt()} ккал", MaterialTheme.colorScheme.tertiary)
                             NutrientInfoDialog("Белки", "${result.product.proteinPer100g.toInt()} г", MaterialTheme.colorScheme.secondary)
                             NutrientInfoDialog("Жиры", "${result.product.fatPer100g.toInt()} г", MaterialTheme.colorScheme.error)
-                            NutrientInfoDialog("Углеводы", "${result.product.carbsPer100g.toInt()} г", Color(0xFF9C27B0)) // оставим фиолетовый как акцент
+                            NutrientInfoDialog("Углеводы", "${result.product.carbsPer100g.toInt()} г", Color(0xFF9C27B0))
                         }
 
                         MealTypeSelector(
@@ -123,6 +147,7 @@ fun RecognitionResultDialog(
                     }
 
                     is RecognitionResult.MultipleMatches -> {
+                        // ... (без изменений)
                         Text(
                             text = "Найдено несколько похожих блюд:",
                             color = MaterialTheme.colorScheme.onSurface
@@ -163,6 +188,7 @@ fun RecognitionResultDialog(
                     }
 
                     is RecognitionResult.NotFound -> {
+                        // ... (без изменений)
                         Text(
                             text = "Блюдо \"${result.suggestedName}\" не найдено в базе.",
                             color = MaterialTheme.colorScheme.onSurface
@@ -193,9 +219,100 @@ fun RecognitionResultDialog(
                                 Text("📝 Добавить вручную (без сохранения)", color = MaterialTheme.colorScheme.onSurface)
                             }
                         } else {
+                            // ... (ручной ввод)
                             Text(
                                 text = "Добавьте блюдо вручную:",
                                 color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            OutlinedTextField(
+                                value = manualName,
+                                onValueChange = { manualName = it },
+                                label = { Text("Название", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
+                            )
+
+                            OutlinedTextField(
+                                value = manualProtein,
+                                onValueChange = { manualProtein = it },
+                                label = { Text("Белки на 100г", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
+                            )
+
+                            OutlinedTextField(
+                                value = manualFat,
+                                onValueChange = { manualFat = it },
+                                label = { Text("Жиры на 100г", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
+                            )
+
+                            OutlinedTextField(
+                                value = manualCarbs,
+                                onValueChange = { manualCarbs = it },
+                                label = { Text("Углеводы на 100г", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
+                            )
+
+                            val proteinVal = manualProtein.toDoubleOrNull() ?: 0.0
+                            val fatVal = manualFat.toDoubleOrNull() ?: 0.0
+                            val carbsVal = manualCarbs.toDoubleOrNull() ?: 0.0
+                            val calories = proteinVal * 4 + fatVal * 9 + carbsVal * 4
+
+                            if (manualName.isNotBlank() && (proteinVal > 0 || fatVal > 0 || carbsVal > 0)) {
+                                Text(
+                                    text = "КБЖУ на 100г: ${calories.toInt()} ккал | Б: ${proteinVal.toInt()}г | Ж: ${fatVal.toInt()}г | У: ${carbsVal.toInt()}г",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+
+                    is RecognitionResult.LowConfidence -> {
+                        Text(
+                            text = "Не удалось распознать блюдо с достаточной уверенностью (менее 40%).",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    isAddingToDatabase = true
+                                    manualAddMode = ManualAddMode.ADD_ONLY
+                                    manualName = result.suggestedName
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                            ) {
+                                Text("Ввести вручную")
+                            }
+
+                            Button(
+                                onClick = { showLocalSearchDialog = true },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            ) {
+                                Text("Выбрать из базы")
+                            }
+                        }
+
+                        if (isAddingToDatabase) {
+                            // Ручной ввод (как в NotFound)
+                            Text(
+                                text = "Добавьте блюдо вручную:",
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(top = 8.dp)
                             )
 
                             OutlinedTextField(
@@ -322,6 +439,35 @@ fun RecognitionResultDialog(
                         }
                     }
                 }
+                is RecognitionResult.LowConfidence -> {
+                    if (isAddingToDatabase) {
+                        Button(
+                            onClick = {
+                                val protein = manualProtein.toDoubleOrNull() ?: 0.0
+                                val fat = manualFat.toDoubleOrNull() ?: 0.0
+                                val carbs = manualCarbs.toDoubleOrNull() ?: 0.0
+                                val factor = portion.toDoubleOrNull()?.div(100) ?: 1.0
+
+                                val finalName = manualName.ifBlank { result.suggestedName }
+
+                                // Не сохраняем в базу при LowConfidence – только добавляем в дневник
+                                onConfirm(
+                                    finalName,
+                                    selectedMealType,
+                                    portion.toDoubleOrNull() ?: 100.0,
+                                    protein * factor,
+                                    fat * factor,
+                                    carbs * factor
+                                )
+                                onDismiss()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            enabled = isManualFormValid
+                        ) {
+                            Text("📝 Добавить в дневник", color = MaterialTheme.colorScheme.onPrimary)
+                        }
+                    }
+                }
                 is RecognitionResult.MultipleMatches -> { }
                 is RecognitionResult.Error -> {
                     Button(
@@ -334,7 +480,7 @@ fun RecognitionResultDialog(
             }
         },
         dismissButton = {
-            if (result !is RecognitionResult.MultipleMatches) {
+            if (result !is RecognitionResult.MultipleMatches && result !is RecognitionResult.LowConfidence) {
                 TextButton(onClick = onDismiss) {
                     Text("Отмена", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                 }
@@ -344,6 +490,72 @@ fun RecognitionResultDialog(
         titleContentColor = MaterialTheme.colorScheme.onSurface,
         textContentColor = MaterialTheme.colorScheme.onSurface
     )
+
+    // Диалог выбора из локальной базы
+    if (showLocalSearchDialog) {
+        AlertDialog(
+            onDismissRequest = { showLocalSearchDialog = false },
+            title = { Text("Выберите продукт из базы") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = localSearchQuery,
+                        onValueChange = { localSearchQuery = it },
+                        label = { Text("Поиск") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    LazyColumn(modifier = Modifier.height(300.dp)) {
+                        items(localSearchResults) { product ->
+                            TextButton(
+                                onClick = {
+                                    // Добавляем выбранный продукт в дневник
+                                    val factor = portion.toDoubleOrNull()?.div(100) ?: 1.0
+                                    onConfirm(
+                                        product.name,
+                                        selectedMealType,
+                                        portion.toDoubleOrNull() ?: 100.0,
+                                        product.proteinPer100g * factor,
+                                        product.fatPer100g * factor,
+                                        product.carbsPer100g * factor
+                                    )
+                                    showLocalSearchDialog = false
+                                    onDismiss()
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column {
+                                    Text(
+                                        text = product.name.toUserVisibleFoodName(),
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "${product.caloriesPer100g.toInt()} ккал | Б:${product.proteinPer100g.toInt()}г Ж:${product.fatPer100g.toInt()}г У:${product.carbsPer100g.toInt()}г",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+                        }
+                        if (localSearchQuery.isNotBlank() && localSearchResults.isEmpty()) {
+                            item {
+                                Text(
+                                    text = "Ничего не найдено",
+                                    modifier = Modifier.padding(16.dp),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showLocalSearchDialog = false }) {
+                    Text("Отмена")
+                }
+            }
+        )
+    }
 }
 
 @Composable

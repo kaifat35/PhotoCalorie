@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -52,6 +50,7 @@ import androidx.navigation.NavController
 import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.FoodEntry
 import com.stafeewa.photocalorie.app.domain.entity.MealType
+import com.stafeewa.photocalorie.app.utils.toUserVisibleFoodName
 
 @Composable
 fun FoodIntakeScreen(
@@ -513,14 +512,4 @@ fun NutrientBadge(
             fontFamily = FontFamily(Font(R.font.jura))
         )
     }
-}
-
-private fun String.toUserVisibleFoodName(): String {
-    val normalized = trim()
-    val keywordPattern = Regex(
-        """\s*(?:[|•—–-]\s*)?(?:keywords?|ключ(?:ев(?:ое|ые))?\s*слов(?:о|а)?)\s*[:=]?\s*.*$""",
-        RegexOption.IGNORE_CASE
-    )
-    val withoutKeyword = normalized.replace(keywordPattern, "").trim()
-    return withoutKeyword.ifEmpty { normalized }
 }

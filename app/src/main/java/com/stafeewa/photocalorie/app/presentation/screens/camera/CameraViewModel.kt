@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
+import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.AddRecognizedFoodToDatabaseUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.RecognizeFoodUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +24,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CameraViewModel @Inject constructor(
     private val recognizeFoodUseCase: RecognizeFoodUseCase,
-    private val addRecognizedFoodToDatabaseUseCase: AddRecognizedFoodToDatabaseUseCase
+    private val addRecognizedFoodToDatabaseUseCase: AddRecognizedFoodToDatabaseUseCase,
+    val productRepository: ProductRepository
 ) : ViewModel() {
 
     private val _recognitionResult = MutableStateFlow<RecognitionResult?>(null)
@@ -81,19 +83,21 @@ class CameraViewModel @Inject constructor(
                         confidence = result.confidence
                     )
                 }
-
                 is RecognizeFoodUseCase.Result.MultipleMatches -> {
                     RecognitionResult.MultipleMatches(
                         matches = result.products
                     )
                 }
-
                 is RecognizeFoodUseCase.Result.NotFound -> {
                     RecognitionResult.NotFound(
                         suggestedName = result.suggestedName
                     )
                 }
-
+                is RecognizeFoodUseCase.Result.LowConfidence -> {
+                    RecognitionResult.LowConfidence(
+                        suggestedName = result.suggestedName
+                    )
+                }
                 is RecognizeFoodUseCase.Result.Error -> {
                     RecognitionResult.Error(result.message)
                 }
@@ -140,6 +144,7 @@ class CameraViewModel @Inject constructor(
     fun clearResult() {
         _recognitionResult.value = null
     }
+
     override fun onCleared() {
         recognizeFoodUseCase.close()
         super.onCleared()
@@ -150,5 +155,6 @@ sealed class RecognitionResult {
     data class Success(val product: Product, val confidence: Float) : RecognitionResult()
     data class MultipleMatches(val matches: List<RecognizeFoodUseCase.ProductMatch>) : RecognitionResult()
     data class NotFound(val suggestedName: String) : RecognitionResult()
+    data class LowConfidence(val suggestedName: String) : RecognitionResult()   // новый тип
     data class Error(val message: String) : RecognitionResult()
 }
