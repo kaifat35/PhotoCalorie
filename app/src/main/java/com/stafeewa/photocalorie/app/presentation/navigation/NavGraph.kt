@@ -54,20 +54,7 @@ fun NavGraph(
 
         // Камера
         composable(Destination.CAMERA.route) {
-            CameraScreen(
-                onFoodRecognized = { name, mealType, portion, protein, fat, carbs ->
-                    val resultBundle = Bundle().apply {
-                        putString("name", name)
-                        putString("mealType", mealType.name)
-                        putDouble("portion", portion)
-                        putDouble("protein", protein)
-                        putDouble("fat", fat)
-                        putDouble("carbs", carbs)
-                    }
-                    navController.previousBackStackEntry?.savedStateHandle?.set("food_result", resultBundle)
-                    navController.popBackStack()
-                }
-            )
+            CameraScreen()
         }
 
         // Рецепты

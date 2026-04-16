@@ -52,34 +52,22 @@ class ProductRepositoryImpl @Inject constructor(
     private fun getDefaultProducts(): List<Product> {
         val breakfastProducts = createProductsForMeal(
             mealType = MealType.BREAKFAST,
-            names = BREAKFAST_DISHES,
-            baseProtein = 9.0,
-            baseFat = 7.0,
-            baseCarbs = 20.0,
+            names = breakfastDishes,
             defaultPortion = 180.0
         )
         val lunchProducts = createProductsForMeal(
             mealType = MealType.LUNCH,
-            names = LUNCH_DISHES,
-            baseProtein = 13.0,
-            baseFat = 9.0,
-            baseCarbs = 18.0,
+            names = lunchDishes,
             defaultPortion = 260.0
         )
         val dinnerProducts = createProductsForMeal(
             mealType = MealType.DINNER,
-            names = DINNER_DISHES,
-            baseProtein = 14.0,
-            baseFat = 7.0,
-            baseCarbs = 12.0,
+            names = dinnerDishes,
             defaultPortion = 220.0
         )
         val snackProducts = createProductsForMeal(
             mealType = MealType.SNACK,
-            names = SNACK_DISHES,
-            baseProtein = 6.0,
-            baseFat = 6.0,
-            baseCarbs = 16.0,
+            names = snackDishes,
             defaultPortion = 90.0
         )
 
@@ -91,16 +79,11 @@ class ProductRepositoryImpl @Inject constructor(
     private fun createProductsForMeal(
         mealType: MealType,
         names: List<String>,
-        baseProtein: Double,
-        baseFat: Double,
-        baseCarbs: Double,
         defaultPortion: Double
     ): List<Product> {
-        return names.mapIndexed { index, name ->
-            val protein = (baseProtein + ((index % 9) - 4) * 0.7).coerceAtLeast(1.0)
-            val fat = (baseFat + ((index % 7) - 3) * 0.6).coerceAtLeast(0.5)
-            val carbs = (baseCarbs + ((index % 11) - 5) * 1.3).coerceAtLeast(2.0)
-            val calories = (protein * 4 + fat * 9 + carbs * 4)
+        return names.map { name ->
+            val (protein, fat, carbs) = getRealisticNutrition(name, mealType)
+            val calories = protein * 4 + fat * 9 + carbs * 4
 
             Product(
                 name = name,
@@ -114,111 +97,260 @@ class ProductRepositoryImpl @Inject constructor(
         }
     }
 
-    private val BREAKFAST_DISHES: List<String> = listOf(
-        "Картошка фри",
-        "Овсяная каша на молоке",
-        "Овсяная каша на воде",
-        "Гречневая каша",
-        "Рисовая каша на молоке",
-        "Пшённая каша",
-        "Манная каша",
-        "Кукурузная каша",
-        "Перловая каша",
-        "Булгур на завтрак",
-        "Киноа с фруктами",
-        "Яичница из двух яиц",
-        "Яичница с помидорами",
-        "Яичница с беконом",
-        "Омлет классический",
-        "Омлет с сыром",
-        "Омлет с овощами",
-        "Омлет с грибами",
-        "Скрэмбл из яиц",
-        "Яйца пашот",
-        "Варёные яйца",
-        "Сырники из творога",
-        "Творожная запеканка",
-        "Творог 5%",
-        "Творог с ягодами",
-        "Творог с мёдом",
-        "Творог с бананом",
-        "Ленивые вареники",
-        "Йогурт греческий",
-        "Йогурт с гранолой",
-        "Кефир с отрубями",
-        "Блины с творогом",
-        "Блины с мёдом",
-        "Блины с ягодами",
-        "Оладьи на кефире",
-        "Панкейки",
-        "Вафли домашние",
-        "Гренки с яйцом",
-        "Тост с авокадо",
-        "Тост с сыром",
-        "Тост с арахисовой пастой",
-        "Бутерброд с маслом и сыром",
-        "Бутерброд с ветчиной",
-        "Бутерброд с индейкой",
-        "Сэндвич с яйцом",
-        "Сэндвич с курицей",
-        "Буррито с яйцом",
-        "Кесадилья с сыром",
-        "Лаваш с творожным сыром",
-        "Ролл с омлетом",
-        "Круассан",
-        "Мюсли с молоком",
-        "Гранола с йогуртом",
-        "Хлопья с молоком",
-        "Пшеница с молоком",
-        "Чиа-пудинг",
-        "Пудинг рисовый",
-        "Смузи банановый",
-        "Смузи ягодный",
-        "Смузи протеиновый",
-        "Фруктовый салат",
-        "Шакшука",
-        "Хачапури по-аджарски",
-        "Каша Дружба",
-        "Сырная каша",
-        "Каша с тыквой",
-        "Запечённые яблоки с творогом",
-        "Запеканка из овсянки",
-        "Маффин овсяный",
-        "Омлет белковый",
-        "Протеиновый блин",
-        "Рисовые хлебцы с творожным сыром",
-        "Бутерброд с красной рыбой",
-        "Брускетта с томатами",
-        "Брускетта с авокадо",
-        "Каша из полбы",
-        "Паста из творога и зелени",
-        "Салат с яйцом и огурцом",
-        "Киноа с йогуртом",
-        "Пшеничная каша",
-        "Гречка с молоком",
-        "Суп-пюре тыквенный",
-        "Бульон куриный с яйцом",
-        "Салат из творога и зелени",
-        "Сырная лепёшка",
-        "Лепёшка с яйцом",
-        "Тортилья с омлетом",
-        "Запечённый батат",
-        "Творожный крем",
-        "Какао с молоком",
-        "Ряженка с гранолой",
-        "Пита с омлетом",
-        "Бейгл с лососем",
-        "Бейгл с творожным сыром",
-        "Сэндвич с тунцом",
-        "Овсяноблин",
-        "Сырный омлет",
-        "Яичный салат",
-        "Паштет из тунца на тосте",
-        "Каша с сухофруктами",
-        "Яблочный штрудель"
+    private fun getRealisticNutrition(
+        name: String,
+        mealType: MealType
+    ): Triple<Double, Double, Double> {
+        val normalized = name.lowercase()
+
+        // Категоризация блюд с типичными диапазонами (белки, жиры, углеводы)
+        when {
+            // === Завтраки ===
+            "каша" in normalized -> {
+                if ("молок" in normalized) return Triple(5.0, 4.0, 18.0)   // каша на молоке
+                return Triple(3.5, 1.5, 15.0)                              // каша на воде
+            }
+
+            "гречневая" in normalized || "гречка" in normalized -> return Triple(4.5, 2.5, 20.0)
+            "рисовая" in normalized -> return Triple(3.0, 1.0, 22.0)
+            "овсяная" in normalized -> return Triple(3.5, 2.0, 16.0)
+            "пшённая" in normalized -> return Triple(3.5, 2.0, 17.0)
+            "манная" in normalized -> return Triple(3.0, 1.5, 20.0)
+            "кукурузная" in normalized -> return Triple(2.5, 1.2, 21.0)
+            "перловая" in normalized -> return Triple(3.0, 1.2, 18.0)
+            "булгур" in normalized -> return Triple(4.0, 1.5, 18.0)
+            "киноа" in normalized -> return Triple(4.5, 2.0, 18.0)
+
+            "яичница" in normalized || "омлет" in normalized || "яйца" in normalized -> {
+                if ("сыр" in normalized) return Triple(12.0, 12.0, 2.0)
+                if ("бекон" in normalized) return Triple(13.0, 15.0, 1.5)
+                if ("овощ" in normalized) return Triple(9.0, 8.0, 4.0)
+                return Triple(10.0, 9.0, 1.5)   // классическая яичница/омлет
+            }
+
+            "варёные яйца" in normalized -> return Triple(12.5, 11.0, 0.7)
+
+            "творог" in normalized || "сырник" in normalized || "творожная запеканка" in normalized -> {
+                if ("запеканка" in normalized) return Triple(12.0, 6.0, 12.0)
+                if ("сырник" in normalized) return Triple(11.0, 9.0, 15.0)
+                return Triple(12.0, 5.0, 3.0)   // творог 5%
+            }
+
+            "йогурт" in normalized -> {
+                if ("греческий" in normalized) return Triple(10.0, 0.5, 4.0)
+                return Triple(3.5, 1.5, 6.0)
+            }
+
+            "блин" in normalized || "оладьи" in normalized || "панкейк" in normalized -> {
+                if ("творог" in normalized) return Triple(8.0, 6.0, 20.0)
+                return Triple(5.5, 5.0, 22.0)
+            }
+
+            "тост" in normalized || "брускетта" in normalized -> {
+                if ("авокадо" in normalized) return Triple(3.0, 9.0, 14.0)
+                if ("сыр" in normalized) return Triple(6.0, 7.0, 15.0)
+                return Triple(4.0, 3.0, 18.0)
+            }
+
+            "бутерброд" in normalized || "сэндвич" in normalized -> {
+                if ("курица" in normalized) return Triple(12.0, 6.0, 16.0)
+                if ("рыба" in normalized || "лосось" in normalized) return Triple(13.0, 8.0, 15.0)
+                return Triple(8.0, 7.0, 18.0)
+            }
+
+            "смузи" in normalized -> {
+                if ("банан" in normalized) return Triple(2.0, 0.5, 14.0)
+                if ("ягод" in normalized) return Triple(1.5, 0.3, 12.0)
+                return Triple(2.0, 0.5, 10.0)
+            }
+
+            "шакшука" in normalized -> return Triple(8.0, 7.0, 6.0)
+
+            // === Обеды (супы, горячее, салаты) ===
+            "борщ" in normalized -> return Triple(3.0, 2.5, 5.0)
+            "щи" in normalized -> return Triple(2.5, 2.0, 4.5)
+            "солянка" in normalized -> return Triple(4.5, 3.0, 3.0)
+            "рассольник" in normalized -> return Triple(2.8, 2.2, 4.0)
+            "харчо" in normalized -> return Triple(4.0, 2.5, 5.0)
+            "уха" in normalized -> return Triple(3.5, 1.5, 2.0)
+            "суп" in normalized -> {
+                if ("кури" in normalized) return Triple(3.0, 2.0, 3.5)
+                if ("гриб" in normalized) return Triple(2.0, 1.5, 3.0)
+                if ("горохов" in normalized) return Triple(4.0, 1.5, 8.0)
+                if ("чечевич" in normalized) return Triple(5.0, 1.0, 10.0)
+                if ("пюре" in normalized) return Triple(2.5, 2.0, 6.0)
+                return Triple(2.5, 1.8, 4.0)
+            }
+
+            "окрошка" in normalized -> return Triple(3.0, 2.0, 5.0)
+
+            "плов" in normalized -> {
+                if ("куриц" in normalized) return Triple(7.0, 6.0, 20.0)
+                if ("говяд" in normalized) return Triple(8.0, 7.0, 20.0)
+                return Triple(7.5, 6.5, 20.0)
+            }
+
+            "гречка" in normalized && ("куриц" in normalized || "говяд" in normalized) -> {
+                return Triple(8.0, 5.0, 18.0)
+            }
+
+            "макарон" in normalized || "паста" in normalized || "спагетти" in normalized -> {
+                if ("болоньезе" in normalized) return Triple(8.0, 6.0, 22.0)
+                if ("карбонара" in normalized) return Triple(9.0, 12.0, 20.0)
+                if ("куриц" in normalized) return Triple(10.0, 5.0, 22.0)
+                return Triple(6.0, 4.0, 25.0)
+            }
+
+            "котлет" in normalized || "тефтели" in normalized || "фрикадельки" in normalized -> {
+                if ("куриц" in normalized) return Triple(15.0, 8.0, 5.0)
+                if ("говяд" in normalized) return Triple(14.0, 10.0, 4.0)
+                return Triple(13.0, 9.0, 5.0)
+            }
+
+            "голубцы" in normalized -> return Triple(6.0, 4.0, 12.0)
+            "перец фаршированный" in normalized -> return Triple(5.0, 4.0, 8.0)
+            "пельмени" in normalized -> return Triple(9.0, 8.0, 18.0)
+            "вареники" in normalized -> {
+                if ("картофель" in normalized) return Triple(4.0, 3.0, 20.0)
+                return Triple(6.0, 5.0, 22.0)
+            }
+
+            "манты" in normalized -> return Triple(10.0, 8.0, 16.0)
+
+            "куриная грудка" in normalized -> return Triple(23.0, 2.0, 0.0)
+            "индейка" in normalized -> return Triple(22.0, 2.5, 0.0)
+            "говядина" in normalized -> return Triple(20.0, 8.0, 0.0)
+            "свинина" in normalized -> return Triple(16.0, 15.0, 0.0)
+            "лосось" in normalized || "семга" in normalized -> return Triple(20.0, 13.0, 0.0)
+            "треска" in normalized -> return Triple(18.0, 1.0, 0.0)
+            "минтай" in normalized -> return Triple(16.0, 1.0, 0.0)
+            "рыба" in normalized -> return Triple(17.0, 5.0, 0.0)
+
+            "картофельное пюре" in normalized -> return Triple(2.0, 3.0, 14.0)
+            "картофель запечённый" in normalized -> return Triple(2.0, 0.5, 15.0)
+            "картошка фри" in normalized -> return Triple(2.5, 10.0, 28.0)
+            "драники" in normalized -> return Triple(3.0, 8.0, 20.0)
+
+            "салат" in normalized -> {
+                if ("цезарь" in normalized) return Triple(8.0, 12.0, 5.0)
+                if ("оливье" in normalized) return Triple(5.0, 8.0, 7.0)
+                if ("греческий" in normalized) return Triple(4.0, 8.0, 4.0)
+                if ("тунец" in normalized) return Triple(12.0, 6.0, 3.0)
+                if ("крабовый" in normalized) return Triple(6.0, 5.0, 8.0)
+                if ("овощной" in normalized) return Triple(1.5, 0.5, 5.0)
+                return Triple(3.0, 4.0, 6.0)
+            }
+
+            // === Ужины (лёгкие блюда) ===
+            "запечённая куриная грудка" in normalized -> return Triple(23.0, 2.0, 0.0)
+            "куриное филе на пару" in normalized -> return Triple(24.0, 1.5, 0.0)
+            "творог 5%" in normalized -> return Triple(12.0, 5.0, 3.0)
+            "рыба на пару" in normalized -> return Triple(18.0, 2.0, 0.0)
+            "овощное рагу" in normalized -> return Triple(1.5, 1.0, 6.0)
+            "тушёная капуста" in normalized -> return Triple(1.5, 0.5, 5.0)
+            "брокколи на пару" in normalized -> return Triple(3.0, 0.4, 4.0)
+            "цветная капуста запечённая" in normalized -> return Triple(2.5, 0.5, 4.5)
+            "кабачки гриль" in normalized -> return Triple(1.2, 0.3, 3.5)
+            "баклажаны запечённые" in normalized -> return Triple(1.0, 0.2, 5.0)
+            "стручковая фасоль" in normalized -> return Triple(2.0, 0.2, 5.0)
+            "шпинат тушёный" in normalized -> return Triple(2.5, 0.5, 1.5)
+
+            // === Перекусы (фрукты, орехи, молочка) ===
+            "яблоко" in normalized -> return Triple(0.3, 0.2, 14.0)
+            "банан" in normalized -> return Triple(1.1, 0.3, 23.0)
+            "груша" in normalized -> return Triple(0.4, 0.2, 15.0)
+            "апельсин" in normalized -> return Triple(0.9, 0.2, 11.0)
+            "мандарин" in normalized -> return Triple(0.8, 0.2, 10.0)
+            "киви" in normalized -> return Triple(1.0, 0.5, 12.0)
+            "ананас" in normalized -> return Triple(0.5, 0.1, 13.0)
+            "клубника" in normalized -> return Triple(0.7, 0.3, 7.0)
+            "малина" in normalized -> return Triple(1.2, 0.6, 6.0)
+            "виноград" in normalized -> return Triple(0.6, 0.2, 17.0)
+            "арбуз" in normalized -> return Triple(0.6, 0.2, 8.0)
+            "дыня" in normalized -> return Triple(0.8, 0.2, 9.0)
+
+            "сухофрукты" in normalized -> return Triple(2.0, 0.5, 55.0)
+            "курага" in normalized -> return Triple(1.5, 0.2, 55.0)
+            "чернослив" in normalized -> return Triple(2.0, 0.5, 57.0)
+            "изюм" in normalized -> return Triple(2.5, 0.5, 66.0)
+            "финики" in normalized -> return Triple(2.0, 0.2, 70.0)
+
+            "орехи" in normalized -> {
+                if ("миндаль" in normalized) return Triple(21.0, 50.0, 22.0)
+                if ("грецкий" in normalized) return Triple(15.0, 65.0, 14.0)
+                if ("кешью" in normalized) return Triple(18.0, 44.0, 30.0)
+                if ("арахис" in normalized) return Triple(26.0, 49.0, 16.0)
+                return Triple(15.0, 50.0, 20.0)
+            }
+
+            "семечки" in normalized -> {
+                if ("подсолнечника" in normalized) return Triple(21.0, 51.0, 20.0)
+                return Triple(20.0, 49.0, 22.0)
+            }
+
+            "протеиновый батончик" in normalized -> return Triple(25.0, 10.0, 35.0)
+            "злаковый батончик" in normalized -> return Triple(5.0, 5.0, 30.0)
+            "рисовые хлебцы" in normalized -> return Triple(3.0, 1.0, 28.0)
+            "попкорн" in normalized -> return Triple(4.0, 2.0, 20.0)
+            "горький шоколад" in normalized -> return Triple(8.0, 40.0, 35.0)
+
+            // === Напитки ===
+            "сок" in normalized -> {
+                if ("апельсиновый" in normalized) return Triple(0.7, 0.2, 11.0)
+                if ("яблочный" in normalized) return Triple(0.2, 0.1, 11.0)
+                return Triple(0.5, 0.1, 10.0)
+            }
+
+            "компот" in normalized -> return Triple(0.2, 0.1, 8.0)
+            "морс" in normalized -> return Triple(0.1, 0.0, 7.0)
+            "какао" in normalized -> return Triple(3.5, 2.5, 10.0)
+            "латте" in normalized -> return Triple(3.5, 2.0, 4.0)
+            "капучино" in normalized -> return Triple(3.0, 1.5, 3.0)
+
+            else -> {
+                // fallback по типу приёма пищи
+                return when (mealType) {
+                    MealType.BREAKFAST -> Triple(7.0, 6.0, 15.0)
+                    MealType.LUNCH -> Triple(10.0, 8.0, 12.0)
+                    MealType.DINNER -> Triple(12.0, 5.0, 8.0)
+                    MealType.SNACK -> Triple(5.0, 4.0, 15.0)
+                }
+            }
+        }
+    }
+
+    // Списки блюд (оставлены без изменений, очень длинные)
+    private val breakfastDishes: List<String> = listOf(
+        "Картошка фри", "Овсяная каша на молоке", "Овсяная каша на воде", "Гречневая каша",
+        "Рисовая каша на молоке", "Пшённая каша", "Манная каша", "Кукурузная каша",
+        "Перловая каша", "Булгур на завтрак", "Киноа с фруктами", "Яичница из двух яиц",
+        "Яичница с помидорами", "Яичница с беконом", "Омлет классический", "Омлет с сыром",
+        "Омлет с овощами", "Омлет с грибами", "Скрэмбл из яиц", "Яйца пашот",
+        "Варёные яйца", "Сырники из творога", "Творожная запеканка", "Творог 5%",
+        "Творог с ягодами", "Творог с мёдом", "Творог с бананом", "Ленивые вареники",
+        "Йогурт греческий", "Йогурт с гранолой", "Кефир с отрубями", "Блины с творогом",
+        "Блины с мёдом", "Блины с ягодами", "Оладьи на кефире", "Панкейки",
+        "Вафли домашние", "Гренки с яйцом", "Тост с авокадо", "Тост с сыром",
+        "Тост с арахисовой пастой", "Бутерброд с маслом и сыром", "Бутерброд с ветчиной",
+        "Бутерброд с индейкой", "Сэндвич с яйцом", "Сэндвич с курицей", "Буррито с яйцом",
+        "Кесадилья с сыром", "Лаваш с творожным сыром", "Ролл с омлетом", "Круассан",
+        "Мюсли с молоком", "Гранола с йогуртом", "Хлопья с молоком", "Пшеница с молоком",
+        "Чиа-пудинг", "Пудинг рисовый", "Смузи банановый", "Смузи ягодный",
+        "Смузи протеиновый", "Фруктовый салат", "Шакшука", "Хачапури по-аджарски",
+        "Каша Дружба", "Сырная каша", "Каша с тыквой", "Запечённые яблоки с творогом",
+        "Запеканка из овсянки", "Маффин овсяный", "Омлет белковый", "Протеиновый блин",
+        "Рисовые хлебцы с творожным сыром", "Бутерброд с красной рыбой",
+        "Брускетта с томатами", "Брускетта с авокадо", "Каша из полбы",
+        "Паста из творога и зелени", "Салат с яйцом и огурцом", "Киноа с йогуртом",
+        "Пшеничная каша", "Гречка с молоком", "Суп-пюре тыквенный",
+        "Бульон куриный с яйцом", "Салат из творога и зелени", "Сырная лепёшка",
+        "Лепёшка с яйцом", "Тортилья с омлетом", "Запечённый батат", "Творожный крем",
+        "Какао с молоком", "Ряженка с гранолой", "Пита с омлетом", "Бейгл с лососем",
+        "Бейгл с творожным сыром", "Сэндвич с тунцом", "Овсяноблин", "Сырный омлет",
+        "Яичный салат", "Паштет из тунца на тосте", "Каша с сухофруктами", "Яблочный штрудель"
     )
 
-    private val LUNCH_DISHES: List<String> = listOf(
+    private val lunchDishes: List<String> = listOf(
         "Борщ с говядиной",
         "Борщ постный",
         "Щи из свежей капусты",
@@ -321,7 +453,7 @@ class ProductRepositoryImpl @Inject constructor(
         "Шашлык свиной"
     )
 
-    private val DINNER_DISHES: List<String> = listOf(
+    private val dinnerDishes: List<String> = listOf(
         "Запечённая куриная грудка",
         "Куриное филе на пару",
         "Индейка с овощами",
@@ -425,7 +557,7 @@ class ProductRepositoryImpl @Inject constructor(
         "Салат с моцареллой"
     )
 
-    private val SNACK_DISHES: List<String> = listOf(
+    private val snackDishes: List<String> = listOf(
         "Яблоко",
         "Банан",
         "Груша",
@@ -536,7 +668,11 @@ class ProductRepositoryImpl @Inject constructor(
         if ("овся" in normalizedName) base += listOf("oatmeal", "oats")
         if ("греч" in normalizedName) base += listOf("buckwheat")
         if ("рис" in normalizedName) base += listOf("rice")
-        if ("яич" in normalizedName || "омлет" in normalizedName) base += listOf("egg", "omelette", "omelet")
+        if ("яич" in normalizedName || "омлет" in normalizedName) base += listOf(
+            "egg",
+            "omelette",
+            "omelet"
+        )
         if ("твор" in normalizedName || "сырник" in normalizedName || "запеканка" in normalizedName) {
             base += listOf("cottage cheese", "curd", "cheesecake")
         }
@@ -552,7 +688,10 @@ class ProductRepositoryImpl @Inject constructor(
         if ("котлет" in normalizedName) base += listOf("cutlet", "patty")
         if ("плов" in normalizedName) base += listOf("pilaf", "pilau")
         if ("макарон" in normalizedName) base += listOf("pasta", "spaghetti", "noodles")
-        if ("пюре" in normalizedName || "картофель" in normalizedName) base += listOf("mashed potato", "potato")
+        if ("пюре" in normalizedName || "картофель" in normalizedName) base += listOf(
+            "mashed potato",
+            "potato"
+        )
         if ("овощ" in normalizedName || "рагу" in normalizedName || "капуст" in normalizedName) {
             base += listOf("vegetables", "stew")
         }

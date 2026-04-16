@@ -51,13 +51,14 @@ import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import com.stafeewa.photocalorie.app.presentation.screens.foodmain.FoodIntakeViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun CameraScreen(
-    onFoodRecognized: (name: String, mealType: MealType, portion: Double, protein: Double, fat: Double, carbs: Double) -> Unit,
     viewModel: CameraViewModel = hiltViewModel()
 ) {
+    val foodIntakeViewModel: FoodIntakeViewModel = hiltViewModel()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -200,7 +201,7 @@ fun CameraScreen(
                 viewModel.clearResult()
             },
             onConfirm = { name, mealType, portion, protein, fat, carbs ->
-                onFoodRecognized(name, mealType, portion, protein, fat, carbs)
+                foodIntakeViewModel.addFoodEntry(name, mealType, portion, protein, fat, carbs)
                 showResultDialog = false
                 viewModel.clearResult()
             },
