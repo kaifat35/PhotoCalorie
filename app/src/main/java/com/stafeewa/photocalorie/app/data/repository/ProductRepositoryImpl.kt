@@ -48,666 +48,1028 @@ class ProductRepositoryImpl @Inject constructor(
             addProducts(getDefaultProducts())
         }
     }
-
     private fun getDefaultProducts(): List<Product> {
-        val breakfastProducts = createProductsForMeal(
-            mealType = MealType.BREAKFAST,
-            names = breakfastDishes,
-            defaultPortion = 180.0
-        )
-        val lunchProducts = createProductsForMeal(
-            mealType = MealType.LUNCH,
-            names = lunchDishes,
-            defaultPortion = 260.0
-        )
-        val dinnerProducts = createProductsForMeal(
-            mealType = MealType.DINNER,
-            names = dinnerDishes,
-            defaultPortion = 220.0
-        )
-        val snackProducts = createProductsForMeal(
-            mealType = MealType.SNACK,
-            names = snackDishes,
-            defaultPortion = 90.0
-        )
-
-        return (breakfastProducts + lunchProducts + dinnerProducts + snackProducts).map { product ->
-            product.copy(keywords = buildMlKeywords(product.name))
-        }
-    }
-
-    private fun createProductsForMeal(
-        mealType: MealType,
-        names: List<String>,
-        defaultPortion: Double
-    ): List<Product> {
-        return names.map { name ->
-            val (protein, fat, carbs) = getRealisticNutrition(name, mealType)
-            val calories = protein * 4 + fat * 9 + carbs * 4
-
+        return allRealProducts.map { (name, nutrition) ->
             Product(
                 name = name,
-                mealType = mealType,
-                defaultPortion = defaultPortion,
-                proteinPer100g = protein,
-                fatPer100g = fat,
-                carbsPer100g = carbs,
-                caloriesPer100g = calories
+                mealType = guessMealType(name),
+                defaultPortion = getDefaultPortionByMealType(guessMealType(name)),
+                proteinPer100g = nutrition.protein,
+                fatPer100g = nutrition.fat,
+                carbsPer100g = nutrition.carbs,
+                caloriesPer100g = nutrition.calories,
+                keywords = buildMlKeywords(name)
             )
         }
     }
 
-    private fun getRealisticNutrition(
-        name: String,
-        mealType: MealType
-    ): Triple<Double, Double, Double> {
-        val normalized = name.lowercase()
+    private fun guessMealType(name: String): MealType {
+        val lower = name.lowercase()
+        return when {
+            // Завтраки
+            "каша" in lower || "манная" in lower || "рисовая" in lower || "гречневая" in lower ||
+                    "овсяная" in lower || "пшённая" in lower || "ячневая" in lower || "яичная каша" in lower ||
+                    "омлет" in lower || "яичница" in lower || "глазунья" in lower || "вареники ленивые" in lower ||
+                    "сырники" in lower || "творожная запеканка" in lower || "блины" in lower || "оладьи" in lower ||
+                    "драчена" in lower || "гурьевская каша" in lower -> MealType.BREAKFAST
 
-        // Категоризация блюд с типичными диапазонами (белки, жиры, углеводы)
-        when {
-            // === Завтраки ===
-            "каша" in normalized -> {
-                if ("молок" in normalized) return Triple(5.0, 4.0, 18.0)   // каша на молоке
-                return Triple(3.5, 1.5, 15.0)                              // каша на воде
-            }
+            // Обеды
+            "суп" in lower || "борщ" in lower || "щи" in lower || "солянка" in lower || "рассольник" in lower ||
+                    "харчо" in lower || "уха" in lower || "окрошка" in lower || "бульон" in lower || "минестроне" in lower ||
+                    "похлебка" in lower || "юшка" in lower || ("крем" in lower && "суп" in lower) ||
+                    "плов" in lower || "макароны" in lower || "паста" in lower || "спагетти" in lower ||
+                    "котлеты" in lower || "биточки" in lower || "тефтели" in lower || "фрикадельки" in lower ||
+                    "зразы" in lower || "голубцы" in lower || "пельмени" in lower || "манты" in lower ||
+                    "бефстроганов" in lower || "гуляш" in lower || "жаркое" in lower || "рагу" in lower ||
+                    "шашлык" in lower || "люля-кебаб" in lower || "чебуреки" in lower || "беляши" in lower ||
+                    "бургер" in lower || "шаурма" in lower || "гарнир" in lower || "клецки" in lower ||
+                    "крокеты" in lower || "профитроли" in lower ||
+                    ("пюре" in lower && "картофель" in lower) ||
+                    ("картофель" in lower && ("жареный" in lower || "тушёный" in lower)) ||
+                    "капуста жареная" in lower ||
+                    ("бобовые" in lower && ("отварные" in lower || "в соусе" in lower)) ||
+                    "картошка фри" in lower -> MealType.LUNCH
 
-            "гречневая" in normalized || "гречка" in normalized -> return Triple(4.5, 2.5, 20.0)
-            "рисовая" in normalized -> return Triple(3.0, 1.0, 22.0)
-            "овсяная" in normalized -> return Triple(3.5, 2.0, 16.0)
-            "пшённая" in normalized -> return Triple(3.5, 2.0, 17.0)
-            "манная" in normalized -> return Triple(3.0, 1.5, 20.0)
-            "кукурузная" in normalized -> return Triple(2.5, 1.2, 21.0)
-            "перловая" in normalized -> return Triple(3.0, 1.2, 18.0)
-            "булгур" in normalized -> return Triple(4.0, 1.5, 18.0)
-            "киноа" in normalized -> return Triple(4.5, 2.0, 18.0)
+            // Ужины
+            "салат" in lower || "винегрет" in lower || "рыба" in lower || "филе" in lower || "треска" in lower ||
+                    "лосось" in lower || "судак" in lower || "щука" in lower || "окунь" in lower || "кальмары" in lower ||
+                    "креветки" in lower || "гребешок" in lower || "овощное рагу" in lower || "овощи" in lower ||
+                    "баклажаны" in lower || "кабачки" in lower || "перец" in lower || "капуста" in lower ||
+                    "брокколи" in lower || "цветная капуста" in lower || "спаржа" in lower || "фасоль" in lower ||
+                    ("запеканка" in lower && !("творожная" in lower)) || "яйца варёные" in lower ||
+                    ("творог" in lower && !("сырники" in lower || "запеканка" in lower)) -> MealType.DINNER
 
-            "яичница" in normalized || "омлет" in normalized || "яйца" in normalized -> {
-                if ("сыр" in normalized) return Triple(12.0, 12.0, 2.0)
-                if ("бекон" in normalized) return Triple(13.0, 15.0, 1.5)
-                if ("овощ" in normalized) return Triple(9.0, 8.0, 4.0)
-                return Triple(10.0, 9.0, 1.5)   // классическая яичница/омлет
-            }
+            // Перекусы
+            "десерт" in lower || "торт" in lower || "пирожное" in lower || "крем" in lower ||
+                    "мусс" in lower || "суфле" in lower || "желе" in lower || "пудинг" in lower ||
+                    "козинаки" in lower || "пастила" in lower || "мармелад" in lower || "варенье" in lower ||
+                    "яблоки печеные" in lower || ("фрукты" in lower && "соус" !in lower) ||
+                    "напиток" in lower || "кисель" in lower || "компот" in lower || "квас" in lower ||
+                    "морс" in lower || "какао" in lower || "кофе" in lower || "чай" in lower ||
+                    "коктейль" in lower || "сбитень" in lower || "отвар" in lower || "молоко" in lower ||
+                    "кефир" in lower || "йогурт" in lower || "ряженка" in lower || "ацидофилин" in lower ||
+                    "простокваша" in lower -> MealType.SNACK
 
-            "варёные яйца" in normalized -> return Triple(12.5, 11.0, 0.7)
-
-            "творог" in normalized || "сырник" in normalized || "творожная запеканка" in normalized -> {
-                if ("запеканка" in normalized) return Triple(12.0, 6.0, 12.0)
-                if ("сырник" in normalized) return Triple(11.0, 9.0, 15.0)
-                return Triple(12.0, 5.0, 3.0)   // творог 5%
-            }
-
-            "йогурт" in normalized -> {
-                if ("греческий" in normalized) return Triple(10.0, 0.5, 4.0)
-                return Triple(3.5, 1.5, 6.0)
-            }
-
-            "блин" in normalized || "оладьи" in normalized || "панкейк" in normalized -> {
-                if ("творог" in normalized) return Triple(8.0, 6.0, 20.0)
-                return Triple(5.5, 5.0, 22.0)
-            }
-
-            "тост" in normalized || "брускетта" in normalized -> {
-                if ("авокадо" in normalized) return Triple(3.0, 9.0, 14.0)
-                if ("сыр" in normalized) return Triple(6.0, 7.0, 15.0)
-                return Triple(4.0, 3.0, 18.0)
-            }
-
-            "бутерброд" in normalized || "сэндвич" in normalized -> {
-                if ("курица" in normalized) return Triple(12.0, 6.0, 16.0)
-                if ("рыба" in normalized || "лосось" in normalized) return Triple(13.0, 8.0, 15.0)
-                return Triple(8.0, 7.0, 18.0)
-            }
-
-            "смузи" in normalized -> {
-                if ("банан" in normalized) return Triple(2.0, 0.5, 14.0)
-                if ("ягод" in normalized) return Triple(1.5, 0.3, 12.0)
-                return Triple(2.0, 0.5, 10.0)
-            }
-
-            "шакшука" in normalized -> return Triple(8.0, 7.0, 6.0)
-
-            // === Обеды (супы, горячее, салаты) ===
-            "борщ" in normalized -> return Triple(3.0, 2.5, 5.0)
-            "щи" in normalized -> return Triple(2.5, 2.0, 4.5)
-            "солянка" in normalized -> return Triple(4.5, 3.0, 3.0)
-            "рассольник" in normalized -> return Triple(2.8, 2.2, 4.0)
-            "харчо" in normalized -> return Triple(4.0, 2.5, 5.0)
-            "уха" in normalized -> return Triple(3.5, 1.5, 2.0)
-            "суп" in normalized -> {
-                if ("кури" in normalized) return Triple(3.0, 2.0, 3.5)
-                if ("гриб" in normalized) return Triple(2.0, 1.5, 3.0)
-                if ("горохов" in normalized) return Triple(4.0, 1.5, 8.0)
-                if ("чечевич" in normalized) return Triple(5.0, 1.0, 10.0)
-                if ("пюре" in normalized) return Triple(2.5, 2.0, 6.0)
-                return Triple(2.5, 1.8, 4.0)
-            }
-
-            "окрошка" in normalized -> return Triple(3.0, 2.0, 5.0)
-
-            "плов" in normalized -> {
-                if ("куриц" in normalized) return Triple(7.0, 6.0, 20.0)
-                if ("говяд" in normalized) return Triple(8.0, 7.0, 20.0)
-                return Triple(7.5, 6.5, 20.0)
-            }
-
-            "гречка" in normalized && ("куриц" in normalized || "говяд" in normalized) -> {
-                return Triple(8.0, 5.0, 18.0)
-            }
-
-            "макарон" in normalized || "паста" in normalized || "спагетти" in normalized -> {
-                if ("болоньезе" in normalized) return Triple(8.0, 6.0, 22.0)
-                if ("карбонара" in normalized) return Triple(9.0, 12.0, 20.0)
-                if ("куриц" in normalized) return Triple(10.0, 5.0, 22.0)
-                return Triple(6.0, 4.0, 25.0)
-            }
-
-            "котлет" in normalized || "тефтели" in normalized || "фрикадельки" in normalized -> {
-                if ("куриц" in normalized) return Triple(15.0, 8.0, 5.0)
-                if ("говяд" in normalized) return Triple(14.0, 10.0, 4.0)
-                return Triple(13.0, 9.0, 5.0)
-            }
-
-            "голубцы" in normalized -> return Triple(6.0, 4.0, 12.0)
-            "перец фаршированный" in normalized -> return Triple(5.0, 4.0, 8.0)
-            "пельмени" in normalized -> return Triple(9.0, 8.0, 18.0)
-            "вареники" in normalized -> {
-                if ("картофель" in normalized) return Triple(4.0, 3.0, 20.0)
-                return Triple(6.0, 5.0, 22.0)
-            }
-
-            "манты" in normalized -> return Triple(10.0, 8.0, 16.0)
-
-            "куриная грудка" in normalized -> return Triple(23.0, 2.0, 0.0)
-            "индейка" in normalized -> return Triple(22.0, 2.5, 0.0)
-            "говядина" in normalized -> return Triple(20.0, 8.0, 0.0)
-            "свинина" in normalized -> return Triple(16.0, 15.0, 0.0)
-            "лосось" in normalized || "семга" in normalized -> return Triple(20.0, 13.0, 0.0)
-            "треска" in normalized -> return Triple(18.0, 1.0, 0.0)
-            "минтай" in normalized -> return Triple(16.0, 1.0, 0.0)
-            "рыба" in normalized -> return Triple(17.0, 5.0, 0.0)
-
-            "картофельное пюре" in normalized -> return Triple(2.0, 3.0, 14.0)
-            "картофель запечённый" in normalized -> return Triple(2.0, 0.5, 15.0)
-            "картошка фри" in normalized -> return Triple(2.5, 10.0, 28.0)
-            "драники" in normalized -> return Triple(3.0, 8.0, 20.0)
-
-            "салат" in normalized -> {
-                if ("цезарь" in normalized) return Triple(8.0, 12.0, 5.0)
-                if ("оливье" in normalized) return Triple(5.0, 8.0, 7.0)
-                if ("греческий" in normalized) return Triple(4.0, 8.0, 4.0)
-                if ("тунец" in normalized) return Triple(12.0, 6.0, 3.0)
-                if ("крабовый" in normalized) return Triple(6.0, 5.0, 8.0)
-                if ("овощной" in normalized) return Triple(1.5, 0.5, 5.0)
-                return Triple(3.0, 4.0, 6.0)
-            }
-
-            // === Ужины (лёгкие блюда) ===
-            "запечённая куриная грудка" in normalized -> return Triple(23.0, 2.0, 0.0)
-            "куриное филе на пару" in normalized -> return Triple(24.0, 1.5, 0.0)
-            "творог 5%" in normalized -> return Triple(12.0, 5.0, 3.0)
-            "рыба на пару" in normalized -> return Triple(18.0, 2.0, 0.0)
-            "овощное рагу" in normalized -> return Triple(1.5, 1.0, 6.0)
-            "тушёная капуста" in normalized -> return Triple(1.5, 0.5, 5.0)
-            "брокколи на пару" in normalized -> return Triple(3.0, 0.4, 4.0)
-            "цветная капуста запечённая" in normalized -> return Triple(2.5, 0.5, 4.5)
-            "кабачки гриль" in normalized -> return Triple(1.2, 0.3, 3.5)
-            "баклажаны запечённые" in normalized -> return Triple(1.0, 0.2, 5.0)
-            "стручковая фасоль" in normalized -> return Triple(2.0, 0.2, 5.0)
-            "шпинат тушёный" in normalized -> return Triple(2.5, 0.5, 1.5)
-
-            // === Перекусы (фрукты, орехи, молочка) ===
-            "яблоко" in normalized -> return Triple(0.3, 0.2, 14.0)
-            "банан" in normalized -> return Triple(1.1, 0.3, 23.0)
-            "груша" in normalized -> return Triple(0.4, 0.2, 15.0)
-            "апельсин" in normalized -> return Triple(0.9, 0.2, 11.0)
-            "мандарин" in normalized -> return Triple(0.8, 0.2, 10.0)
-            "киви" in normalized -> return Triple(1.0, 0.5, 12.0)
-            "ананас" in normalized -> return Triple(0.5, 0.1, 13.0)
-            "клубника" in normalized -> return Triple(0.7, 0.3, 7.0)
-            "малина" in normalized -> return Triple(1.2, 0.6, 6.0)
-            "виноград" in normalized -> return Triple(0.6, 0.2, 17.0)
-            "арбуз" in normalized -> return Triple(0.6, 0.2, 8.0)
-            "дыня" in normalized -> return Triple(0.8, 0.2, 9.0)
-
-            "сухофрукты" in normalized -> return Triple(2.0, 0.5, 55.0)
-            "курага" in normalized -> return Triple(1.5, 0.2, 55.0)
-            "чернослив" in normalized -> return Triple(2.0, 0.5, 57.0)
-            "изюм" in normalized -> return Triple(2.5, 0.5, 66.0)
-            "финики" in normalized -> return Triple(2.0, 0.2, 70.0)
-
-            "орехи" in normalized -> {
-                if ("миндаль" in normalized) return Triple(21.0, 50.0, 22.0)
-                if ("грецкий" in normalized) return Triple(15.0, 65.0, 14.0)
-                if ("кешью" in normalized) return Triple(18.0, 44.0, 30.0)
-                if ("арахис" in normalized) return Triple(26.0, 49.0, 16.0)
-                return Triple(15.0, 50.0, 20.0)
-            }
-
-            "семечки" in normalized -> {
-                if ("подсолнечника" in normalized) return Triple(21.0, 51.0, 20.0)
-                return Triple(20.0, 49.0, 22.0)
-            }
-
-            "протеиновый батончик" in normalized -> return Triple(25.0, 10.0, 35.0)
-            "злаковый батончик" in normalized -> return Triple(5.0, 5.0, 30.0)
-            "рисовые хлебцы" in normalized -> return Triple(3.0, 1.0, 28.0)
-            "попкорн" in normalized -> return Triple(4.0, 2.0, 20.0)
-            "горький шоколад" in normalized -> return Triple(8.0, 40.0, 35.0)
-
-            // === Напитки ===
-            "сок" in normalized -> {
-                if ("апельсиновый" in normalized) return Triple(0.7, 0.2, 11.0)
-                if ("яблочный" in normalized) return Triple(0.2, 0.1, 11.0)
-                return Triple(0.5, 0.1, 10.0)
-            }
-
-            "компот" in normalized -> return Triple(0.2, 0.1, 8.0)
-            "морс" in normalized -> return Triple(0.1, 0.0, 7.0)
-            "какао" in normalized -> return Triple(3.5, 2.5, 10.0)
-            "латте" in normalized -> return Triple(3.5, 2.0, 4.0)
-            "капучино" in normalized -> return Triple(3.0, 1.5, 3.0)
-
-            else -> {
-                // fallback по типу приёма пищи
-                return when (mealType) {
-                    MealType.BREAKFAST -> Triple(7.0, 6.0, 15.0)
-                    MealType.LUNCH -> Triple(10.0, 8.0, 12.0)
-                    MealType.DINNER -> Triple(12.0, 5.0, 8.0)
-                    MealType.SNACK -> Triple(5.0, 4.0, 15.0)
-                }
-            }
+            else -> MealType.SNACK
         }
     }
 
-    // Списки блюд (оставлены без изменений, очень длинные)
-    private val breakfastDishes: List<String> = listOf(
-        "Картошка фри", "Овсяная каша на молоке", "Овсяная каша на воде", "Гречневая каша",
-        "Рисовая каша на молоке", "Пшённая каша", "Манная каша", "Кукурузная каша",
-        "Перловая каша", "Булгур на завтрак", "Киноа с фруктами", "Яичница из двух яиц",
-        "Яичница с помидорами", "Яичница с беконом", "Омлет классический", "Омлет с сыром",
-        "Омлет с овощами", "Омлет с грибами", "Скрэмбл из яиц", "Яйца пашот",
-        "Варёные яйца", "Сырники из творога", "Творожная запеканка", "Творог 5%",
-        "Творог с ягодами", "Творог с мёдом", "Творог с бананом", "Ленивые вареники",
-        "Йогурт греческий", "Йогурт с гранолой", "Кефир с отрубями", "Блины с творогом",
-        "Блины с мёдом", "Блины с ягодами", "Оладьи на кефире", "Панкейки",
-        "Вафли домашние", "Гренки с яйцом", "Тост с авокадо", "Тост с сыром",
-        "Тост с арахисовой пастой", "Бутерброд с маслом и сыром", "Бутерброд с ветчиной",
-        "Бутерброд с индейкой", "Сэндвич с яйцом", "Сэндвич с курицей", "Буррито с яйцом",
-        "Кесадилья с сыром", "Лаваш с творожным сыром", "Ролл с омлетом", "Круассан",
-        "Мюсли с молоком", "Гранола с йогуртом", "Хлопья с молоком", "Пшеница с молоком",
-        "Чиа-пудинг", "Пудинг рисовый", "Смузи банановый", "Смузи ягодный",
-        "Смузи протеиновый", "Фруктовый салат", "Шакшука", "Хачапури по-аджарски",
-        "Каша Дружба", "Сырная каша", "Каша с тыквой", "Запечённые яблоки с творогом",
-        "Запеканка из овсянки", "Маффин овсяный", "Омлет белковый", "Протеиновый блин",
-        "Рисовые хлебцы с творожным сыром", "Бутерброд с красной рыбой",
-        "Брускетта с томатами", "Брускетта с авокадо", "Каша из полбы",
-        "Паста из творога и зелени", "Салат с яйцом и огурцом", "Киноа с йогуртом",
-        "Пшеничная каша", "Гречка с молоком", "Суп-пюре тыквенный",
-        "Бульон куриный с яйцом", "Салат из творога и зелени", "Сырная лепёшка",
-        "Лепёшка с яйцом", "Тортилья с омлетом", "Запечённый батат", "Творожный крем",
-        "Какао с молоком", "Ряженка с гранолой", "Пита с омлетом", "Бейгл с лососем",
-        "Бейгл с творожным сыром", "Сэндвич с тунцом", "Овсяноблин", "Сырный омлет",
-        "Яичный салат", "Паштет из тунца на тосте", "Каша с сухофруктами", "Яблочный штрудель"
+    private fun getDefaultPortionByMealType(mealType: MealType): Double = when (mealType) {
+        MealType.BREAKFAST -> 180.0
+        MealType.LUNCH -> 260.0
+        MealType.DINNER -> 220.0
+        MealType.SNACK -> 90.0
+    }
+
+    private val allRealProducts: Map<String, Nutrition> = mapOf(
+        "Гречневая каша рассыпчатая" to Nutrition(3.6, 2.2, 17.1, 98.7),
+        "Каша \"Янтарная\" (из пшена с яблоками)" to Nutrition(3.8, 6.5, 17.5, 138.9),
+        "Каша боярская (из пшена с изюмом)" to Nutrition(4.8, 14.4, 19.5, 221.7),
+        "Каша вязкая из пшена с тыквой" to Nutrition(4.2, 8.0, 18.5, 158.0),
+        "Каша гурьевская" to Nutrition(4.4, 5.4, 22.6, 151.2),
+        "Каша из тыквы с манкой" to Nutrition(2.8, 8.4, 19.9, 161.5),
+        "Каша манная коричневая" to Nutrition(5.3, 6.0, 23.2, 162.1),
+        "Каша пшенная с сушеными сливами" to Nutrition(2.4, 2.9, 22.7, 121.3),
+        "Каша рисовая с какао" to Nutrition(4.1, 6.0, 20.3, 146.2),
+        "Манная каша на клюквенном соке" to Nutrition(1.9, 4.6, 17.0, 112.7),
+        "Манная каша с морковью" to Nutrition(2.7, 5.6, 9.7, 97.3),
+        "Мучная каша" to Nutrition(3.4, 4.9, 10.2, 95.3),
+        "Рисовая каша с черносливом" to Nutrition(1.9, 2.4, 26.4, 128.5),
+        "Рисовая с абрикосами по-венгерски" to Nutrition(2.6, 0.3, 28.5, 119.7),
+        "Яблочно-манная каша" to Nutrition(1.9, 4.3, 22.0, 128.4),
+        "Яичная каша (натуральная)" to Nutrition(10.3, 11.0, 10.8, 180.3),
+        "Яичная каша с овощами или грибами" to Nutrition(15.9, 13.2, 20.9, 261.0),
+        "Ячневая каша с картофелем" to Nutrition(1.8, 1.0, 8.7, 48.6),
+        "Борщ" to Nutrition(3.8, 2.9, 4.3, 57.7),
+        "Борщ из свежей капусты и картофеля по 1-110" to Nutrition(1.0, 1.1, 5.4, 36.0),
+        "Борщ кубанский с кабачками" to Nutrition(4.9, 5.7, 4.7, 88.2),
+        "Борщ летний (с ботвой свеклы)" to Nutrition(3.9, 3.2, 6.6, 69.0),
+        "Борщ летний по 1-122" to Nutrition(1.1, 1.2, 5.7, 38.0),
+        "Борщ московский" to Nutrition(8.3, 7.2, 4.6, 115.5),
+        "Борщ по 1-110" to Nutrition(0.8, 1.0, 4.1, 29.0),
+        "Борщ по-вегетариански" to Nutrition(0.5, 2.7, 2.2, 34.7),
+        "Борщ с капустой и картофелем" to Nutrition(3.8, 2.9, 5.4, 61.6),
+        "Борщ с картофелем по 1-112" to Nutrition(1.1, 1.1, 6.8, 42.0),
+        "Борщ с черносливом и грибами" to Nutrition(4.6, 3.1, 7.4, 74.0),
+        "Борщ сибирский" to Nutrition(5.4, 3.4, 6.5, 76.7),
+        "Борщ украинский" to Nutrition(4.4, 4.4, 8.7, 90.2),
+        "Борщ украинский по 1-122" to Nutrition(1.1, 2.2, 6.5, 50.0),
+        "Борщ холодный" to Nutrition(1.1, 1.3, 3.0, 27.1),
+        "Борщ холодный (2)" to Nutrition(1.5, 3.2, 3.0, 45.7),
+        "Говяжий суп" to Nutrition(2.3, 1.1, 2.6, 28.8),
+        "Голландский зеленый суп" to Nutrition(4.8, 1.4, 8.8, 65.3),
+        "Голландский зеленый суп (0)" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Гороховый суп" to Nutrition(2.2, 3.0, 5.0, 54.3),
+        "Грибной борщ" to Nutrition(0.7, 2.1, 1.4, 27.1),
+        "Грибной суп" to Nutrition(0.8, 3.4, 4.6, 50.9),
+        "Куриный суп по-индийски" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Куриный суп с макаронами" to Nutrition(4.5, 3.3, 3.1, 59.7),
+        "Литовский холодный борщ" to Nutrition(2.9, 2.2, 8.6, 63.8),
+        "Лэпсытепх (бульон с жареными орешками)" to Nutrition(11.4, 10.3, 7.6, 167.1),
+        "Молочный суп с морковью" to Nutrition(1.6, 1.5, 3.7, 33.6),
+        "Окрошка мясная на кефире с говядиной, по 1-194" to Nutrition(2.8, 1.1, 4.3, 39.0),
+        "Окрошка мясная со сметаной и говядиной, по 1-192" to Nutrition(2.1, 1.7, 6.3, 52.0),
+        "Окрошка овощная по 1-192" to Nutrition(0.9, 0.8, 6.8, 39.0),
+        "Похлебка грибная (карельское)" to Nutrition(3.1, 4.1, 8.5, 81.6),
+        "Похлебка из сардин в горшочке" to Nutrition(6.4, 6.9, 7.5, 115.8),
+        "Похлебка по-суворовски" to Nutrition(8.7, 2.4, 3.8, 70.4),
+        "Похлебка рыбная по-сибирски" to Nutrition(4.8, 1.5, 6.7, 57.8),
+        "Похлебка старомосковская" to Nutrition(3.6, 7.1, 4.2, 94.1),
+        "Рассольник" to Nutrition(0.9, 1.6, 5.9, 40.4),
+        "Рассольник (0)" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Рассольник домашний" to Nutrition(0.9, 1.6, 5.4, 38.4),
+        "Рассольник домашний по 1-136" to Nutrition(1.0, 1.0, 5.8, 36.0),
+        "Рассольник ленинградский" to Nutrition(1.3, 1.7, 8.8, 53.3),
+        "Рассольник по-кубански" to Nutrition(4.9, 5.7, 7.9, 100.8),
+        "Рисовый грибной суп" to Nutrition(2.0, 2.2, 9.3, 62.7),
+        "Свекольник холодный" to Nutrition(1.8, 3.6, 6.2, 62.6),
+        "Свекольник холодный по 1-198" to Nutrition(0.8, 0.2, 6.1, 30.0),
+        "Сладкий суп из черники с клецками" to Nutrition(1.4, 1.3, 15.6, 75.8),
+        "Солянка грибная по 1-172" to Nutrition(0.5, 1.2, 1.3, 18.0),
+        "Солянка рыбная, по 1-170" to Nutrition(2.4, 1.2, 1.2, 25.0),
+        "Солянка сборная мясная, по 1-168" to Nutrition(2.1, 2.8, 1.3, 39.0),
+        "Суп \"Ереванский\"" to Nutrition(3.1, 1.9, 6.5, 54.1),
+        "Суп \"Хинкал\" (с мясом и ракушками)" to Nutrition(10.2, 6.1, 7.8, 125.1),
+        "Суп вишневый с клецками" to Nutrition(2.0, 1.1, 16.4, 79.3),
+        "Суп гороховый с яблоками" to Nutrition(2.5, 2.3, 3.6, 44.0),
+        "Суп грибной картофельный" to Nutrition(0.8, 3.7, 2.6, 45.5),
+        "Суп грибной с пирожками" to Nutrition(1.3, 5.2, 2.2, 60.3),
+        "Суп из белых грибов с макаронами" to Nutrition(1.4, 4.7, 2.8, 58.1),
+        "Суп из говядины" to Nutrition(2.4, 2.5, 2.6, 41.9),
+        "Суп из клюквы и яблок" to Nutrition(0.4, 1.9, 8.7, 51.0),
+        "Суп из моркови и кефира" to Nutrition(2.3, 2.1, 8.0, 58.0),
+        "Суп из овощей" to Nutrition(1.7, 1.6, 4.2, 36.7),
+        "Суп из овсяной крупы с яблоками" to Nutrition(1.7, 1.4, 11.5, 62.4),
+        "Суп из овсяных хлопьев с яблоками" to Nutrition(1.7, 1.5, 7.4, 48.1),
+        "Суп из плодов свежих" to Nutrition(0.2, 0.2, 16.2, 63.2),
+        "Суп из свежих помидоров" to Nutrition(0.9, 2.1, 4.0, 37.4),
+        "Суп из свежих фруктов по 1-200" to Nutrition(0.1, 0.1, 11.9, 50.0),
+        "Суп из свекольной ботвы и щавеля" to Nutrition(1.7, 3.8, 1.6, 46.6),
+        "Суп из смеси сухофруктов" to Nutrition(0.5, 0.0, 20.9, 80.5),
+        "Суп из спаржи" to Nutrition(2.6, 4.8, 6.6, 78.0),
+        "Суп из утки" to Nutrition(10.9, 23.0, 8.6, 283.0),
+        "Суп из фасоли с орехами" to Nutrition(2.3, 4.8, 3.8, 67.0),
+        "Суп из цветной капусты" to Nutrition(1.0, 3.2, 1.1, 36.8),
+        "Суп из черники с клецками" to Nutrition(4.6, 2.3, 17.6, 105.4),
+        "Суп из черники с макаронами" to Nutrition(0.5, 0.8, 6.6, 34.2),
+        "Суп из чечевицы" to Nutrition(2.5, 4.2, 5.2, 67.8),
+        "Суп картофельный" to Nutrition(1.3, 1.1, 9.4, 50.6),
+        "Суп картофельный по 1-142" to Nutrition(1.1, 1.2, 7.8, 45.0),
+        "Суп картофельный с бобовыми" to Nutrition(2.7, 2.4, 10.8, 73.3),
+        "Суп картофельный с грибами" to Nutrition(1.7, 1.2, 6.5, 42.2),
+        "Суп картофельный с кальмарами" to Nutrition(4.0, 2.4, 6.5, 62.4),
+        "Суп картофельный с крупой" to Nutrition(1.3, 1.2, 10.0, 53.6),
+        "Суп картофельный с макаронными изделиями" to Nutrition(1.3, 1.0, 8.8, 47.7),
+        "Суп картофельный с мясными фрикадельками" to Nutrition(3.3, 2.2, 6.5, 57.6),
+        "Суп картофельный с перловой крупой по 1-146" to Nutrition(1.0, 1.1, 6.5, 37.0),
+        "Суп картофельный с рыбными фрикадельками" to Nutrition(2.5, 1.6, 6.6, 48.9),
+        "Суп картофельный со сладким перцем" to Nutrition(0.9, 3.7, 4.9, 55.9),
+        "Суп лапша грибная" to Nutrition(1.6, 2.1, 4.1, 41.3),
+        "Суп молочный рисовый" to Nutrition(3.1, 5.0, 11.1, 99.2),
+        "Суп молочный с белокочанной капустой, по 1-180" to Nutrition(2.0, 2.0, 6.8, 54.0),
+        "Суп молочный с грибами" to Nutrition(2.5, 3.3, 7.3, 67.2),
+        "Суп молочный с картофельными \"стружками\"" to Nutrition(1.4, 3.6, 3.5, 51.3),
+        "Суп молочный с клецками" to Nutrition(3.8, 5.2, 13.0, 110.9),
+        "Суп молочный с крупой" to Nutrition(2.6, 2.8, 8.7, 68.2),
+        "Суп молочный с макаронами, по 1-172" to Nutrition(2.2, 1.9, 7.9, 58.0),
+        "Суп молочный с макаронными изделиями" to Nutrition(2.8, 2.7, 7.7, 64.6),
+        "Суп молочный с овощами" to Nutrition(4.5, 2.8, 11.2, 84.9),
+        "Суп молочный с рисом" to Nutrition(2.2, 2.8, 7.5, 61.9),
+        "Суп молочный с рисом (2)" to Nutrition(2.1, 3.9, 10.0, 81.0),
+        "Суп молочный с рисом, по 1-174" to Nutrition(1.8, 1.9, 7.3, 54.0),
+        "Суп молочный с тыквой" to Nutrition(2.1, 1.7, 7.2, 50.9),
+        "Суп молочный с тыквой и манной крупой, по 1-178" to Nutrition(2.0, 2.2, 5.4, 50.0),
+        "Суп овощной на отваре шиповника" to Nutrition(2.3, 3.2, 7.9, 67.8),
+        "Суп перловый с грибами по 1-164" to Nutrition(1.6, 1.2, 6.4, 43.0),
+        "Суп пикантный с креветками" to Nutrition(9.0, 2.7, 5.7, 81.9),
+        "Суп полевой" to Nutrition(1.5, 5.9, 9.2, 93.5),
+        "Суп пшенный с мясом по 1-160" to Nutrition(2.9, 2.2, 6.4, 57.0),
+        "Суп рисовый по 1-158" to Nutrition(0.9, 1.1, 6.2, 38.0),
+        "Суп с бобовыми (фасоль) по 1-162" to Nutrition(3.0, 1.3, 6.9, 54.0),
+        "Суп с крупой" to Nutrition(0.7, 1.9, 5.7, 41.5),
+        "Суп с макаронными изделиями" to Nutrition(0.9, 2.0, 4.5, 39.0),
+        "Суп с перловой крупой" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Суп с рыбными вареничками" to Nutrition(5.2, 2.6, 5.3, 64.3),
+        "Суп с рыбными фрикадельками" to Nutrition(3.7, 0.6, 2.3, 28.8),
+        "Суп с фрикадельками" to Nutrition(1.7, 0.9, 2.3, 24.0),
+        "Суп со шпинатом и грибами" to Nutrition(1.8, 7.6, 0.5, 76.8),
+        "Суп фасолевый" to Nutrition(1.7, 4.8, 4.2, 66.3),
+        "Суп харчо с мясом по 1-164" to Nutrition(3.1, 4.5, 5.5, 75.0),
+        "Суп холодный \"Таратор\"" to Nutrition(3.9, 10.0, 10.7, 146.1),
+        "Суп-крем из тыквы" to Nutrition(3.4, 4.6, 10.0, 92.5),
+        "Суп-лапша домашняя" to Nutrition(1.2, 2.4, 5.9, 47.8),
+        "Суп-лапша с помидорами по-казачьи" to Nutrition(4.0, 4.1, 4.0, 67.4),
+        "Суп-пюре из зеленого горошка" to Nutrition(4.0, 3.0, 10.5, 82.7),
+        "Суп-пюре из кабачков или тыквы" to Nutrition(1.3, 2.8, 4.5, 47.0),
+        "Суп-пюре из картофеля и моркови" to Nutrition(0.6, 2.9, 2.4, 37.7),
+        "Суп-пюре из картофеля по 1-180" to Nutrition(1.6, 2.0, 8.3, 58.0),
+        "Суп-пюре из моркови по 1-182" to Nutrition(1.2, 1.8, 4.5, 39.0),
+        "Суп-пюре из печени" to Nutrition(3.7, 4.1, 4.3, 67.9),
+        "Суп-пюре из птицы" to Nutrition(4.8, 6.8, 3.5, 93.1),
+        "Суп-пюре из разных овощей" to Nutrition(2.3, 2.8, 7.0, 60.3),
+        "Суп-пюре из рисовой крупы по 1-186" to Nutrition(1.4, 1.3, 7.7, 48.0),
+        "Суп-пюре из свежих помидоров" to Nutrition(1.8, 3.1, 1.4, 40.5),
+        "Суп-пюре из черники" to Nutrition(0.3, 1.3, 5.5, 33.5),
+        "Суп-пюре из шпината по 1-184" to Nutrition(1.9, 2.0, 4.0, 42.0),
+        "Суп-салат \"Садовый\"" to Nutrition(5.6, 2.8, 4.0, 62.8),
+        "Суп-харчо" to Nutrition(2.2, 2.1, 4.3, 43.9),
+        "Суп-харчо (грузинское)" to Nutrition(4.8, 5.5, 5.0, 87.9),
+        "Сырный суп" to Nutrition(4.7, 6.9, 3.2, 93.4),
+        "Уха ладожская с кнелями и расстегаями" to Nutrition(13.4, 2.5, 2.5, 85.2),
+        "Уха ростовская" to Nutrition(8.5, 2.2, 4.4, 70.1),
+        "Уха рыбацкая" to Nutrition(8.5, 1.9, 4.3, 66.7),
+        "Уха с перловой крупой" to Nutrition(9.3, 1.0, 5.4, 66.3),
+        "Уха с расстегаями" to Nutrition(10.4, 2.9, 4.7, 85.3),
+        "Фасолевый суп" to Nutrition(2.3, 1.6, 6.6, 48.1),
+        "Харчо" to Nutrition(8.0, 3.6, 13.6, 114.9),
+        "Хирмаса (суп из субпродуктов с лапшой)" to Nutrition(4.3, 5.5, 5.0, 85.6),
+        "Холодный борщ с редькой" to Nutrition(0.9, 2.0, 2.9, 32.3),
+        "Щи боярские" to Nutrition(3.5, 2.6, 2.9, 48.3),
+        "Щи зеленые с яйцом" to Nutrition(1.9, 3.2, 2.2, 44.9),
+        "Щи из квашеной капусты" to Nutrition(2.0, 2.8, 1.0, 37.2),
+        "Щи из квашеной капусты (2)" to Nutrition(0.8, 1.7, 2.6, 28.7),
+        "Щи из квашеной капусты по 1-132" to Nutrition(0.8, 1.0, 1.5, 19.0),
+        "Щи из клевера и щавеля" to Nutrition(3.3, 8.9, 6.1, 116.3),
+        "Щи из свежей белокочанной капусты" to Nutrition(0.5, 0.8, 2.2, 17.1),
+        "Щи из свежей капусты" to Nutrition(1.0, 1.9, 3.4, 33.3),
+        "Щи из свежей капусты по 1-130" to Nutrition(0.9, 1.1, 2.5, 24.0),
+        "Щи из свежей капусты с картофелем" to Nutrition(1.1, 2.1, 4.9, 41.6),
+        "Щи из щавеля" to Nutrition(2.1, 3.1, 2.4, 45.3),
+        "Щи из щавеля по 1-132" to Nutrition(2.3, 3.5, 1.8, 48.0),
+        "Щи по-уральски (с крупой)" to Nutrition(0.8, 1.8, 3.2, 31.5),
+        "Щи с ячневой крупой" to Nutrition(2.3, 3.6, 1.6, 47.6),
+        "Щи суточные" to Nutrition(1.7, 3.2, 2.8, 46.3),
+        "Щи суточные по 1-134" to Nutrition(0.9, 1.0, 1.5, 19.0),
+        "Щи томленые с гречневыми блинами" to Nutrition(3.5, 3.7, 2.6, 56.8),
+        "Юшка картофельная с кабачками и помидорами" to Nutrition(3.5, 4.3, 6.0, 74.6),
+        "Яблочный суп со сметаной" to Nutrition(0.8, 3.2, 4.9, 50.5),
+        "Винегрет" to Nutrition(1.7, 10.3, 8.2, 130.1),
+        "Винегрет из овощей" to Nutrition(1.9, 13.9, 11.7, 176.9),
+        "Винегрет из овощей и фруктов" to Nutrition(1.9, 9.5, 11.9, 137.4),
+        "Винегрет из овощей, яблок и зелени" to Nutrition(1.6, 7.3, 8.6, 104.2),
+        "Винегрет из перца с картофелем" to Nutrition(3.0, 6.2, 7.9, 97.4),
+        "Винегрет из фруктов и овощей" to Nutrition(2.1, 8.2, 12.4, 128.5),
+        "Винегрет овощной" to Nutrition(1.7, 4.9, 6.8, 76.6),
+        "Винегрет овощной (2)" to Nutrition(5.7, 8.4, 16.2, 158.7),
+        "Винегрет по-румынски" to Nutrition(6.2, 16.8, 8.7, 208.1),
+        "Винегрет с консервированным мясом" to Nutrition(10.3, 15.4, 9.5, 215.0),
+        "Винегрет с селедкой" to Nutrition(4.5, 6.9, 10.5, 119.1),
+        "Винегрет с сельдью" to Nutrition(9.1, 13.0, 6.8, 179.2),
+        "Диетический салат из свеклы и яблок" to Nutrition(0.8, 3.0, 17.0, 94.2),
+        "Жареный салат \"Универсал\"" to Nutrition(1.0, 0.2, 5.5, 26.6),
+        "Морковный салат" to Nutrition(0.8, 7.5, 4.7, 88.2),
+        "Морковь с помидорами и яблоками" to Nutrition(0.8, 1.6, 7.0, 44.4),
+        "Огуречный салат" to Nutrition(3.7, 12.0, 2.2, 131.5),
+        "Окрошка" to Nutrition(3.7, 5.1, 4.0, 75.7),
+        "Окрошка (2)" to Nutrition(2.4, 3.2, 5.0, 57.2),
+        "Окрошка мясная" to Nutrition(7.0, 4.8, 4.6, 89.1),
+        "Окрошка овощная" to Nutrition(1.9, 1.9, 6.4, 48.1),
+        "Окрошка сборная мясная" to Nutrition(5.1, 6.4, 4.6, 95.1),
+        "Оригинальный салат" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Пестрый летний салат" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Пестрый салат" to Nutrition(3.7, 1.9, 11.2, 73.9),
+        "Печеночный салат" to Nutrition(8.2, 7.5, 1.1, 104.7),
+        "Пикантный салат" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Помидоры с огурцами и перцем" to Nutrition(1.0, 0.9, 5.0, 30.7),
+        "Помидоры с огурцами и яблоками" to Nutrition(0.8, 4.9, 4.8, 65.7),
+        "Помидоры с чесночной заправкой" to Nutrition(3.9, 1.9, 10.1, 70.9),
+        "Помидоры, фаршированные салатом из яблок и огурцов" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Помидоры, фаршированные салатом из яблок и огурцов. (2)" to Nutrition(0.7, 3.2, 5.8, 53.5),
+        "Редиска со сметаной" to Nutrition(2.7, 9.0, 3.0, 103.5),
+        "Редька в сметане" to Nutrition(2.0, 9.2, 5.5, 111.8),
+        "Рыбный салат" to Nutrition(5.1, 12.0, 4.5, 145.6),
+        "Рыбный салат (2)" to Nutrition(9.3, 18.3, 1.4, 207.0),
+        "Салат \"Ак-идель\" (рыбный с рисом по-башкирски)" to Nutrition(18.4, 29.6, 7.5, 368.8),
+        "Салат \"Архиерейский\"" to Nutrition(5.9, 20.8, 3.0, 221.5),
+        "Салат \"Весна\"" to Nutrition(3.0, 7.4, 3.1, 90.3),
+        "Салат \"Гнездо глухаря\"" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Салат \"Гранат\"" to Nutrition(4.7, 18.0, 12.0, 225.9),
+        "Салат \"Гранатовый браслет\"" to Nutrition(3.9, 14.2, 6.1, 166.6),
+        "Салат \"Грибки\"" to Nutrition(6.5, 4.7, 2.6, 77.6),
+        "Салат \"Золушка\"" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Салат \"Киевский\"" to Nutrition(5.0, 12.0, 8.8, 160.9),
+        "Салат \"Копенгагенский\"" to Nutrition(3.0, 4.8, 5.4, 75.7),
+        "Салат \"Кремлевский\"" to Nutrition(5.8, 22.1, 7.9, 252.3),
+        "Салат \"Летний\"" to Nutrition(3.6, 7.5, 5.4, 102.5),
+        "Салат \"Матрешки\"" to Nutrition(11.4, 8.4, 1.2, 125.9),
+        "Салат \"Мимоза\"" to Nutrition(6.3, 28.3, 4.4, 296.6),
+        "Салат \"Молдова\"" to Nutrition(5.5, 20.4, 20.7, 283.5),
+        "Салат \"Московский\"" to Nutrition(4.7, 24.7, 10.5, 280.3),
+        "Салат \"Невеста\"" to Nutrition(4.3, 18.5, 9.4, 218.7),
+        "Салат \"Нежность\"" to Nutrition(5.1, 8.7, 30.0, 211.0),
+        "Салат \"Обжарка\"" to Nutrition(3.8, 11.9, 2.7, 132.6),
+        "Салат \"Осенний\" из свежих овощей с рыбой" to Nutrition(8.3, 7.7, 5.5, 123.0),
+        "Салат \"Острый\" из картофеля с ветчиной и чесноком" to Nutrition(5.9, 10.3, 15.5, 175.0),
+        "Салат \"Петровский\" грибной с квашеной капустой и огурцами" to Nutrition(1.5, 10.3, 3.1, 110.5),
+        "Салат \"Приятное с полезным\"" to Nutrition(8.5, 0.7, 16.5, 101.7),
+        "Салат \"Тихая заводь\"" to Nutrition(7.8, 23.5, 4.6, 259.9),
+        "Салат \"Универсал\"" to Nutrition(1.0, 0.2, 5.6, 27.2),
+        "Салат \"Фантазия\"" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Салат \"Цезарь\"" to Nutrition(14.8, 17.2, 24.0, 303.6),
+        "Салат \"Цезарь\" классический" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Салат \"Эгоист\"" to Nutrition(10.5, 19.5, 9.2, 252.3),
+        "Салат \"Эксклюзив\"" to Nutrition(7.2, 6.8, 2.9, 100.4),
+        "Салат \"Экспериментальный\"" to Nutrition(2.6, 4.2, 9.8, 85.0),
+        "Салат \"Эстонский\"" to Nutrition(2.3, 14.2, 7.8, 166.2),
+        "Салат витаминный - 1" to Nutrition(1.3, 7.4, 7.8, 101.0),
+        "Салат витаминный - 2" to Nutrition(1.4, 7.7, 10.3, 113.7),
+        "Салат гороховый с яблоками" to Nutrition(3.3, 5.3, 11.2, 102.3),
+        "Салат греческий" to Nutrition(3.9, 17.8, 3.4, 188.5),
+        "Салат для мужчин" to Nutrition(1.6, 10.0, 8.3, 127.5),
+        "Салат из апельсинов и лука-порея" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Салат из белокачанной капусты" to Nutrition(1.8, 3.6, 7.6, 67.9),
+        "Салат из белокочанной и морской капусты" to Nutrition(1.8, 5.1, 8.4, 84.6),
+        "Салат из белокочанной капусты с кальмарами" to Nutrition(14.0, 17.7, 3.7, 229.5),
+        "Салат из белокочанной капусты с сельдью и шпиком" to Nutrition(13.0, 13.0, 4.4, 185.6),
+        "Салат из белокочанной капусты с яблоками и сельдереем" to Nutrition(1.6, 5.0, 9.0, 85.3),
+        "Салат из белых грибов или шампиньонов" to Nutrition(5.2, 2.5, 5.2, 62.3),
+        "Салат из бобов" to Nutrition(3.3, 13.9, 5.0, 157.4),
+        "Салат из грибов и квашеной капусты" to Nutrition(2.0, 8.7, 8.9, 120.3),
+        "Салат из грибов с сельдью" to Nutrition(8.2, 10.8, 1.6, 135.7),
+        "Салат из зелени с дичью" to Nutrition(6.8, 18.5, 9.7, 230.4),
+        "Салат из кабачков и помидоров" to Nutrition(1.1, 9.0, 4.8, 103.4),
+        "Салат из кальмаров с яблоками" to Nutrition(16.4, 21.6, 14.7, 315.3),
+        "Салат из капусты с апельсинами" to Nutrition(2.5, 5.3, 11.1, 99.1),
+        "Салат из капусты с грибами" to Nutrition(5.9, 5.5, 9.0, 106.6),
+        "Салат из капусты с яблоками" to Nutrition(1.5, 0.2, 6.5, 32.4),
+        "Салат из капусты с яблоками (2)" to Nutrition(2.5, 3.1, 6.0, 60.2),
+        "Салат из капусты с яблоками и луком" to Nutrition(1.1, 2.3, 12.4, 71.7),
+        "Салат из картофеля с морской капустой и свеклой" to Nutrition(2.1, 7.8, 9.4, 114.0),
+        "Салат из картофеля с редькой и яблоками" to Nutrition(4.2, 17.9, 7.5, 205.8),
+        "Салат из квашенной капусты" to Nutrition(1.6, 3.1, 11.6, 77.8),
+        "Салат из квашенной капусты и свеклы" to Nutrition(1.9, 5.0, 4.6, 69.9),
+        "Салат из квашеной капусты" to Nutrition(1.4, 8.1, 6.2, 101.7),
+        "Салат из квашеной капусты с селью" to Nutrition(8.0, 11.4, 8.3, 165.3),
+        "Салат из кильки в томатном соусе" to Nutrition(5.0, 27.2, 5.0, 283.5),
+        "Салат из кольраби" to Nutrition(2.1, 12.3, 7.0, 144.8),
+        "Салат из крабов" to Nutrition(14.7, 9.5, 7.3, 171.8),
+        "Салат из красного сладкого перца, зеленого горошка и риса" to Nutrition(10.0, 5.3, 42.4, 247.2),
+        "Салат из краснокачанной капусты" to Nutrition(0.8, 3.6, 7.8, 64.4),
+        "Салат из краснокачанной капусты с яблоками" to Nutrition(0.7, 0.3, 8.6, 38.1),
+        "Салат из краснокочанной капусты" to Nutrition(0.5, 6.1, 7.8, 86.8),
+        "Салат из краснокочанной капусты с грибами" to Nutrition(1.8, 6.5, 8.4, 97.4),
+        "Салат из креветок с рисом" to Nutrition(25.6, 10.3, 30.6, 310.1),
+        "Салат из кукурузы" to Nutrition(8.8, 8.5, 54.8, 317.6),
+        "Салат из курицы по-архангельски" to Nutrition(4.7, 15.0, 11.3, 195.9),
+        "Салат из маринованной свеклы с яблоками" to Nutrition(1.3, 6.1, 8.0, 90.1),
+        "Салат из моркови" to Nutrition(5.7, 7.6, 26.8, 191.8),
+        "Салат из моркови и капусты" to Nutrition(1.7, 11.0, 9.2, 140.6),
+        "Салат из моркови с курагой, помидорами и яблоками" to Nutrition(1.2, 2.8, 12.8, 78.2),
+        "Салат из моркови с орехами и медом" to Nutrition(4.9, 15.2, 16.7, 219.4),
+        "Салат из моркови с хреном" to Nutrition(1.9, 12.6, 5.4, 141.2),
+        "Салат из морского гребешка с огурцами" to Nutrition(9.0, 11.1, 3.3, 148.2),
+        "Салат из овощей с капустой морской" to Nutrition(2.0, 10.6, 9.1, 136.8),
+        "Салат из огурцов" to Nutrition(1.1, 4.5, 3.2, 57.0),
+        "Салат из огурцов (0)" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Салат из перца" to Nutrition(1.1, 16.9, 4.4, 173.0),
+        "Салат из помидоров" to Nutrition(4.4, 12.4, 4.4, 146.0),
+        "Салат из помидоров и огурцов" to Nutrition(0.7, 7.7, 4.5, 89.2),
+        "Салат из помидоров по-чилийски" to Nutrition(0.6, 0.2, 4.2, 19.9),
+        "Салат из помидоров, огурцов и сладкого перца" to Nutrition(1.1, 0.2, 5.2, 25.0),
+        "Салат из птицы или дичи" to Nutrition(5.6, 15.1, 10.9, 198.8),
+        "Салат из птицы или дичи (2)" to Nutrition(11.2, 19.4, 6.3, 243.5),
+        "Салат из разных фруктов" to Nutrition(1.0, 11.9, 9.5, 147.3),
+        "Салат из редиса" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Салат из редиски со метаной" to Nutrition(2.0, 9.3, 4.0, 106.4),
+        "Салат из редьки" to Nutrition(2.2, 19.1, 6.3, 204.2),
+        "Салат из редьки и картофеля по-кабардински" to Nutrition(4.7, 9.2, 7.3, 128.4),
+        "Салат из редьки с орехами" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Салат из репы" to Nutrition(1.8, 9.4, 13.6, 142.6),
+        "Салат из рыбы" to Nutrition(10.5, 13.0, 6.9, 184.9),
+        "Салат из свежей капусты с мясом" to Nutrition(3.7, 12.8, 3.6, 143.1),
+        "Салат из свежих овощей" to Nutrition(1.6, 4.4, 8.3, 77.5),
+        "Салат из свеклы и хрена" to Nutrition(1.3, 5.2, 11.6, 95.6),
+        "Салат из свеклы с орехами" to Nutrition(1.7, 8.8, 8.5, 117.8),
+        "Салат из свеклы с сыром и чесноком" to Nutrition(7.1, 17.1, 7.8, 211.6),
+        "Салат из свеклы с хреном" to Nutrition(1.5, 0.1, 10.7, 46.8),
+        "Салат из свеклы с черносливом, орехами и чесноком" to Nutrition(7.1, 15.6, 30.7, 284.0),
+        "Салат из сельди" to Nutrition(11.9, 14.7, 6.4, 204.1),
+        "Салат из соленых огурцов и брюквы" to Nutrition(1.9, 3.7, 6.8, 66.6),
+        "Салат из соленых огурцов и редьки" to Nutrition(1.2, 7.7, 4.3, 90.8),
+        "Салат из соленых огурцов и свеклы" to Nutrition(1.4, 7.6, 5.6, 95.0),
+        "Салат из спаржи" to Nutrition(2.1, 23.9, 3.6, 237.5),
+        "Салат из стручковой фасоли" to Nutrition(16.1, 3.9, 31.1, 215.9),
+        "Салат из стручковой фасоли (2)" to Nutrition(2.8, 10.5, 7.2, 132.5),
+        "Салат из сырой моркови и репы" to Nutrition(1.5, 8.8, 8.2, 115.9),
+        "Салат из сырой моркови м яблоками" to Nutrition(1.2, 4.8, 9.1, 82.2),
+        "Салат из сырой свеклы" to Nutrition(1.2, 4.7, 8.0, 76.7),
+        "Салат из сырых овощей" to Nutrition(1.6, 7.6, 5.3, 94.3),
+        "Салат из сырых овощей с яблоками" to Nutrition(1.1, 3.3, 6.4, 58.0),
+        "Салат из творога" to Nutrition(12.6, 19.2, 6.1, 246.4),
+        "Салат из трески с майонезом" to Nutrition(9.9, 15.0, 2.6, 184.6),
+        "Салат из трески с хреном" to Nutrition(8.9, 10.1, 10.0, 164.8),
+        "Салат из тыквы" to Nutrition(0.9, 6.1, 3.8, 73.0),
+        "Салат из тыквы по-чувашски" to Nutrition(1.2, 0.2, 20.4, 82.9),
+        "Салат из тыквы с яблоками" to Nutrition(0.6, 0.3, 8.2, 35.7),
+        "Салат из фасоли" to Nutrition(0.9, 0.9, 88.9, 345.2),
+        "Салат из фасоли (2)" to Nutrition(13.8, 19.6, 28.1, 336.6),
+        "Салат из фруктов" to Nutrition(0.8, 4.9, 12.9, 95.2),
+        "Салат из цветной капусты" to Nutrition(1.8, 3.8, 3.1, 53.2),
+        "Салат из цветной капусты (2)" to Nutrition(1.2, 5.7, 3.5, 69.1),
+        "Салат из цветной капусты, свежих огурцов и помидоров" to Nutrition(2.0, 5.3, 5.6, 77.3),
+        "Салат из шампиньонов" to Nutrition(3.9, 12.5, 4.0, 143.1),
+        "Салат из щавеля" to Nutrition(2.3, 18.8, 5.8, 200.1),
+        "Салат из яблок и брусники" to Nutrition(0.8, 5.0, 8.1, 78.6),
+        "Салат из яблок и лука" to Nutrition(1.0, 8.3, 8.6, 111.1),
+        "Салат из яблок и моркови с орехами" to Nutrition(4.1, 6.8, 19.9, 152.6),
+        "Салат из яблок и помидоров" to Nutrition(0.8, 4.1, 7.2, 67.1),
+        "Салат из яблок и сливы" to Nutrition(2.6, 2.2, 18.1, 97.9),
+        "Салат из яблок и тыквы" to Nutrition(0.6, 0.3, 8.3, 36.2),
+        "Салат из яблок с орехами" to Nutrition(1.7, 0.3, 17.6, 75.8),
+        "Салат картофельный" to Nutrition(2.5, 6.6, 15.5, 127.9),
+        "Салат картофельный с грибами и брусникой" to Nutrition(4.2, 9.1, 6.7, 123.6),
+        "Салат картофельный с грибами и клюквой" to Nutrition(4.2, 9.1, 6.7, 123.6),
+        "Салат картофельный с яблоками" to Nutrition(2.0, 7.9, 8.2, 109.5),
+        "Салат любительский" to Nutrition(1.5, 5.5, 11.2, 97.3),
+        "Салат Муравейник" to Nutrition(12.6, 7.9, 30.2, 235.4),
+        "Салат мясной" to Nutrition(7.1, 15.5, 9.9, 205.1),
+        "Салат мясной (2)" to Nutrition(11.8, 20.7, 5.4, 254.0),
+        "Салат овощной с редькой и яблоками" to Nutrition(2.0, 13.5, 7.4, 157.3),
+        "Салат овощной с яблоками и сладким перцем" to Nutrition(1.4, 10.8, 5.7, 123.8),
+        "Салат освежающий с редькой" to Nutrition(1.7, 0.3, 10.3, 47.9),
+        "Салат осенний" to Nutrition(1.6, 6.1, 5.6, 82.1),
+        "Салат по-берлински" to Nutrition(1.9, 21.6, 4.8, 219.7),
+        "Салат по-деревенски" to Nutrition(2.6, 7.2, 10.1, 113.7),
+        "Салат по-коми-пермяцки (из квашеной капусты с мясом)" to Nutrition(10.5, 10.1, 2.8, 143.0),
+        "Салат по-французски" to Nutrition(2.1, 14.3, 7.9, 166.6),
+        "Салат по-чешски" to Nutrition(4.2, 18.4, 3.8, 196.6),
+        "Салат рыбный" to Nutrition(6.4, 12.4, 4.4, 153.3),
+        "Салат рыбный (2)" to Nutrition(12.1, 15.7, 3.9, 204.2),
+        "Салат рыбный с морской капустой" to Nutrition(8.8, 7.5, 4.2, 119.0),
+        "Салат с кальмарами" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Салат с колбасой" to Nutrition(4.0, 14.8, 8.9, 182.5),
+        "Салат с копченой треской" to Nutrition(6.9, 8.8, 4.0, 122.2),
+        "Салат с креветками" to Nutrition(7.7, 23.3, 2.7, 250.9),
+        "Салат с кукурузой" to Nutrition(7.4, 22.5, 23.4, 319.9),
+        "Салат с маслом и уксусом" to Nutrition(1.4, 15.8, 5.1, 167.2),
+        "Салат с сардинами" to Nutrition(6.1, 2.6, 10.0, 85.1),
+        "Салат с сельдереем и творогом" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Салат сезонный" to Nutrition(2.1, 10.1, 8.2, 129.8),
+        "Салат со сметаной и яйцом" to Nutrition(1.8, 7.0, 3.0, 81.4),
+        "Салат столичный" to Nutrition(15.9, 27.8, 3.0, 325.2),
+        "Салат фруктовый со сметанным соусом" to Nutrition(1.1, 7.9, 16.6, 137.7),
+        "Салат яичный" to Nutrition(7.3, 19.5, 2.6, 214.2),
+        "Салат-коктейль \"Экзотик\"" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Салат-коктейль овощной" to Nutrition(1.8, 12.8, 6.6, 147.4),
+        "Салат-коктейль рыбный" to Nutrition(13.9, 17.3, 1.7, 217.6),
+        "Салат-коктейль с ветчиной и сыром" to Nutrition(12.4, 23.8, 2.6, 273.6),
+        "Салат-коктейль с курицей и фруктами" to Nutrition(10.3, 19.1, 8.6, 245.1),
+        "Свекла в сладком маринаде" to Nutrition(0.4, 0.04, 12.4, 48.6),
+        "Свекла с клюквой" to Nutrition(1.5, 6.2, 11.2, 103.7),
+        "Селедка \"под шубой\"" to Nutrition(8.0, 18.2, 3.7, 209.5),
+        "Сельдь протертая с маслом" to Nutrition(16.1, 26.4, 4.4, 319.0),
+        "Сыр картофельный" to Nutrition(9.1, 9.6, 8.5, 154.6),
+        "Сыр слоеный" to Nutrition(16.0, 14.2, 1.1, 196.1),
+        "Сырный салат" to Nutrition(5.6, 11.6, 7.2, 153.4),
+        "Сырный салат (0)" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Фальшивый Оливье" to Nutrition(11.1, 8.8, 11.5, 167.0),
+        "Черемша с маслом" to Nutrition(3.4, 8.7, 8.6, 124.3),
+        "Яблочный салат с сельдереем и помидорами" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Яичный салат" to Nutrition(9.7, 15.1, 1.9, 181.7),
+        "Азу" to Nutrition(9.3114, 12.2569, 7.2551, 177.62),
+        "Антрекот" to Nutrition(21.536, 25.0652, 1.3686, 317.2565),
+        "Анчоусы и кильки с картофелем" to Nutrition(12.3, 7.9, 9.7, 156.5),
+        "Баклажаны панированные" to Nutrition(2.9, 23.1, 4.4, 236.0),
+        "Баклажаны по-украински" to Nutrition(1.7, 13.6, 6.8, 154.1),
+        "Баклажаны под майонезом" to Nutrition(1.4, 10.4, 4.1, 114.2),
+        "Баклажаны тушеные с помидорами" to Nutrition(2.1, 17.7, 5.7, 189.3),
+        "Беляш" to Nutrition(8.8, 6.2, 12.8, 139.3),
+        "Бефстроганов" to Nutrition(21.9, 27.4, 5.7, 355.4),
+        "Биточки или котлеты манные, рисовые" to Nutrition(4.0, 7.8, 20.4, 162.4),
+        "Биточки паровые" to Nutrition(20.0, 19.5, 7.0, 281.4),
+        "Бифштекс" to Nutrition(27.8, 29.6, 1.7, 384.3),
+        "Бифштекс рубленый" to Nutrition(27.1, 43.2, 0.0, 497.3),
+        "Бозбаш" to Nutrition(4.6, 3.7, 9.6, 87.9),
+        "Брюква запеченная" to Nutrition(2.1, 1.6, 7.5, 51.1),
+        "Вареники ленивые отварные" to Nutrition(17.2, 23.5, 20.0, 355.4),
+        "Вареники с капустой" to Nutrition(4.2, 2.9, 9.7, 79.1),
+        "Вареники с творожным, фруктовым или овощным фаршем" to Nutrition(10.4, 10.5, 38.8, 281.3),
+        "Волованы с курицей" to Nutrition(14.1, 30.8, 20.7, 410.8),
+        "Галантин из рыбы" to Nutrition(15.6, 7.4, 4.3, 145.1),
+        "Говядина в кисло-сладком соусе" to Nutrition(26.1, 22.0, 13.9, 354.9),
+        "Голубцы овощные" to Nutrition(3.4, 16.7, 7.3, 190.9),
+        "Грибная запеканка" to Nutrition(4.7, 10.1, 9.5, 145.2),
+        "Грибная икра" to Nutrition(2.2, 6.1, 6.5, 88.4),
+        "Грибные пельмени" to Nutrition(5.5, 13.3, 11.8, 185.8),
+        "Грибы в сметанном соусе" to Nutrition(5.0, 18.9, 3.8, 204.2),
+        "Грибы жареные" to Nutrition(4.6, 11.5, 10.7, 162.1),
+        "Гуляш" to Nutrition(24.9, 22.0, 7.7, 326.0),
+        "Драники" to Nutrition(3.0, 0.9, 13.0, 69.3),
+        "Ежики сибирские" to Nutrition(10.1, 9.6, 15.5, 184.7),
+        "Жаркое по-домашнему" to Nutrition(16.2, 13.8, 15.7, 248.0),
+        "Запеканка из кабачков" to Nutrition(5.2, 12.1, 3.3, 142.3),
+        "Запеканка из макарон с творогом" to Nutrition(11.6, 9.2, 30.0, 241.8),
+        "Запеканка из творога" to Nutrition(12.4, 20.8, 16.7, 299.7),
+        "Запеканка из тыквы" to Nutrition(4.4, 12.9, 25.0, 227.8),
+        "Запеканка картофельная с мясом" to Nutrition(10.6, 9.9, 13.1, 180.3),
+        "Запеканка морковная" to Nutrition(6.9, 13.4, 12.0, 192.6),
+        "Имам баилди" to Nutrition(8.2, 11.7, 4.2, 153.2),
+        "Кабачки фаршированные мясом" to Nutrition(5.5, 8.8, 3.9, 115.9),
+        "Кабачки, фаршированные рисом" to Nutrition(10.0, 8.6, 10.0, 154.9),
+        "Кальмары жареные" to Nutrition(9.9, 14.4, 1.4, 174.6),
+        "Капуста тушеная" to Nutrition(2.7, 5.9, 10.2, 102.2),
+        "Капустные котлеты" to Nutrition(6.4, 3.5, 11.3, 99.4),
+        "Картофельные котлеты" to Nutrition(3.7, 12.9, 15.6, 189.2),
+        "Картофельные оладьи с сыром" to Nutrition(5.4, 11.6, 13.8, 178.0),
+        "Котлета по-киевски" to Nutrition(21.6, 27.8, 28.8, 444.7),
+        "Котлеты гороховые" to Nutrition(13.3, 10.4, 23.7, 236.0),
+        "Котлеты из кабачков с творогом" to Nutrition(5.0, 7.9, 8.3, 122.5),
+        "Котлеты из овощей" to Nutrition(3.3, 13.3, 14.5, 187.6),
+        "Котлеты картофельные" to Nutrition(3.7, 12.9, 15.6, 189.2),
+        "Котлеты морковные" to Nutrition(4.1, 14.5, 15.9, 206.2),
+        "Котлеты рубленые из кур" to Nutrition(12.3, 12.9, 43.6, 328.4),
+        "Котлеты рыбные любительские" to Nutrition(10.5, 8.5, 8.0, 148.2),
+        "Котлеты свекольные" to Nutrition(3.8, 9.0, 15.2, 153.5),
+        "Крокеты картофельные" to Nutrition(4.2, 13.0, 14.2, 187.3),
+        "Кролик по-любительски" to Nutrition(15.4, 26.0, 42.3, 455.0),
+        "Курица по-купечески" to Nutrition(7.0, 9.9, 2.8, 127.9),
+        "Лангет" to Nutrition(33.2, 27.6, 0.0, 381.3),
+        "Люля-кебаб" to Nutrition(20.1, 24.6, 9.9, 338.7),
+        "Манты с бараниной" to Nutrition(11.7, 10.3, 17.6, 204.9),
+        "Манты с тыквой" to Nutrition(3.0, 18.0, 19.7, 247.7),
+        "Морковь глазированная" to Nutrition(1.0, 6.8, 21.6, 146.3),
+        "Морковь тушеная" to Nutrition(0.9, 8.9, 6.4, 108.0),
+        "Мясо отварное" to Nutrition(34.1, 18.6, 0.9, 307.2),
+        "Мясо по-французски" to Nutrition(10.0, 23.0, 4.6, 264.6),
+        "Мясо тушеное" to Nutrition(17.3, 9.0, 27.3, 252.3),
+        "Овощное рагу" to Nutrition(4.5, 7.9, 15.4, 147.2),
+        "Омлет натуральный" to Nutrition(12.2, 18.4, 1.9, 221.9),
+        "Омлет с сыром" to Nutrition(16.3, 29.7, 2.6, 342.0),
+        "Паштет из печени" to Nutrition(14.0, 26.0, 1.1, 294.5),
+        "Пельмени \"Московские\"" to Nutrition(14.0, 14.6, 24.6, 279.0),
+        "Пельмени из говядины и свинины" to Nutrition(13.4, 12.0, 30.7, 276.9),
+        "Перец, фаршированный овощами и рисом" to Nutrition(2.7, 8.9, 11.0, 131.8),
+        "Печень по-строгановски" to Nutrition(16.3, 29.1, 5.3, 347.0),
+        "Плов с курицей" to Nutrition(7.0, 6.0, 20.0, 172.0), // приблизительно
+        "Плов с говядиной" to Nutrition(8.0, 7.0, 20.0, 185.0),
+        "Поджарка" to Nutrition(26.1, 26.1, 4.9, 357.6),
+        "Помидоры, фаршированные грибами" to Nutrition(1.6, 4.1, 3.9, 58.0),
+        "Поросенок отварной" to Nutrition(20.5, 8.6, 9.5, 194.8),
+        "Рагу из овощей" to Nutrition(4.5, 7.9, 15.4, 147.2),
+        "Рис припущенный" to Nutrition(5.7, 6.1, 22.9, 163.6),
+        "Ромштекс" to Nutrition(26.9, 27.4, 11.1, 395.3),
+        "Рулет мясной с черносливом" to Nutrition(13.2, 13.7, 7.3, 202.9),
+        "Рыба жареная" to Nutrition(16.6, 11.3, 10.6, 207.8),
+        "Рыба по-русски" to Nutrition(14.5, 11.6, 7.5, 190.6),
+        "Рыбные котлеты" to Nutrition(7.9, 12.3, 26.4, 241.6),
+        "Салат Цезарь с курицей" to Nutrition(8.0, 12.0, 5.0, 160.0), // пример
+        "Салат Оливье" to Nutrition(5.0, 8.0, 7.0, 190.0),
+        "Салат Греческий" to Nutrition(4.0, 8.0, 4.0, 120.0),
+        "Салат с тунцом" to Nutrition(12.0, 6.0, 3.0, 140.0),
+        "Свекла тушеная" to Nutrition(2.7, 5.5, 12.2, 106.3),
+        "Свинина по-китайски" to Nutrition(9.2, 23.3, 15.3, 303.9),
+        "Сельдь с картофелем" to Nutrition(9.8, 10.4, 11.1, 174.5),
+        "Солянка сборная мясная" to Nutrition(5.2, 4.6, 1.7, 68.7),
+        "Судак, запеченный с картофелем" to Nutrition(5.6, 4.9, 5.9, 88.1),
+        "Тефтели" to Nutrition(9.8, 9.0, 10.1, 158.5),
+        "Треска с горчичным соусом" to Nutrition(8.1, 8.5, 4.9, 127.5),
+        "Уха" to Nutrition(3.5, 1.5, 2.0, 60.0),
+        "Фаршированные огурцы" to Nutrition(1.6, 9.3, 3.2, 102.0),
+        "Фасоль с черносливом" to Nutrition(8.7, 12.8, 44.4, 316.5),
+        "Филе индейки, фаршированное яблоками" to Nutrition(12.2, 14.9, 19.4, 255.5),
+        "Форшмак" to Nutrition(6.9, 21.7, 6.0, 245.3),
+        "Фрикадельки мясные" to Nutrition(28.7, 16.0, 1.0, 263.0),
+        "Цветная капуста отварная" to Nutrition(1.3, 18.3, 2.3, 178.8),
+        "Цыплята табака" to Nutrition(29.2, 24.8, 2.8, 350.5),
+        "Чахохбили из курицы" to Nutrition(6.9, 8.9, 3.3, 119.7),
+        "Чебуреки" to Nutrition(12.5, 15.6, 23.6, 279.3),
+        "Шашлык из баранины" to Nutrition(11.3, 10.5, 4.0, 154.5),
+        "Шницель из капусты" to Nutrition(3.3, 10.9, 10.1, 149.2),
+        "Эскалоп" to Nutrition(19.0, 42.8, 6.8, 486.6),
+        "Язык отварной в соусе" to Nutrition(19.1, 14.1, 0.9, 206.7),
+        "Яичница глазунья с овощами" to Nutrition(18.2, 14.4, 14.6, 257.1),
+        "Яйца фаршированные креветками" to Nutrition(19.1, 15.9, 1.8, 226.6),
+        "Яблоко" to Nutrition(0.3, 0.2, 14.0, 52.0),
+        "Банан" to Nutrition(1.1, 0.3, 23.0, 96.0),
+        "Груша" to Nutrition(0.4, 0.2, 15.0, 57.0),
+        "Апельсин" to Nutrition(0.9, 0.2, 11.0, 47.0),
+        "Мандарин" to Nutrition(0.8, 0.2, 10.0, 42.0),
+        "Киви" to Nutrition(1.0, 0.5, 12.0, 56.0),
+        "Виноград" to Nutrition(0.6, 0.2, 17.0, 72.0),
+        "Арбуз" to Nutrition(0.6, 0.2, 8.0, 30.0),
+        "Дыня" to Nutrition(0.8, 0.2, 9.0, 36.0),
+        "Сухофрукты микс" to Nutrition(2.0, 0.5, 55.0, 250.0),
+        "Орехи микс" to Nutrition(15.0, 50.0, 20.0, 580.0),
+        "Миндаль" to Nutrition(21.0, 50.0, 22.0, 609.0),
+        "Грецкий орех" to Nutrition(15.0, 65.0, 14.0, 656.0),
+        "Кешью" to Nutrition(18.0, 44.0, 30.0, 553.0),
+        "Протеиновый батончик" to Nutrition(25.0, 10.0, 35.0, 350.0),
+        "Злаковый батончик" to Nutrition(5.0, 5.0, 30.0, 185.0),
+        "Йогурт греческий" to Nutrition(10.0, 0.5, 4.0, 66.0),
+        "Кефир" to Nutrition(3.0, 1.5, 4.0, 40.0),
+        "Творог 5%" to Nutrition(12.0, 5.0, 3.0, 105.0),
+        "Сок апельсиновый" to Nutrition(0.7, 0.2, 11.0, 45.0),
+        "Абрикосовый газированный коктейль" to Nutrition(1.0, 0.8, 6.6, 36.4),
+        "Абрикосовый гоголь-моголь" to Nutrition(3.1, 2.8, 12.9, 85.5),
+        "Абрикосовый десертный напиток" to Nutrition(0.3, 0.04, 22.5, 86.1),
+        "Абрикосовый коктейль с поплавком" to Nutrition(2.7, 2.7, 9.4, 70.8),
+        "Апельсиновое молоко" to Nutrition(3.0347, 2.5187, 10.6881, 78.2648),
+        "Апельсиновый компот" to Nutrition(0.3, 0.05, 14.9, 57.2),
+        "Бурятский чай" to Nutrition(0.7, 9.3, 2.1, 94.0),
+        "Горячий абрикосовый напиток" to Nutrition(2.3, 2.6, 5.6, 53.7),
+        "Какао с молоком" to Nutrition(2.9, 2.9, 17.2, 102.8),
+        "Какао с молоком сгущенным" to Nutrition(2.2, 2.4, 15.0, 86.6),
+        "Квас из ревеня" to Nutrition(0.2, 0.04, 8.8, 34.0),
+        "Квас клюквенный" to Nutrition(0.1, 0.03, 10.6, 40.4),
+        "Квас по-тобольски" to Nutrition(0.6, 0.1, 8.6, 35.8),
+        "Квас хлебный из экстракта" to Nutrition(0.04, 0.008, 1.1, 4.3),
+        "Квас яблочный" to Nutrition(0.2, 0.09, 9.4, 36.7),
+        "Кефир с ревенем" to Nutrition(2.1, 2.3, 6.8, 55.0),
+        "Кефир, ацидофилин, простокваша, ряженка" to Nutrition(2.8, 3.2, 4.1, 55.9),
+        "Кисель апельсиновый" to Nutrition(2.7, 2.1, 18.0, 97.8),
+        "Кисель брусничный" to Nutrition(0.07, 0.05, 19.9, 75.2),
+        "Кисель из абрикосов" to Nutrition(0.1, 0.01, 14.2, 53.7),
+        "Кисель из земляники" to Nutrition(0.08, 0.04, 13.5, 51.1),
+        "Кисель из клюквы (густой)" to Nutrition(0.05, 0.02, 14.7, 55.4),
+        "Кисель из концентрата на плодовых или ягодных экстрактах" to Nutrition(0.0, 0.0, 7.0, 26.3),
+        "Кисель из овсяных хлопьев" to Nutrition(4.0, 7.5, 12.6, 130.6),
+        "Кисель из плодов и ягод свежих" to Nutrition(0.06, 0.02, 14.6, 55.2),
+        "Кисель из яблок (густой)" to Nutrition(0.09, 0.08, 16.3, 62.1),
+        "Кисель молочный" to Nutrition(0.9, 1.0, 5.5, 33.5),
+        "Кисель молочный (густой)" to Nutrition(3.0, 3.3, 4.9, 60.5),
+        "Кисель морковный" to Nutrition(0.3, 0.02, 12.8, 49.3),
+        "Коктейль \"Юпитер\"" to Nutrition(2.5, 4.7, 8.1, 82.5),
+        "Коктейль молочный" to Nutrition(2.9, 4.3, 12.5, 96.6),
+        "Коктейль с креветками" to Nutrition(3.1, 4.5, 1.2, 57.5),
+        "Компот из абрикосов" to Nutrition(0.2, 0.02, 12.7, 48.4),
+        "Компот из айвы" to Nutrition(0.1, 0.1, 18.9, 72.4),
+        "Компот из барбариса" to Nutrition(0.0, 0.0, 29.8, 111.7),
+        "Компот из вишни" to Nutrition(0.3, 0.08, 13.7, 53.5),
+        "Компот из моркови" to Nutrition(0.3, 0.02, 8.8, 34.1),
+        "Компот из плодов консервированных 2" to Nutrition(0.3, 0.07, 10.5, 41.3),
+        "Компот из свежих плодов" to Nutrition(0.1, 0.1, 15.3, 59.1),
+        "Компот из свеклы" to Nutrition(1.0, 0.07, 11.8, 49.2),
+        "Компот из смеси сухофруктов" to Nutrition(0.3, 0.0, 14.5, 55.6),
+        "Компот из тыквы и ревеня" to Nutrition(0.3, 0.03, 9.4, 36.5),
+        "Компот из черники" to Nutrition(0.4, 0.2, 12.0, 48.5),
+        "Компот из яблок и слив или из яблок и алычи" to Nutrition(0.2, 0.1, 17.3, 66.6),
+        "Костяничный кисель" to Nutrition(0.003, 0.0, 10.0, 37.5),
+        "Кофе на молоке" to Nutrition(1.4, 1.5, 12.1, 64.1),
+        "Кофе на молоке по-варшавски" to Nutrition(2.0, 3.0, 10.2, 72.5),
+        "Кофе на молоке сгущенном" to Nutrition(2.3, 2.4, 59.5, 254.3),
+        "Кофе по-восточному" to Nutrition(1.1, 1.2, 12.5, 61.7),
+        "Кофе черный 1-ый вариант (для кофеварки типа \"Экспресс\")" to Nutrition(14.0, 14.5, 4.1, 202.6),
+        "Кофе черный 2-ой вариант" to Nutrition(0.7, 0.8, 0.2, 10.7),
+        "Кофе черный с мороженым (глясе)" to Nutrition(1.9, 4.1, 17.9, 111.7),
+        "Кофейный холодный напиток" to Nutrition(1.9, 10.9, 7.1, 131.9),
+        "Креольский напиток" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Крыжовник с кефиром" to Nutrition(3.0, 4.7, 6.6, 79.5),
+        "Лимонный кисель" to Nutrition(0.06, 0.006, 16.0, 60.1),
+        "Медовуха \"Зауральская\"" to Nutrition(1.0, 0.2, 15.6, 64.5),
+        "Молоко кипяченое" to Nutrition(3.0, 3.3, 4.9, 60.5),
+        "Молочно-абрикосовый коктейль" to Nutrition(2.7, 2.8, 7.0, 62.0),
+        "Молочный кисель из моркови" to Nutrition(2.0, 1.9, 9.5, 60.8),
+        "Молочный напиток с абрикосами" to Nutrition(1.8, 6.3, 16.2, 125.0),
+        "Морс брусничный" to Nutrition(0.06, 0.04, 10.9, 41.4),
+        "Напиток \"Лесная быль\"" to Nutrition(1.6, 1.4, 12.8, 67.6),
+        "Напиток \"Петровский\"" to Nutrition(0.2, 0.02, 3.7, 14.9),
+        "Напиток \"Фанта\"" to Nutrition(0.1, 0.01, 7.2, 27.6),
+        "Напиток апельсиновый" to Nutrition(0.03, 0.006, 11.4, 43.0),
+        "Напиток апельсиновый или лимонный" to Nutrition(0.08, 0.02, 11.0, 41.7),
+        "Напиток из айвы со сливками" to Nutrition(0.2, 0.9, 7.8, 37.7),
+        "Напиток из айвы со сметаной" to Nutrition(0.3, 2.3, 3.0, 32.7),
+        "Напиток из боярышника" to Nutrition(0.0, 0.0, 8.0, 30.0),
+        "Напиток из боярышника с овсяным отваром" to Nutrition(0.8, 0.5, 9.3, 42.4),
+        "Напиток из брусники" to Nutrition(0.3, 0.2, 20.5, 79.6),
+        "Напиток из варенья" to Nutrition(0.0, 0.0, 5.2, 19.4),
+        "Напиток из вишни с изюмом" to Nutrition(0.7, 0.5, 10.4, 46.1),
+        "Напиток из кураги" to Nutrition(0.4, 0.02, 12.1, 47.4),
+        "Напиток из сиропа" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Напиток из тыквы" to Nutrition(0.2, 0.02, 10.3, 39.7),
+        "Напиток клюквенный" to Nutrition(0.05, 0.02, 10.6, 40.3),
+        "Напиток Рябинушка" to Nutrition(0.4, 0.05, 10.4, 41.1),
+        "Напиток яблочный" to Nutrition(0.05, 0.05, 11.1, 42.1),
+        "Напиток яблочный с медом" to Nutrition(0.3, 0.1, 18.3, 70.7),
+        "Настой барбарисовый" to Nutrition(0.0, 0.0, 47.7, 178.7),
+        "Ногайский чай (карачаево-черкесский национальный напиток)" to Nutrition(2.6, 9.2, 3.3, 105.4),
+        "Отвар из шиповника" to Nutrition(0.3, 0.1, 4.4, 18.8),
+        "Пинемень куслят (кисель овсяный - мордовское национальное блюдо)" to Nutrition(1.6, 0.8, 11.1, 54.9),
+        "Сбитень" to Nutrition(0.2, 0.7, 13.5, 58.1),
+        "Сбитень по Новониколаевски" to Nutrition(0.1, 0.009, 18.2, 68.7),
+        "Студенческий напиток" to Nutrition(1.2, 0.03, 2.3, 13.9),
+        "Тыквенный кисель" to Nutrition(1.9, 5.0, 13.0, 101.5),
+        "Хлебный квас" to Nutrition(0.2, 0.0, 5.2, 27.0),
+        "Чай брусничный" to Nutrition(0.02, 0.02, 7.0, 26.4),
+        "Чай из душицы" to Nutrition(0.01, 0.0, 7.2, 27.1),
+        "Чай рябиновый" to Nutrition(0.3, 0.05, 2.0, 9.2),
+        "Чай с лимоном" to Nutrition(0.2, 0.05, 10.6, 41.1),
+        "Чай с молоком или сливками" to Nutrition(0.9, 0.8, 11.3, 52.9),
+        "Чай с сахаром, вареньем, джемом, медом, повидлом" to Nutrition(0.2, 0.05, 10.8, 41.7),
+        "Чай с яблоками" to Nutrition(0.3, 0.2, 3.7, 17.2),
+        "Чай фруктовый с абрикосами" to Nutrition(4.7, 0.4, 39.4, 169.8),
+        "Черника с молоком" to Nutrition(2.2, 2.3, 8.2, 60.0),
+        "Яблочный пунш" to Nutrition(0.3, 0.3, 19.1, 75.0),
+        "Ягодная наливка" to Nutrition(0.6, 0.4, 31.6, 124.1),
+        "Абрикосовое суфле" to Nutrition(5.6456, 0.0347, 23.1126, 116.2208),
+        "Апельсиновые корзиночки с кремом" to Nutrition(3.1, 8.0, 9.2, 118.9),
+        "Апельсиновый десерт" to Nutrition(0.7, 0.2, 14.0, 56.7),
+        "Апельсины в ванильном соусе" to Nutrition(2.4, 1.7, 11.6, 68.7),
+        "Безе" to Nutrition(1.0, 0.0, 61.4, 234.4),
+        "Безе (2)" to Nutrition(2.3, 0.0, 78.8, 304.8),
+        "Бисквит из яичных белков" to Nutrition(11.1, 12.3, 43.7, 319.2),
+        "Блинчики из овсяных хлопьев" to Nutrition(5.2, 9.2, 17.7, 170.1),
+        "Блинчики с маком" to Nutrition(7.4, 10.6, 23.7, 214.3),
+        "Блинчики с морковью" to Nutrition(4.2, 5.3, 11.0, 105.4),
+        "Блинчики с мясным, ливерным, творожным, яблочным фаршем, джемом, повидлом или вареньем" to Nutrition(13.7, 18.1, 16.1, 278.3),
+        "Блинчики-полуфабрикат (оболочка)" to Nutrition(6.4, 4.8, 22.6, 153.0),
+        "Блины" to Nutrition(6.1, 12.3, 26.0, 232.5),
+        "Блины гречневые" to Nutrition(6.8, 13.1, 22.3, 229.1),
+        "Блины гурьевские" to Nutrition(6.5, 8.6, 19.9, 178.6),
+        "Блины дехканские" to Nutrition(7.0, 1.1, 45.8, 210.2),
+        "Блины из вареного картофеля" to Nutrition(4.0, 11.9, 17.6, 189.3),
+        "Блины из капусты" to Nutrition(4.0, 12.2, 7.7, 154.4),
+        "Блины из тыквы" to Nutrition(2.6, 8.3, 14.3, 138.3),
+        "Блины красные" to Nutrition(4.5, 13.1, 10.3, 174.7),
+        "Блины кукурузные (чечено-ингушское национальное блюдо)" to Nutrition(6.1, 11.8, 24.0, 221.0),
+        "Блины с квашенной капустой" to Nutrition(3.4, 3.3, 16.8, 106.6),
+        "Блины славянские" to Nutrition(9.3, 8.7, 27.2, 218.0),
+        "Блины со сладким соусом по-староелецки" to Nutrition(6.6, 20.7, 21.1, 291.7),
+        "Блины-скородумки" to Nutrition(4.8, 5.8, 14.9, 127.2),
+        "Брусника свежая с сахаром" to Nutrition(0.5, 0.3, 37.8, 146.9),
+        "Ванильный крем" to Nutrition(4.5, 12.8, 15.2, 190.6),
+        "Ванильный соус" to Nutrition(3.5, 2.8, 8.8, 72.1),
+        "Вафли" to Nutrition(5.5, 6.5, 34.9, 210.9),
+        "Вафли на вафельнице" to Nutrition(4.8, 18.6, 35.5, 319.3),
+        "Взбитый лимонный соус" to Nutrition(2.0, 1.2, 25.0, 112.4),
+        "Взбитый шоколадный соус" to Nutrition(5.0, 4.6, 14.3, 114.7),
+        "Взбитый яблочный соус" to Nutrition(2.6, 2.4, 13.4, 82.4),
+        "Вишневый мусс" to Nutrition(5.9, 0.1, 33.7, 150.7),
+        "Галушки яблочные" to Nutrition(3.2, 1.6, 16.5, 89.1),
+        "Груши, начиненные творогом" to Nutrition(2.2, 2.5, 9.1, 65.4),
+        "Густой шоколадный соус" to Nutrition(2.1, 18.0, 39.1, 316.6),
+        "Десерт \"Птичье молоко\"" to Nutrition(5.1, 13.8, 38.5, 288.9),
+        "Десерт из сметаны \"Радуга\"" to Nutrition(3.9, 14.7, 10.0, 185.6),
+        "Десерт молочный (чувашское национальное блюдо)" to Nutrition(5.1, 5.5, 40.7, 222.4),
+        "Желе из барбариса" to Nutrition(0.0, 0.0, 58.2, 218.3),
+        "Желе из водяники" to Nutrition(2.6, 0.01, 15.1, 67.4),
+        "Желе из кишмиша" to Nutrition(0.0, 0.0, 65.9, 247.0),
+        "Желе из лимонов, апельсинов, мандаринов (лимон)" to Nutrition(2.6, 0.03, 15.6, 69.4),
+        "Желе из молока" to Nutrition(6.3, 11.1, 17.9, 192.1),
+        "Желе из плодов или ягод свежих" to Nutrition(2.5, 0.04, 15.6, 69.1),
+        "Желе из сиропа плодового или ягодного" to Nutrition(2.6, 0.01, 0.02, 10.5),
+        "Желе из сливок" to Nutrition(6.4, 12.0, 30.9, 249.0),
+        "Желе из экстракта плодового или ягодного, или из сока плодового или ягодного натурального (сок)" to Nutrition(2.7, 0.1, 18.9, 82.3),
+        "Желе лимонное" to Nutrition(2.8, 0.02, 20.3, 87.6),
+        "Желе мясное или рыбное" to Nutrition(21.7, 5.7, 0.6, 140.0),
+        "Желе с плодами свежими и консервированными" to Nutrition(2.1, 0.1, 11.7, 53.7),
+        "Изюм или чернослив, или курага в медовом желе (башкирское национальное блюдо)" to Nutrition(2.8, 0.2, 33.2, 137.2),
+        "Клубника с творогом" to Nutrition(6.5, 1.1, 11.1, 77.6),
+        "Клубничный \"снег\"" to Nutrition(3.2, 0.2, 36.8, 152.7),
+        "Клубничный пудинг" to Nutrition(2.0, 1.4, 14.6, 75.6),
+        "Клюквенный мусс" to Nutrition(1.2, 0.08, 17.5, 71.0),
+        "Клюквенный соус" to Nutrition(0.6, 7.5, 7.1, 96.9),
+        "Коврижка \"Диетическая\"" to Nutrition(5.0, 3.8, 26.8, 154.7),
+        "Козинаки" to Nutrition(2.4, 19.8, 61.8, 419.4),
+        "Кофейный крем" to Nutrition(5.5, 10.1, 18.3, 181.2),
+        "Крем ванильный из сметаны" to Nutrition(4.1, 12.2, 19.7, 200.0),
+        "Крем ванильный, шоколадный, кофейный" to Nutrition(4.5, 10.6, 16.2, 174.2),
+        "Крем из клубники" to Nutrition(2.9, 1.9, 11.8, 73.4),
+        "Крем из клюквы и тыквы" to Nutrition(3.8, 6.7, 27.6, 178.7),
+        "Крем из ревеня" to Nutrition(2.1, 6.6, 28.5, 174.9),
+        "Крем из ржаного хлеба" to Nutrition(4.1, 5.7, 23.1, 154.5),
+        "Крем из смородины" to Nutrition(3.6, 3.1, 35.6, 176.4),
+        "Крем из черники" to Nutrition(5.7, 2.5, 19.6, 119.1),
+        "Крем твороженный" to Nutrition(3.8, 3.0, 24.8, 135.8),
+        "Крем ягодный" to Nutrition(3.3, 11.3, 17.2, 179.6),
+        "Крем-крокант" to Nutrition(4.6, 6.5, 32.8, 199.8),
+        "Крем-мокко" to Nutrition(5.7, 8.9, 24.4, 193.9),
+        "Кулага" to Nutrition(1.4, 0.4, 22.1, 92.7),
+        "Лантутики" to Nutrition(8.4, 12.1, 22.7, 227.9),
+        "Лимонное пирожное" to Nutrition(5.3, 12.2, 23.8, 219.9),
+        "Лимонный крем" to Nutrition(6.5, 10.2, 15.8, 177.4),
+        "Лимонный снежок" to Nutrition(7.6, 4.8, 38.7, 218.6),
+        "Лимонный соус" to Nutrition(1.5, 13.3, 6.4, 149.9),
+        "Лимонный соус (2)" to Nutrition(4.1, 14.9, 6.1, 173.1),
+        "Лимонный соус (3)" to Nutrition(0.03, 0.003, 14.9, 56.0),
+        "Лимонный творог" to Nutrition(9.8, 13.9, 19.7, 238.7),
+        "Малина или земляника с молоком, сметаной или сливками" to Nutrition(1.8, 1.9, 14.6, 78.9),
+        "Мармелад из абрикосов" to Nutrition(0.5, 0.05, 52.4, 198.9),
+        "Мармелад из абрикосов в кожице" to Nutrition(0.5, 0.06, 48.3, 183.6),
+        "Мармелад из брусники и яблок" to Nutrition(0.5, 0.3, 28.7, 112.7),
+        "Мармелад из черники" to Nutrition(1.0, 0.6, 13.0, 57.6),
+        "Медовая горка" to Nutrition(5.8, 1.5, 62.5, 270.4),
+        "Мороженое \"Сюрприз\"" to Nutrition(3.6, 6.3, 32.7, 194.3),
+        "Мороженое с плодами или ягодами консервированными" to Nutrition(4.5, 15.5, 17.5, 222.9),
+        "Мусс из растворимого кофе" to Nutrition(4.1, 1.5, 19.9, 104.3),
+        "Мусс из ревеня" to Nutrition(0.9, 0.07, 22.2, 87.6),
+        "Мусс из ржаной муки" to Nutrition(0.9, 0.1, 24.1, 94.9),
+        "Мусс из смородины" to Nutrition(2.1, 0.06, 27.8, 113.3),
+        "Мусс из тыквы" to Nutrition(2.1, 0.07, 22.1, 91.7),
+        "Мусс клюквенный" to Nutrition(2.3, 0.06, 19.3, 81.9),
+        "Мусс лимонный" to Nutrition(2.4, 0.03, 28.1, 115.1),
+        "Мусс яблочный (на крупе манной)" to Nutrition(0.9, 0.2, 20.3, 81.1),
+        "Оладьи" to Nutrition(7.4, 8.9, 24.5, 201.1),
+        "Оладьи (2)" to Nutrition(10.0, 13.6, 42.7, 322.2),
+        "Оладьи из моркови" to Nutrition(3.0, 9.8, 11.0, 141.2),
+        "Оладьи из тыквы" to Nutrition(4.4, 13.0, 12.2, 180.2),
+        "Оладьи с изюмом" to Nutrition(8.4, 15.0, 44.4, 334.9),
+        "Оладьи с яблоками" to Nutrition(4.3, 2.6, 19.5, 113.8),
+        "Оладьи с яблоками (2)" to Nutrition(9.2, 13.3, 39.8, 306.2),
+        "Омлет с яблоками" to Nutrition(3.5, 4.9, 16.8, 121.4),
+        "Омлет с яблоками (2)" to Nutrition(8.6, 14.1, 4.4, 177.7),
+        "Омлет с яблоками (3)" to Nutrition(3.5, 5.1, 6.9, 86.0),
+        "Ореховый крем" to Nutrition(5.4, 4.3, 12.2, 105.9),
+        "Орешки творожные по-русски" to Nutrition(8.9, 17.0, 22.1, 271.2),
+        "Пастила из ежевики" to Nutrition(0.8, 0.3, 44.8, 174.0),
+        "Пастила из калины" to Nutrition(0.0, 0.0, 52.7, 197.5),
+        "Пирожное \"Кокетка\"" to Nutrition(18.7, 29.4, 21.0, 418.1),
+        "Плавающие острова" to Nutrition(3.8, 3.1, 13.8, 94.9),
+        "Пудинг из ревеня" to Nutrition(4.5, 6.3, 29.9, 187.0),
+        "Пудинг из риса и ревеня" to Nutrition(3.6, 7.9, 18.6, 155.0),
+        "Пудинг из сыра" to Nutrition(9.0, 13.2, 7.9, 184.2),
+        "Пудинг из творога, запеченный" to Nutrition(11.0, 19.7, 24.3, 312.5),
+        "Пудинг на сметане" to Nutrition(5.8, 15.3, 24.9, 254.3),
+        "Пудинг ореховый" to Nutrition(7.1, 7.7, 35.1, 229.4),
+        "Пудинг рисовый, манный, пшенный" to Nutrition(3.4, 5.1, 34.7, 189.6),
+        "Пудинг с грушами" to Nutrition(3.6, 3.5, 22.7, 131.2),
+        "Пудинг сливочный с орехами" to Nutrition(7.6, 20.0, 25.6, 307.1),
+        "Пудинг сухарный" to Nutrition(6.4, 5.1, 37.8, 213.3),
+        "Ревень с сахаром" to Nutrition(0.5, 0.08, 25.8, 99.6),
+        "Ревень с сухарями и сливками" to Nutrition(1.4, 6.5, 9.8, 100.4),
+        "Самбук абрикосовый" to Nutrition(2.0, 0.07, 28.4, 115.1),
+        "Самбук из абрикосов" to Nutrition(1.7, 0.06, 21.1, 86.5),
+        "Самбук яблочный или сливовый" to Nutrition(1.8, 0.2, 21.6, 90.3),
+        "Сгущенка по-русски" to Nutrition(2.3, 2.5, 23.7, 120.4),
+        "Сельдерей на десерт" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Сладкий молочный соус" to Nutrition(3.4, 2.8, 12.1, 84.1),
+        "Сладкое блюдо из риса и творога" to Nutrition(11.1, 5.7, 37.6, 236.4),
+        "Сливки или сметана взбитые" to Nutrition(2.4, 17.3, 17.5, 231.3),
+        "Сливовый соус" to Nutrition(0.09, 0.03, 11.1, 42.4),
+        "Смородина с медом и миндалем" to Nutrition(2.6, 7.2, 31.0, 191.4),
+        "Смородиновый \"снег\"" to Nutrition(1.3, 0.1, 28.1, 111.5),
+        "Снежки" to Nutrition(4.0, 3.7, 23.7, 138.2),
+        "Соус абрикосовый" to Nutrition(0.5, 0.06, 66.2, 250.9),
+        "Соус земляничный или малиновый, или вишневый" to Nutrition(0.5, 0.2, 64.1, 244.5),
+        "Соус из брусники и сыра" to Nutrition(9.1, 16.3, 6.8, 208.5),
+        "Соус из изюма и миндаля" to Nutrition(4.4, 6.8, 17.4, 144.2),
+        "Соус из какао" to Nutrition(3.9, 3.5, 13.0, 95.9),
+        "Соус из крыжовника" to Nutrition(0.4, 0.2, 8.5, 35.0),
+        "Соус из яблок и брусники" to Nutrition(0.3, 0.3, 45.7, 174.9),
+        "Соус клюквенный" to Nutrition(0.08, 0.03, 17.8, 67.3),
+        "Соус сметанный" to Nutrition(3.3, 35.3, 13.7, 382.0),
+        "Соус яблочный" to Nutrition(0.1, 0.09, 16.0, 61.1),
+        "Суфле" to Nutrition(5.4, 12.2, 19.1, 203.2),
+        "Суфле ванильное, шоколадное, ореховое" to Nutrition(5.6, 13.5, 18.2, 212.1),
+        "Сырники с морковью" to Nutrition(9.6, 14.1, 22.1, 248.0),
+        "Творог апельсиновый" to Nutrition(6.1, 11.7, 17.8, 196.8),
+        "Творожный соус" to Nutrition(8.4, 7.7, 4.2, 118.8),
+        "Торт \"Вишня в сотах\"" to Nutrition(3.5, 15.0, 22.7, 234.2),
+        "Торт \"Катерина\"" to Nutrition(4.7, 22.9, 41.6, 381.2),
+        "Торт \"Медовый\"" to Nutrition(3.7, 16.6, 42.4, 322.7),
+        "Торт \"Мужской идеал\"" to Nutrition(6.7, 8.7, 54.1, 307.8),
+        "Торт \"Негр\"" to Nutrition(4.4, 15.4, 29.9, 268.7),
+        "Торт \"Почти \"Прага\"" to Nutrition(4.2, 20.5, 39.9, 350.9),
+        "Торт \"Прага\"" to Nutrition(5.9, 12.6, 39.0, 283.5),
+        "Торт \"Снежная горка\"" to Nutrition(1.0, 11.4, 11.6, 150.1),
+        "Торт \"Шоколадная мазурка\"" to Nutrition(7.6, 7.6, 54.0, 301.4),
+        "Торт бисквитный с орехами" to Nutrition(11.4, 15.0, 46.5, 355.3),
+        "Торт Зебра»" to Nutrition(8.5, 12.9, 32.0, 270.8),
+        "Торт из картофеля с творогом" to Nutrition(9.1, 3.9, 25.9, 169.0),
+        "Торт из тыквы" to Nutrition(2.6, 14.5, 19.0, 212.5),
+        "Торт картофельный" to Nutrition(5.6, 5.7, 31.2, 190.5),
+        "Торт печёночный" to Nutrition(8.1, 14.5, 10.0, 200.0),
+        "Торт Прага»" to Nutrition(6.5, 17.3, 38.7, 326.4),
+        "Торт Черный принц»" to Nutrition(0.2, 1.1, 1.2, 14.8),
+        "Тыква с орехами" to Nutrition(3.6, 0.07, 25.8, 111.4),
+        "Тыква с ревенем" to Nutrition(0.8, 0.09, 12.8, 51.7),
+        "Тыква с фруктами" to Nutrition(1.7, 2.4, 14.1, 81.1),
+        "Тыква, запеченная с фруктами, по-ижевски (удмуртское национальное блюдо)" to Nutrition(1.5, 3.7, 17.9, 106.8),
+        "Тыквенный крем" to Nutrition(4.0, 11.2, 7.4, 144.8),
+        "Фаршированные яблоки" to Nutrition(3.3, 1.9, 7.5, 58.1),
+        "Фруктовый маседуан" to Nutrition(0.4, 0.1, 54.0, 205.3),
+        "Холодное из абрикосов" to Nutrition(1.8, 10.8, 6.0, 127.0),
+        "Чернослив со сливками или сметаной взбитыми" to Nutrition(2.5, 12.6, 39.6, 271.8),
+        "Шоколадное мороженое" to Nutrition(4.4, 15.8, 29.1, 268.7),
+        "Шоколадный крем" to Nutrition(3.8, 12.7, 38.1, 272.4),
+        "Шоколадный пудинг" to Nutrition(4.5, 9.3, 24.2, 192.4),
+        "Шоколадный соус" to Nutrition(2.8, 7.7, 16.0, 139.9),
+        "Шульо мелна (блины овсяные - марийское национальное блюдо)" to Nutrition(5.5, 10.5, 21.0, 195.4),
+        "Яблоки в грильяже" to Nutrition(0.3, 2.8, 31.9, 146.1),
+        "Яблоки в желе" to Nutrition(3.0, 3.4, 18.3, 111.1),
+        "Яблоки печеные" to Nutrition(0.6, 1.4, 13.6, 65.8),
+        "Яблоки печеные (2)" to Nutrition(0.5, 0.4, 43.6, 169.1),
+        "Яблоки печеные с брусникой" to Nutrition(0.3, 0.3, 27.2, 105.8),
+        "Яблоки со взбитыми сливками" to Nutrition(1.9, 5.0, 16.4, 113.9),
+        "Яблоки, фаршированные морковью" to Nutrition(0.8, 2.8, 13.4, 78.4),
+        "Яблочно-сливочный соус" to Nutrition(1.2, 6.1, 10.1, 97.1),
+        "Яблочный крем" to Nutrition(0.6, 4.7, 18.2, 112.8),
+        "Ягодный мусс" to Nutrition(1.2, 0.8, 41.2, 167.0),
+        "Яичный мусс" to Nutrition(5.9, 3.5, 23.4, 142.3),
+        "Бобовые в соусе" to Nutrition(26.2, 7.0, 48.0, 347.7),
+        "Бобовые отварные" to Nutrition(30.4, 7.2, 54.7, 391.5),
+        "Бобовые отварные (2)" to Nutrition(24.2, 1.8, 43.6, 276.8),
+        "Гарнир из овощей 1" to Nutrition(8.4, 7.7, 17.0, 167.1),
+        "Гарнир из овощей 2" to Nutrition(1.0, 0.2, 3.6, 18.8),
+        "Гарнир из овощей 3" to Nutrition(1.5, 3.4, 7.6, 65.2),
+        "Гарнир из овощей 4" to Nutrition(4.3, 12.9, 12.7, 180.5),
+        "Гарнир из овощей 5" to Nutrition(1.8, 0.3, 8.6, 42.4),
+        "Гарнир из овощей 6" to Nutrition(5.9, 0.6, 11.9, 73.5),
+        "Гарнир из овощей 7" to Nutrition(8.0, 1.8, 3.8, 62.3),
+        "Гарнир из овощей 8" to Nutrition(0.6, 0.4, 10.9, 47.1),
+        "Гарнир из овощей 9" to Nutrition(10.0, 1.5, 13.0, 102.4),
+        "Гарнир из овощей к сельди и отварной рыбе 1" to Nutrition(2.5, 0.4, 12.2, 58.9),
+        "Гарнир из овощей к сельди и отварной рыбе 2" to Nutrition(2.0, 0.3, 9.0, 44.0),
+        "Гарнир из овощей к сельди и отварной рыбе 3" to Nutrition(2.0, 0.3, 9.1, 44.6),
+        "Гарнир из овощей к сельди и отварной рыбе 4" to Nutrition(3.5, 1.9, 7.1, 57.1),
+        "Гарнир сложный 1" to Nutrition(3.5, 7.7, 16.1, 143.4),
+        "Гарнир сложный 10" to Nutrition(3.5, 11.3, 19.8, 189.8),
+        "Гарнир сложный 11" to Nutrition(16.1, 10.6, 46.2, 333.2),
+        "Гарнир сложный 12" to Nutrition(9.9, 5.6, 29.9, 201.9),
+        "Гарнир сложный 13" to Nutrition(4.5, 13.4, 15.9, 198.5),
+        "Гарнир сложный 15" to Nutrition(4.2, 16.3, 25.2, 257.5),
+        "Гарнир сложный 16" to Nutrition(5.1, 3.3, 17.1, 114.4),
+        "Гарнир сложный 17" to Nutrition(7.2, 5.8, 27.1, 182.7),
+        "Гарнир сложный 18" to Nutrition(4.6, 7.4, 20.0, 160.3),
+        "Гарнир сложный 19" to Nutrition(7.1, 0.9, 23.0, 122.7),
+        "Гарнир сложный 2" to Nutrition(20.1, 13.0, 50.0, 384.9),
+        "Гарнир сложный 3" to Nutrition(6.1, 9.5, 28.2, 216.1),
+        "Гарнир сложный 5" to Nutrition(3.2, 7.2, 26.0, 174.9),
+        "Гарнир сложный 6" to Nutrition(6.3, 9.5, 27.4, 212.9),
+        "Гарнир сложный 7" to Nutrition(5.1, 6.4, 16.5, 140.3),
+        "Гарнир сложный 8" to Nutrition(3.4, 11.5, 15.8, 176.2),
+        "Гарниры к сладким супам" to Nutrition(6.2, 6.9, 41.8, 243.9),
+        "Капуста \"Невская\"" to Nutrition(1.7, 0.1, 5.5, 28.3),
+        "Капуста жареная" to Nutrition(2.8, 3.3, 5.3, 60.6),
+        "Картофель в молоке" to Nutrition(2.8, 4.7, 11.8, 97.6),
+        "Картофель в молоке (2)" to Nutrition(3.4, 4.8, 20.6, 133.6),
+        "Картофель в молоке (3)" to Nutrition(2.2, 5.0, 10.4, 93.3),
+        "Картофель в фольге" to Nutrition(1.9, 2.8, 10.8, 73.5),
+        "Картофель жаренный во фритюре" to Nutrition(4.7, 17.8, 26.6, 279.0),
+        "Картофель жареный (из вареного)" to Nutrition(3.6, 11.7, 24.5, 211.5),
+        "Картофель жареный (из сырого)" to Nutrition(3.7, 10.6, 24.8, 203.3),
+        "Картофель молодой в сметане" to Nutrition(2.1, 14.0, 7.2, 161.1),
+        "Картофель по домашнему" to Nutrition(5.3, 18.4, 16.3, 247.7),
+        "Картофель, запеченный в сметанном соусе" to Nutrition(3.7, 19.5, 14.5, 245.2),
+        "Картофель, запеченный со свининой" to Nutrition(7.8, 22.9, 16.6, 299.5),
+        "Картофель, тушённый с грибами" to Nutrition(3.0, 14.2, 8.4, 171.3),
+        "Картофель, тушенный с грибами в сметане" to Nutrition(4.3, 10.1, 12.2, 153.6),
+        "Картофельная запеканка" to Nutrition(2.9, 4.3, 7.9, 79.8),
+        "Картофельная запеканка (0)" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Картофельная запеканка по-французски" to Nutrition(5.9, 4.7, 8.1, 96.0),
+        "Картофельная масса" to Nutrition(4.0, 1.0, 17.2, 89.4),
+        "Картофельное пюре" to Nutrition(2.1, 4.6, 8.5, 81.7),
+        "Картофельные крокеты" to Nutrition(2.6, 34.1, 7.6, 346.0),
+        "Картошка по Оксановски" to Nutrition(4.7, 10.0, 11.0, 150.1),
+        "Клецки" to Nutrition(5.0, 4.8, 25.8, 160.3),
+        "Клецки в лимонном соусе" to Nutrition(1.9, 4.3, 10.8, 87.0),
+        "Клецки из капусты" to Nutrition(1.2, 1.3, 1.3, 21.5),
+        "Лапша домашняя" to Nutrition(9.7, 3.1, 50.5, 255.9),
+        "Морковь, пассерованная в масле" to Nutrition(0.9, 10.2, 8.5, 127.4),
+        "Плов" to Nutrition(4.1, 7.3, 18.3, 150.7),
+        "Помидоры с рисом" to Nutrition(0.0, 0.0, 0.0, 0.0),
+        "Помидоры, баклажаны и другие овощи жареные" to Nutrition(1.2, 10.6, 5.1, 119.4),
+        "Профитроли" to Nutrition(9.6, 16.0, 18.7, 253.0),
+        "Пюре из кабачков" to Nutrition(1.1, 12.4, 3.8, 129.8),
+        "Пюре из картофеля и капусты" to Nutrition(2.2, 2.8, 7.0, 60.4),
+        "Пюре из картофеля и тыквы" to Nutrition(1.8, 4.8, 6.6, 75.4),
+        "Пюре из картофеля и шпината" to Nutrition(1.9, 4.8, 5.2, 70.6),
+        "Пюре из моркови" to Nutrition(1.7, 8.4, 6.3, 105.7),
+        "Пюре из репчатого лука" to Nutrition(1.8, 0.7, 8.2, 44.4),
+        "Пюре картофельное" to Nutrition(2.7, 5.9, 12.9, 112.0),
+        "Свекла пикантная" to Nutrition(1.3, 1.6, 10.3, 58.3),
+        "Суфле из брюквы" to Nutrition(1.7, 11.6, 9.5, 147.2),
+        "Борщ с говядиной" to Nutrition(1.7, 1.7, 2.2, 30.6),
+        "Картошка фри" to Nutrition(3.4, 15.0, 41.0, 312.0),
+        "Манная каша" to Nutrition(3.0, 3.5, 13.2, 98.3),
+        "Салат овощной" to Nutrition(0.8, 1.8, 3.9, 34.8),
+        "Яичница из двух яиц" to Nutrition(14.2, 14.7, 0.8, 192.3)
     )
 
-    private val lunchDishes: List<String> = listOf(
-        "Борщ с говядиной",
-        "Борщ постный",
-        "Щи из свежей капусты",
-        "Щи из квашеной капусты",
-        "Солянка мясная",
-        "Рассольник",
-        "Харчо",
-        "Уха",
-        "Суп лапша куриный",
-        "Грибной суп",
-        "Гороховый суп",
-        "Чечевичный суп",
-        "Суп-пюре из тыквы",
-        "Суп-пюре из брокколи",
-        "Минестроне",
-        "Томатный суп",
-        "Куриный бульон",
-        "Свекольник",
-        "Окрошка на кефире",
-        "Окрошка на квасе",
-        "Плов с курицей",
-        "Плов с говядиной",
-        "Рис с овощами и курицей",
-        "Гречка с курицей",
-        "Гречка с говядиной",
-        "Булгур с индейкой",
-        "Киноа с овощами",
-        "Перловка с грибами",
-        "Пшено с курицей",
-        "Кускус с овощами",
-        "Макароны по-флотски",
-        "Спагетти болоньезе",
-        "Паста карбонара",
-        "Паста с курицей",
-        "Лапша удон с курицей",
-        "Лапша соба с овощами",
-        "Лазанья мясная",
-        "Каннеллони с фаршем",
-        "Равиоли с сыром",
-        "Ньокки с соусом",
-        "Котлеты куриные с пюре",
-        "Котлеты говяжьи с гречкой",
-        "Тефтели с рисом",
-        "Фрикадельки в соусе",
-        "Голубцы с мясом",
-        "Перец фаршированный",
-        "Пельмени отварные",
-        "Вареники с картофелем",
-        "Манты",
-        "Хинкали",
-        "Куриная грудка запечённая",
-        "Индейка запечённая",
-        "Говядина тушёная",
-        "Свинина запечённая",
-        "Рыба запечённая",
-        "Рыба на пару",
-        "Лосось с рисом",
-        "Треска с овощами",
-        "Минтай тушёный",
-        "Куриные бёдра запечённые",
-        "Жаркое по-домашнему",
-        "Рагу овощное с мясом",
-        "Картофель тушёный с мясом",
-        "Картофельное пюре с котлетой",
-        "Картофель запечённый с курицей",
-        "Драники со сметаной",
-        "Запеканка картофельная",
-        "Запеканка мясная",
-        "Жульен с курицей",
-        "Бефстроганов",
-        "Салат Цезарь с курицей",
-        "Салат Оливье",
-        "Винегрет",
-        "Салат Греческий",
-        "Салат с тунцом",
-        "Салат с курицей и овощами",
-        "Салат с киноа",
-        "Салат крабовый",
-        "Салат с фасолью",
-        "Салат с авокадо",
-        "Шаурма с курицей",
-        "Бургер куриный",
-        "Бургер говяжий",
-        "Кесадилья с курицей",
-        "Тако с говядиной",
-        "Пицца Маргарита",
-        "Пицца с курицей",
-        "Сэндвич клубный",
-        "Панини с индейкой",
-        "Ролл с курицей",
-        "Рис с морепродуктами",
-        "Паэлья",
-        "Поке с лососем",
-        "Поке с тунцом",
-        "Курица карри с рисом",
-        "Чили кон карне",
-        "Фахитас с курицей",
-        "Кебаб с овощами",
-        "Шашлык куриный",
-        "Шашлык свиной"
-    )
-
-    private val dinnerDishes: List<String> = listOf(
-        "Запечённая куриная грудка",
-        "Куриное филе на пару",
-        "Индейка с овощами",
-        "Треска запечённая",
-        "Лосось на гриле",
-        "Минтай на пару",
-        "Омлет с овощами",
-        "Омлет белковый",
-        "Яйца варёные",
-        "Яичница с овощами",
-        "Творог 5%",
-        "Творог с зеленью",
-        "Творожная запеканка",
-        "Греческий йогурт",
-        "Кефир",
-        "Ряженка",
-        "Сырники запечённые",
-        "Пудинг творожный",
-        "Творог с ягодами",
-        "Йогурт натуральный",
-        "Салат овощной",
-        "Салат Греческий",
-        "Салат с тунцом",
-        "Салат с курицей",
-        "Салат с авокадо",
-        "Салат с креветками",
-        "Салат из капусты",
-        "Салат из огурцов и помидоров",
-        "Салат с рукколой",
-        "Салат с фасолью",
-        "Овощное рагу",
-        "Тушёная капуста",
-        "Брокколи на пару",
-        "Цветная капуста запечённая",
-        "Кабачки гриль",
-        "Баклажаны запечённые",
-        "Стручковая фасоль",
-        "Шпинат тушёный",
-        "Овощи гриль",
-        "Тыква запечённая",
-        "Гречка с грибами",
-        "Рис бурый с овощами",
-        "Булгур с овощами",
-        "Киноа с овощами",
-        "Чечевица тушёная",
-        "Нут с овощами",
-        "Перловка с овощами",
-        "Кускус с зеленью",
-        "Пшено с тыквой",
-        "Картофель запечённый",
-        "Картошка фри",
-        "Куриные котлеты на пару",
-        "Индейка тефтели",
-        "Рыбные котлеты",
-        "Фрикадельки из индейки",
-        "Говядина отварная",
-        "Телятина тушёная",
-        "Кролик тушёный",
-        "Курица в духовке",
-        "Филе индейки гриль",
-        "Говяжий язык отварной",
-        "Суп куриный лёгкий",
-        "Овощной суп",
-        "Суп-пюре из брокколи",
-        "Томатный суп",
-        "Рыбный суп",
-        "Грибной суп лёгкий",
-        "Суп из чечевицы",
-        "Минестроне лёгкий",
-        "Бульон с зеленью",
-        "Суп с фрикадельками",
-        "Паста из цельнозерновых с овощами",
-        "Спагетти с томатами",
-        "Рисовая лапша с овощами",
-        "Лапша соба с тофу",
-        "Поке с курицей",
-        "Поке с овощами",
-        "Ролл с лососем",
-        "Ролл с огурцом",
-        "Суши с тунцом",
-        "Сашими лосось",
-        "Шакшука",
-        "Фриттата овощная",
-        "Кесадилья с овощами",
-        "Лаваш с курицей",
-        "Сэндвич с индейкой",
-        "Пита с хумусом",
-        "Хумус с овощами",
-        "Авокадо-тост",
-        "Тост с лососем",
-        "Тост с творожным сыром",
-        "Запечённый батат",
-        "Рататуй",
-        "Киноа с креветками",
-        "Креветки на гриле",
-        "Кальмар тушёный",
-        "Мидии в томатном соусе",
-        "Тофу с овощами",
-        "Темпе с овощами",
-        "Сыр халлуми гриль",
-        "Салат с моцареллой"
-    )
-
-    private val snackDishes: List<String> = listOf(
-        "Яблоко",
-        "Банан",
-        "Груша",
-        "Апельсин",
-        "Мандарин",
-        "Грейпфрут",
-        "Киви",
-        "Манго",
-        "Ананас",
-        "Персик",
-        "Нектарин",
-        "Слива",
-        "Абрикос",
-        "Виноград",
-        "Клубника",
-        "Малина",
-        "Черника",
-        "Ежевика",
-        "Смородина",
-        "Арбуз",
-        "Дыня",
-        "Сухофрукты микс",
-        "Курага",
-        "Чернослив",
-        "Изюм",
-        "Финики",
-        "Инжир сушёный",
-        "Орехи микс",
-        "Миндаль",
-        "Грецкий орех",
-        "Фундук",
-        "Кешью",
-        "Фисташки",
-        "Арахис",
-        "Семечки подсолнечника",
-        "Семечки тыквенные",
-        "Йогурт питьевой",
-        "Йогурт греческий",
-        "Кефир",
-        "Ряженка",
-        "Творог мягкий",
-        "Творожок без сахара",
-        "Протеиновый батончик",
-        "Злаковый батончик",
-        "Фруктовый батончик",
-        "Рисовые хлебцы",
-        "Хлебцы с отрубями",
-        "Гранола порция",
-        "Мюсли батончик",
-        "Попкорн без масла",
-        "Горький шоколад",
-        "Пастила",
-        "Зефир",
-        "Мармелад",
-        "Печенье овсяное",
-        "Крекеры цельнозерновые",
-        "Галеты",
-        "Смузи ягодный",
-        "Смузи банановый",
-        "Смузи зелёный",
-        "Фруктовый салат",
-        "Овощные палочки",
-        "Морковь с хумусом",
-        "Огурцы с хумусом",
-        "Сельдерей с арахисовой пастой",
-        "Авокадо половина",
-        "Тост цельнозерновой",
-        "Сэндвич мини с индейкой",
-        "Брускетта с томатами",
-        "Мини-ролл с лососем",
-        "Яйцо варёное",
-        "Омлет маффин",
-        "Сыр твёрдый",
-        "Сыр моцарелла",
-        "Сыр адыгейский",
-        "Хумус",
-        "Гуакамоле",
-        "Пудинг чиа",
-        "Творожный мусс",
-        "Протеиновый коктейль",
-        "Молочный коктейль",
-        "Какао",
-        "Латте",
-        "Капучино",
-        "Чай с мёдом",
-        "Компот домашний",
-        "Морс ягодный",
-        "Сок апельсиновый",
-        "Сок яблочный",
-        "Томатный сок",
-        "Энергетический шарик",
-        "Финик с орехом",
-        "Банановые чипсы",
-        "Яблочные чипсы",
-        "Кокосовые чипсы",
-        "Кукуруза отварная",
-        "Эдамаме",
-        "Мини-салат Цезарь",
-        "Мини-салат Греческий",
-        "Тунец в собственном соку"
-    )
+    private data class Nutrition(val protein: Double, val fat: Double, val carbs: Double, val calories: Double)
 
     private fun buildMlKeywords(name: String): List<String> {
         val normalizedName = name.lowercase()
         val base = mutableSetOf(name.lowercase())
-
-        if ("каша" in normalizedName) base += listOf("porridge", "oatmeal", "каша")
-        if ("овся" in normalizedName) base += listOf("oatmeal", "oats")
-        if ("греч" in normalizedName) base += listOf("buckwheat")
-        if ("рис" in normalizedName) base += listOf("rice")
-        if ("яич" in normalizedName || "омлет" in normalizedName) base += listOf(
-            "egg",
-            "omelette",
-            "omelet"
-        )
-        if ("твор" in normalizedName || "сырник" in normalizedName || "запеканка" in normalizedName) {
-            base += listOf("cottage cheese", "curd", "cheesecake")
-        }
-        if ("йогурт" in normalizedName) base += listOf("yogurt", "yoghurt")
-        if ("блин" in normalizedName) base += listOf("pancake", "crepe")
-        if ("борщ" in normalizedName) base += listOf("borscht", "beet soup")
+        if ("каша" in normalizedName) base += listOf("porridge", "каша")
+        if ("омлет" in normalizedName) base += listOf("omelette", "яйца")
         if ("суп" in normalizedName) base += listOf("soup")
-        if ("кур" in normalizedName) base += listOf("chicken")
-        if ("рыб" in normalizedName) base += listOf("fish", "seafood")
         if ("салат" in normalizedName) base += listOf("salad")
-        if ("цезарь" in normalizedName) base += listOf("caesar")
-        if ("гречес" in normalizedName) base += listOf("greek salad", "greek")
-        if ("котлет" in normalizedName) base += listOf("cutlet", "patty")
-        if ("плов" in normalizedName) base += listOf("pilaf", "pilau")
-        if ("макарон" in normalizedName) base += listOf("pasta", "spaghetti", "noodles")
-        if ("пюре" in normalizedName || "картофель" in normalizedName) base += listOf(
-            "mashed potato",
-            "potato"
-        )
-        if ("овощ" in normalizedName || "рагу" in normalizedName || "капуст" in normalizedName) {
-            base += listOf("vegetables", "stew")
-        }
-        if ("яблок" in normalizedName || "груш" in normalizedName || "банан" in normalizedName) {
-            base += listOf("fruit", "apple", "banana", "pear")
-        }
-        if ("йогурт" in normalizedName || "кефир" in normalizedName || "ряженка" in normalizedName) {
-            base += listOf("dairy", "fermented milk")
-        }
-        if ("орех" in normalizedName || "миндал" in normalizedName || "кешью" in normalizedName) {
-            base += listOf("nuts", "almond", "cashew")
-        }
-        if ("батончик" in normalizedName || "гранола" in normalizedName || "мюсли" in normalizedName) {
-            base += listOf("bar", "granola", "muesli")
-        }
-
+        if ("рыба" in normalizedName) base += listOf("fish")
+        if ("мясо" in normalizedName) base += listOf("meat")
+        if ("борщ" in normalizedName) base += listOf("borscht")
+        if ("щи" in normalizedName) base += listOf("cabbage soup")
+        if ("винегрет" in normalizedName) base += listOf("vinaigrette")
+        if ("чай" in normalizedName) base += listOf("tea")
+        if ("кофе" in normalizedName) base += listOf("coffee")
+        if ("кисель" in normalizedName) base += listOf("kissel")
+        if ("компот" in normalizedName) base += listOf("compote")
+        if ("квас" in normalizedName) base += listOf("kvass")
+        if ("морс" in normalizedName) base += listOf("mors")
+        if ("какао" in normalizedName) base += listOf("cocoa")
+        if ("коктейль" in normalizedName) base += listOf("cocktail")
+        if ("десерт" in normalizedName) base += listOf("dessert")
+        if ("торт" in normalizedName) base += listOf("cake")
+        if ("крем" in normalizedName) base += listOf("cream")
+        if ("мусс" in normalizedName) base += listOf("mousse")
+        if ("желе" in normalizedName) base += listOf("jelly")
+        if ("пудинг" in normalizedName) base += listOf("pudding")
+        if ("блины" in normalizedName) base += listOf("pancakes")
+        if ("оладьи" in normalizedName) base += listOf("fritters")
+        if ("сырники" in normalizedName) base += listOf("syrniki")
+        if ("гарнир" in normalizedName) base += listOf("garnish")
+        if ("клецки" in normalizedName) base += listOf("dumplings")
+        if ("пюре" in normalizedName) base += listOf("puree")
+        if ("крокеты" in normalizedName) base += listOf("croquettes")
         return base.toList()
     }
 }
