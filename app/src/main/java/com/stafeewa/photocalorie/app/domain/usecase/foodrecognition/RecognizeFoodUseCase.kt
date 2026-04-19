@@ -6,6 +6,7 @@ import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.ml.FoodClassifier
+import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -20,7 +21,7 @@ class RecognizeFoodUseCase @Inject constructor(
         data class Success(val product: Product, val confidence: Float) : Result()
         data class MultipleMatches(val products: List<ProductMatch>) : Result()
         data class NotFound(val suggestedName: String) : Result()
-        data class LowConfidence(val suggestedName: String) : Result()   // новый тип
+        data class LowConfidence(val suggestedName: String) : Result()
         data class Error(val message: String) : Result()
     }
 
@@ -39,28 +40,35 @@ class RecognizeFoodUseCase @Inject constructor(
             val best = results.first()
             val bestLabel = best.label.lowercase().trim()
             val confidence = best.confidence
-
-            // Если уверенность ниже 40% – сразу предлагаем ручной ввод / поиск
-            if (confidence < 0.4f) {
+            //точность
+            if (confidence < 0.1f) {
                 return Result.LowConfidence(bestLabel)
             }
 
-            // Загружаем все продукты из локальной БД
+            val russianLabel = EnglishToRussianMap.map[bestLabel] ?: bestLabel
+            android.util.Log.d("FoodRecognition", "Translated: $russianLabel")
+
+            // Сначала ищем точное совпадение в БД
+            val exactProduct = productRepository.getProductByName(russianLabel)
+            if (exactProduct != null) {
+                return Result.Success(exactProduct, confidence)
+            }
+
             val allProducts = MealType.entries.flatMap { mealType ->
                 productRepository.getProductsByMealType(mealType).first()
             }.distinctBy { it.id }
+
             if (allProducts.isEmpty()) {
-                return Result.NotFound(bestLabel)
+                return Result.NotFound(russianLabel)
             }
 
-            // Оцениваем схожесть
             val scoredMatches = allProducts.map { product ->
-                val score = calculateMatchScore(bestLabel, product.name.lowercase())
+                val score = calculateMatchScore(russianLabel, product.name.lowercase())
                 ProductMatch(product, confidence, score)
             }.filter { it.matchScore > 30 }.sortedByDescending { it.matchScore }
 
             if (scoredMatches.isEmpty()) {
-                return Result.NotFound(bestLabel)
+                return Result.NotFound(russianLabel)
             }
 
             val exactMatch = scoredMatches.firstOrNull { it.matchScore >= 95 }

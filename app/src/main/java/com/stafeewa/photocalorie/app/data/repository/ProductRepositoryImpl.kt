@@ -6,6 +6,7 @@ import com.stafeewa.photocalorie.app.data.mapper.toDomain
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
+import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -43,11 +44,21 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     override suspend fun initDefaultProducts() {
-        val existingProducts = productDao.getProductsByMealType(MealType.BREAKFAST).firstOrNull()
-        if (existingProducts.isNullOrEmpty()) {
-            addProducts(getDefaultProducts())
+        val existingProducts = productDao.getAllProducts()
+        val existingNames = existingProducts.map { it.name }.toSet()
+        val allDefaultProducts = getDefaultProducts()
+        val productsToAdd = allDefaultProducts.filter { it.name !in existingNames }
+        if (productsToAdd.isNotEmpty()) {
+            addProducts(productsToAdd)
+            android.util.Log.d("ProductRepo", "Added ${productsToAdd.size} new products")
+        } else {
+            android.util.Log.d("ProductRepo", "No new products to add")
         }
     }
+    override suspend fun getProductByName(name: String): Product? {
+        return productDao.getProductByName(name)?.toDomain()
+    }
+
     private fun getDefaultProducts(): List<Product> {
         return allRealProducts.map { (name, nutrition) ->
             Product(
@@ -140,7 +151,6 @@ class ProductRepositoryImpl @Inject constructor(
         "Яичная каша (натуральная)" to Nutrition(10.3, 11.0, 10.8, 180.3),
         "Яичная каша с овощами или грибами" to Nutrition(15.9, 13.2, 20.9, 261.0),
         "Ячневая каша с картофелем" to Nutrition(1.8, 1.0, 8.7, 48.6),
-        "Борщ" to Nutrition(3.8, 2.9, 4.3, 57.7),
         "Борщ из свежей капусты и картофеля по 1-110" to Nutrition(1.0, 1.1, 5.4, 36.0),
         "Борщ кубанский с кабачками" to Nutrition(4.9, 5.7, 4.7, 88.2),
         "Борщ летний (с ботвой свеклы)" to Nutrition(3.9, 3.2, 6.6, 69.0),
@@ -360,7 +370,12 @@ class ProductRepositoryImpl @Inject constructor(
         "Салат \"Обжарка\"" to Nutrition(3.8, 11.9, 2.7, 132.6),
         "Салат \"Осенний\" из свежих овощей с рыбой" to Nutrition(8.3, 7.7, 5.5, 123.0),
         "Салат \"Острый\" из картофеля с ветчиной и чесноком" to Nutrition(5.9, 10.3, 15.5, 175.0),
-        "Салат \"Петровский\" грибной с квашеной капустой и огурцами" to Nutrition(1.5, 10.3, 3.1, 110.5),
+        "Салат \"Петровский\" грибной с квашеной капустой и огурцами" to Nutrition(
+            1.5,
+            10.3,
+            3.1,
+            110.5
+        ),
         "Салат \"Приятное с полезным\"" to Nutrition(8.5, 0.7, 16.5, 101.7),
         "Салат \"Тихая заводь\"" to Nutrition(7.8, 23.5, 4.6, 259.9),
         "Салат \"Универсал\"" to Nutrition(1.0, 0.2, 5.6, 27.2),
@@ -403,7 +418,12 @@ class ProductRepositoryImpl @Inject constructor(
         "Салат из кильки в томатном соусе" to Nutrition(5.0, 27.2, 5.0, 283.5),
         "Салат из кольраби" to Nutrition(2.1, 12.3, 7.0, 144.8),
         "Салат из крабов" to Nutrition(14.7, 9.5, 7.3, 171.8),
-        "Салат из красного сладкого перца, зеленого горошка и риса" to Nutrition(10.0, 5.3, 42.4, 247.2),
+        "Салат из красного сладкого перца, зеленого горошка и риса" to Nutrition(
+            10.0,
+            5.3,
+            42.4,
+            247.2
+        ),
         "Салат из краснокачанной капусты" to Nutrition(0.8, 3.6, 7.8, 64.4),
         "Салат из краснокачанной капусты с яблоками" to Nutrition(0.7, 0.3, 8.6, 38.1),
         "Салат из краснокочанной капусты" to Nutrition(0.5, 6.1, 7.8, 86.8),
@@ -681,7 +701,12 @@ class ProductRepositoryImpl @Inject constructor(
         "Кисель из абрикосов" to Nutrition(0.1, 0.01, 14.2, 53.7),
         "Кисель из земляники" to Nutrition(0.08, 0.04, 13.5, 51.1),
         "Кисель из клюквы (густой)" to Nutrition(0.05, 0.02, 14.7, 55.4),
-        "Кисель из концентрата на плодовых или ягодных экстрактах" to Nutrition(0.0, 0.0, 7.0, 26.3),
+        "Кисель из концентрата на плодовых или ягодных экстрактах" to Nutrition(
+            0.0,
+            0.0,
+            7.0,
+            26.3
+        ),
         "Кисель из овсяных хлопьев" to Nutrition(4.0, 7.5, 12.6, 130.6),
         "Кисель из плодов и ягод свежих" to Nutrition(0.06, 0.02, 14.6, 55.2),
         "Кисель из яблок (густой)" to Nutrition(0.09, 0.08, 16.3, 62.1),
@@ -708,7 +733,12 @@ class ProductRepositoryImpl @Inject constructor(
         "Кофе на молоке по-варшавски" to Nutrition(2.0, 3.0, 10.2, 72.5),
         "Кофе на молоке сгущенном" to Nutrition(2.3, 2.4, 59.5, 254.3),
         "Кофе по-восточному" to Nutrition(1.1, 1.2, 12.5, 61.7),
-        "Кофе черный 1-ый вариант (для кофеварки типа \"Экспресс\")" to Nutrition(14.0, 14.5, 4.1, 202.6),
+        "Кофе черный 1-ый вариант (для кофеварки типа \"Экспресс\")" to Nutrition(
+            14.0,
+            14.5,
+            4.1,
+            202.6
+        ),
         "Кофе черный 2-ой вариант" to Nutrition(0.7, 0.8, 0.2, 10.7),
         "Кофе черный с мороженым (глясе)" to Nutrition(1.9, 4.1, 17.9, 111.7),
         "Кофейный холодный напиток" to Nutrition(1.9, 10.9, 7.1, 131.9),
@@ -741,9 +771,19 @@ class ProductRepositoryImpl @Inject constructor(
         "Напиток яблочный" to Nutrition(0.05, 0.05, 11.1, 42.1),
         "Напиток яблочный с медом" to Nutrition(0.3, 0.1, 18.3, 70.7),
         "Настой барбарисовый" to Nutrition(0.0, 0.0, 47.7, 178.7),
-        "Ногайский чай (карачаево-черкесский национальный напиток)" to Nutrition(2.6, 9.2, 3.3, 105.4),
+        "Ногайский чай (карачаево-черкесский национальный напиток)" to Nutrition(
+            2.6,
+            9.2,
+            3.3,
+            105.4
+        ),
         "Отвар из шиповника" to Nutrition(0.3, 0.1, 4.4, 18.8),
-        "Пинемень куслят (кисель овсяный - мордовское национальное блюдо)" to Nutrition(1.6, 0.8, 11.1, 54.9),
+        "Пинемень куслят (кисель овсяный - мордовское национальное блюдо)" to Nutrition(
+            1.6,
+            0.8,
+            11.1,
+            54.9
+        ),
         "Сбитень" to Nutrition(0.2, 0.7, 13.5, 58.1),
         "Сбитень по Новониколаевски" to Nutrition(0.1, 0.009, 18.2, 68.7),
         "Студенческий напиток" to Nutrition(1.2, 0.03, 2.3, 13.9),
@@ -770,7 +810,12 @@ class ProductRepositoryImpl @Inject constructor(
         "Блинчики из овсяных хлопьев" to Nutrition(5.2, 9.2, 17.7, 170.1),
         "Блинчики с маком" to Nutrition(7.4, 10.6, 23.7, 214.3),
         "Блинчики с морковью" to Nutrition(4.2, 5.3, 11.0, 105.4),
-        "Блинчики с мясным, ливерным, творожным, яблочным фаршем, джемом, повидлом или вареньем" to Nutrition(13.7, 18.1, 16.1, 278.3),
+        "Блинчики с мясным, ливерным, творожным, яблочным фаршем, джемом, повидлом или вареньем" to Nutrition(
+            13.7,
+            18.1,
+            16.1,
+            278.3
+        ),
         "Блинчики-полуфабрикат (оболочка)" to Nutrition(6.4, 4.8, 22.6, 153.0),
         "Блины" to Nutrition(6.1, 12.3, 26.0, 232.5),
         "Блины гречневые" to Nutrition(6.8, 13.1, 22.3, 229.1),
@@ -780,7 +825,12 @@ class ProductRepositoryImpl @Inject constructor(
         "Блины из капусты" to Nutrition(4.0, 12.2, 7.7, 154.4),
         "Блины из тыквы" to Nutrition(2.6, 8.3, 14.3, 138.3),
         "Блины красные" to Nutrition(4.5, 13.1, 10.3, 174.7),
-        "Блины кукурузные (чечено-ингушское национальное блюдо)" to Nutrition(6.1, 11.8, 24.0, 221.0),
+        "Блины кукурузные (чечено-ингушское национальное блюдо)" to Nutrition(
+            6.1,
+            11.8,
+            24.0,
+            221.0
+        ),
         "Блины с квашенной капустой" to Nutrition(3.4, 3.3, 16.8, 106.6),
         "Блины славянские" to Nutrition(9.3, 8.7, 27.2, 218.0),
         "Блины со сладким соусом по-староелецки" to Nutrition(6.6, 20.7, 21.1, 291.7),
@@ -808,11 +858,21 @@ class ProductRepositoryImpl @Inject constructor(
         "Желе из плодов или ягод свежих" to Nutrition(2.5, 0.04, 15.6, 69.1),
         "Желе из сиропа плодового или ягодного" to Nutrition(2.6, 0.01, 0.02, 10.5),
         "Желе из сливок" to Nutrition(6.4, 12.0, 30.9, 249.0),
-        "Желе из экстракта плодового или ягодного, или из сока плодового или ягодного натурального (сок)" to Nutrition(2.7, 0.1, 18.9, 82.3),
+        "Желе из экстракта плодового или ягодного, или из сока плодового или ягодного натурального (сок)" to Nutrition(
+            2.7,
+            0.1,
+            18.9,
+            82.3
+        ),
         "Желе лимонное" to Nutrition(2.8, 0.02, 20.3, 87.6),
         "Желе мясное или рыбное" to Nutrition(21.7, 5.7, 0.6, 140.0),
         "Желе с плодами свежими и консервированными" to Nutrition(2.1, 0.1, 11.7, 53.7),
-        "Изюм или чернослив, или курага в медовом желе (башкирское национальное блюдо)" to Nutrition(2.8, 0.2, 33.2, 137.2),
+        "Изюм или чернослив, или курага в медовом желе (башкирское национальное блюдо)" to Nutrition(
+            2.8,
+            0.2,
+            33.2,
+            137.2
+        ),
         "Клубника с творогом" to Nutrition(6.5, 1.1, 11.1, 77.6),
         "Клубничный \"снег\"" to Nutrition(3.2, 0.2, 36.8, 152.7),
         "Клубничный пудинг" to Nutrition(2.0, 1.4, 14.6, 75.6),
@@ -933,7 +993,12 @@ class ProductRepositoryImpl @Inject constructor(
         "Тыква с орехами" to Nutrition(3.6, 0.07, 25.8, 111.4),
         "Тыква с ревенем" to Nutrition(0.8, 0.09, 12.8, 51.7),
         "Тыква с фруктами" to Nutrition(1.7, 2.4, 14.1, 81.1),
-        "Тыква, запеченная с фруктами, по-ижевски (удмуртское национальное блюдо)" to Nutrition(1.5, 3.7, 17.9, 106.8),
+        "Тыква, запеченная с фруктами, по-ижевски (удмуртское национальное блюдо)" to Nutrition(
+            1.5,
+            3.7,
+            17.9,
+            106.8
+        ),
         "Тыквенный крем" to Nutrition(4.0, 11.2, 7.4, 144.8),
         "Фаршированные яблоки" to Nutrition(3.3, 1.9, 7.5, 58.1),
         "Фруктовый маседуан" to Nutrition(0.4, 0.1, 54.0, 205.3),
@@ -943,7 +1008,12 @@ class ProductRepositoryImpl @Inject constructor(
         "Шоколадный крем" to Nutrition(3.8, 12.7, 38.1, 272.4),
         "Шоколадный пудинг" to Nutrition(4.5, 9.3, 24.2, 192.4),
         "Шоколадный соус" to Nutrition(2.8, 7.7, 16.0, 139.9),
-        "Шульо мелна (блины овсяные - марийское национальное блюдо)" to Nutrition(5.5, 10.5, 21.0, 195.4),
+        "Шульо мелна (блины овсяные - марийское национальное блюдо)" to Nutrition(
+            5.5,
+            10.5,
+            21.0,
+            195.4
+        ),
         "Яблоки в грильяже" to Nutrition(0.3, 2.8, 31.9, 146.1),
         "Яблоки в желе" to Nutrition(3.0, 3.4, 18.3, 111.1),
         "Яблоки печеные" to Nutrition(0.6, 1.4, 13.6, 65.8),
@@ -1028,14 +1098,121 @@ class ProductRepositoryImpl @Inject constructor(
         "Пюре картофельное" to Nutrition(2.7, 5.9, 12.9, 112.0),
         "Свекла пикантная" to Nutrition(1.3, 1.6, 10.3, 58.3),
         "Суфле из брюквы" to Nutrition(1.7, 11.6, 9.5, 147.2),
-        "Борщ с говядиной" to Nutrition(1.7, 1.7, 2.2, 30.6),
-        "Картошка фри" to Nutrition(3.4, 15.0, 41.0, 312.0),
-        "Манная каша" to Nutrition(3.0, 3.5, 13.2, 98.3),
         "Салат овощной" to Nutrition(0.8, 1.8, 3.9, 34.8),
-        "Яичница из двух яиц" to Nutrition(14.2, 14.7, 0.8, 192.3)
+
+        "Яблочный пирог" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Ребрышки по-домашнему"  to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Пахлава"  to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Карпаччо из говядины"  to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Тартар из говядины" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Салат из свеклы" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Бенье" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Пибимпап" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Борщ" to Nutrition(1.7, 1.7, 2.2, 30.6),
+        "Хлебный пудинг" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Буррито на завтрак" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Брускетта" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Гречка с мясом" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Салат Цезарь" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Канноли" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Капрезе" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Морковный торт" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Севиче" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Сырная тарелка" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Чизкейк" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Карри из курицы" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Кесадилья с курицей" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Куриные крылышки" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Шоколадный торт" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Шоколадный мусс" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Чуррос" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Суп из моллюсков" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Клубный сэндвич" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Крабовые котлеты" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Крем-брюле" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Крок-мадам" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Капкейки" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Фаршированные яйца" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Пончики" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Пельмени" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Эдамаме" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Яйца Бенедикт" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Улитки" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Фалафель" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Филе-миньон" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Рыба с картошкой фри" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Фуа-гра" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Картофель фри" to Nutrition(3.4, 15.0, 41.0, 312.0),
+        "Луковый суп по-французски" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Французский тост" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Жареные кальмары" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Яичница" to Nutrition(14.2, 14.7, 0.8, 192.3),
+        "Жареный рис" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Замороженный йогурт" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Чесночный хлеб" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Ньокки" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Греческий салат" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Сэндвич с плавленым сыром" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Лосось на гриле" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Гуакамоле" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Гёдза" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Гамбургер" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Кисло-острый суп" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Хот-дог" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Уэвос ранчерос" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Хумус" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Мороженое" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Лазанья" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Биск из омара" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Сэндвич с омаром" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Макароны с сыром" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Макаронс" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Мисо-суп" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Мидии" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Начос" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Омлет" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Луковые кольца" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Устрицы" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Пад-тай" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Паэлья" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Блины" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Панна-котта" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Утка по-пекински" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Фо" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Пицца" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Свиная отбивная" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Путин" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Ростбиф" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Сэндвич с тянутой свининой" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Лапша рамен" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Равиоли" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Красный бархат" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Ризотто" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Самоса" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Сашими" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Гребешки" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Салат из морской капусты" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Манная каша" to Nutrition(3.0, 3.5, 13.2, 98.3),
+        "Креветки с мамалыгой" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Спагетти болоньезе" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Спагетти карбонара" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Спринг-роллы" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Стейк" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Клубничный пирог" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Суши" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Тако" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Такояки" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Тирамису" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Тартар из тунца" to Nutrition(1.0, 1.0, 1.0, 10.0),
+        "Вафли" to Nutrition(1.0, 1.0, 1.0, 10.0)
     )
 
-    private data class Nutrition(val protein: Double, val fat: Double, val carbs: Double, val calories: Double)
+    private data class Nutrition(
+        val protein: Double,
+        val fat: Double,
+        val carbs: Double,
+        val calories: Double
+    )
 
     private fun buildMlKeywords(name: String): List<String> {
         val normalizedName = name.lowercase()

@@ -140,7 +140,9 @@ fun RecognitionResultDialog(
 
                         val factor = portion.toDoubleOrNull()?.div(100) ?: 1.0
                         Text(
-                            text = "КБЖУ на ${portion.toIntOrNull() ?: 100} г: ${(result.product.caloriesPer100g * factor).toInt()} ккал | Б: ${(result.product.proteinPer100g * factor).toInt()}г | Ж: ${(result.product.fatPer100g * factor).toInt()}г | У: ${(result.product.carbsPer100g * factor).toInt()}г",
+                            text = "КБЖУ на ${portion.toIntOrNull() ?: 100} г: ${(result.product.caloriesPer100g * factor).toInt()}" +
+                                    " ккал | Б: ${(result.product.proteinPer100g * factor).toInt()}г | Ж: ${(result.product.fatPer100g * factor).toInt()}г " +
+                                    "| У: ${(result.product.carbsPer100g * factor).toInt()}г",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
@@ -188,7 +190,6 @@ fun RecognitionResultDialog(
                     }
 
                     is RecognitionResult.NotFound -> {
-                        // ... (без изменений)
                         Text(
                             text = "Блюдо \"${result.suggestedName}\" не найдено в базе.",
                             color = MaterialTheme.colorScheme.onSurface

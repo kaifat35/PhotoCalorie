@@ -35,4 +35,10 @@ interface ProductDao {
 
     @Query("DELETE FROM products")
     suspend fun deleteAllProducts()
+
+    @Query("SELECT * FROM products WHERE name COLLATE NOCASE = :name LIMIT 1")
+    suspend fun getProductByName(name: String): ProductDbModel?
+
+    @Query("SELECT * FROM products")
+    suspend fun getAllProducts(): List<ProductDbModel>
 }

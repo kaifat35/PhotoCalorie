@@ -12,6 +12,7 @@ import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.AddRecognizedFoodToDatabaseUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.RecognizeFoodUseCase
+import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -70,6 +71,16 @@ class CameraViewModel @Inject constructor(
         return Bitmap.createBitmap(bitmap, left, top, cropWidth, cropHeight)
     }
 
+    private suspend fun translateProduct(product: Product): Product {
+        val englishName = product.name
+        val russianName = EnglishToRussianMap.map[englishName]?.trim()
+        return if (russianName != null) {
+            productRepository.getProductByName(russianName) ?: product
+        } else {
+            product
+        }
+    }
+
     private fun recognizeFood(bitmap: Bitmap) {
         viewModelScope.launch {
             _isProcessing.value = true
@@ -78,25 +89,28 @@ class CameraViewModel @Inject constructor(
 
             _recognitionResult.value = when (result) {
                 is RecognizeFoodUseCase.Result.Success -> {
+                    val translatedProduct = translateProduct(result.product)
                     RecognitionResult.Success(
-                        product = result.product,
+                        product = translatedProduct,
                         confidence = result.confidence
                     )
                 }
                 is RecognizeFoodUseCase.Result.MultipleMatches -> {
+                    val translatedMatches = result.products.map { match ->
+                        val translatedProduct = translateProduct(match.product)
+                        match.copy(product = translatedProduct)
+                    }
                     RecognitionResult.MultipleMatches(
-                        matches = result.products
+                        matches = translatedMatches
                     )
                 }
                 is RecognizeFoodUseCase.Result.NotFound -> {
-                    RecognitionResult.NotFound(
-                        suggestedName = result.suggestedName
-                    )
+                    val translatedName = EnglishToRussianMap.map[result.suggestedName] ?: result.suggestedName
+                    RecognitionResult.NotFound(suggestedName = translatedName)
                 }
                 is RecognizeFoodUseCase.Result.LowConfidence -> {
-                    RecognitionResult.LowConfidence(
-                        suggestedName = result.suggestedName
-                    )
+                    val translatedName = EnglishToRussianMap.map[result.suggestedName] ?: result.suggestedName
+                    RecognitionResult.LowConfidence(suggestedName = translatedName)
                 }
                 is RecognizeFoodUseCase.Result.Error -> {
                     RecognitionResult.Error(result.message)
@@ -155,6 +169,6 @@ sealed class RecognitionResult {
     data class Success(val product: Product, val confidence: Float) : RecognitionResult()
     data class MultipleMatches(val matches: List<RecognizeFoodUseCase.ProductMatch>) : RecognitionResult()
     data class NotFound(val suggestedName: String) : RecognitionResult()
-    data class LowConfidence(val suggestedName: String) : RecognitionResult()   // новый тип
+    data class LowConfidence(val suggestedName: String) : RecognitionResult()
     data class Error(val message: String) : RecognitionResult()
 }
