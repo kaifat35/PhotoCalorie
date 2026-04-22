@@ -404,16 +404,15 @@ private fun RecipeCard(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Row(
+                Column (
                     modifier = modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val context = LocalContext.current
 
                     Button(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             val intent = Intent(Intent.ACTION_VIEW, recipe.sourceUrl.toUri())
                             context.startActivity(intent)
@@ -428,7 +427,7 @@ private fun RecipeCard(
 
                     }
                     Button(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             val intent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
@@ -452,6 +451,7 @@ private fun RecipeCard(
             }
         }
     }
+    Spacer(modifier = Modifier.height(16.dp))
 }
 
 @Composable

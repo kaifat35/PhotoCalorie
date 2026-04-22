@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-// Цвета для светлой темы (почти белый фон, голубые/зелёные акценты)
+// Цвета для светлой темы
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF006D3B),
     onPrimary = Color.White,
@@ -27,10 +27,11 @@ private val LightColorScheme = lightColorScheme(
     onBackground = Color(0xFF191C19),
     surface = Color(0xFFFBFDF8),
     onSurface = Color(0xFF191C19),
-    surfaceVariant = Color(0xFFDDF3E4)
+    surfaceVariant = Color(0xFFDDF3E4),
+    outline = Color(0xFF8C9A8F)
 )
 
-// Тёмная тема – адаптированные тёмные версии
+// Тёмная тема
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF77DA91),
     onPrimary = Color(0xFF00391D),
@@ -45,12 +46,13 @@ private val DarkColorScheme = darkColorScheme(
     onBackground = Color(0xFFE1E3DE),
     surface = Color(0xFF111411),
     onSurface = Color(0xFFE1E3DE),
-    surfaceVariant = Color(0xFF3C4940)
+    surfaceVariant = Color(0xFF3C4940),
+    outline = Color(0xFF6F7D72)
 )
 
 @Composable
 fun PhotoCalorieTheme(
-    darkTheme: Boolean? = true,   // null = системная, true/false = принудительно
+    darkTheme: Boolean? = true,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -80,7 +82,7 @@ fun textFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedTextColor = MaterialTheme.colorScheme.onSurface,
     unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
     disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
-    errorTextColor = Color.Red,
+    errorTextColor = MaterialTheme.colorScheme.error,
     cursorColor = MaterialTheme.colorScheme.primary,
     focusedBorderColor = MaterialTheme.colorScheme.primary,
     unfocusedBorderColor = MaterialTheme.colorScheme.outline,

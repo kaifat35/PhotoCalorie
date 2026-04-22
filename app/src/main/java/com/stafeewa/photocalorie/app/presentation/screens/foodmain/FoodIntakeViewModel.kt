@@ -77,6 +77,9 @@ class FoodIntakeViewModel @Inject constructor(
     private val _dinnerEntries = MutableStateFlow<List<FoodEntry>>(emptyList())
     val dinnerEntries: StateFlow<List<FoodEntry>> = _dinnerEntries.asStateFlow()
 
+    private val _snackEntries = MutableStateFlow<List<FoodEntry>>(emptyList())
+    val snackEntries: StateFlow<List<FoodEntry>> = _snackEntries.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -124,6 +127,7 @@ class FoodIntakeViewModel @Inject constructor(
                 _breakfastEntries.value = entries.filter { it.mealType == MealType.BREAKFAST }
                 _lunchEntries.value = entries.filter { it.mealType == MealType.LUNCH }
                 _dinnerEntries.value = entries.filter { it.mealType == MealType.DINNER }
+                _snackEntries.value = entries.filter { it.mealType == MealType.SNACK }
             }
             .launchIn(viewModelScope)
     }

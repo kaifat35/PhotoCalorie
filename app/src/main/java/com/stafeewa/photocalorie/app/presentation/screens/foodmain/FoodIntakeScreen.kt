@@ -52,6 +52,7 @@ import com.stafeewa.photocalorie.app.domain.entity.FoodEntry
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.utils.toUserVisibleFoodName
 
+
 @Composable
 fun FoodIntakeScreen(
     modifier: Modifier = Modifier,
@@ -67,6 +68,7 @@ fun FoodIntakeScreen(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
     val successMessage by viewModel.successMessage.collectAsStateWithLifecycle()
+    val snackEntries by viewModel.snackEntries.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -262,7 +264,7 @@ fun FoodIntakeScreen(
                         MealSection(
                             title = stringResource(R.string.snack),
                             mealType = MealType.SNACK,
-                            items = dinnerEntries,
+                            items = snackEntries,
                             onAddClick = {
                                 selectedMealType = MealType.SNACK
                                 showAddDialog = true
