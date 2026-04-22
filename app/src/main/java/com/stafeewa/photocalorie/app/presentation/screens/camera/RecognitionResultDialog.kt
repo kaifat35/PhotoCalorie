@@ -574,34 +574,41 @@ fun MealTypeSelector(
     selectedMealType: MealType,
     onMealTypeSelected: (MealType) -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        MealTypeButton(
-            title = "Завтрак",
-            isSelected = selectedMealType == MealType.BREAKFAST,
-            modifier = Modifier.weight(1.2f),
-            onClick = { onMealTypeSelected(MealType.BREAKFAST) }
-        )
-        MealTypeButton(
-            title = "Обед",
-            isSelected = selectedMealType == MealType.LUNCH,
-            modifier = Modifier.weight(1f),
-            onClick = { onMealTypeSelected(MealType.LUNCH) }
-        )
-        MealTypeButton(
-            title = "Ужин",
-            isSelected = selectedMealType == MealType.DINNER,
-            modifier = Modifier.weight(1f),
-            onClick = { onMealTypeSelected(MealType.DINNER) }
-        )
-        MealTypeButton(
-            title = "Перекус",
-            isSelected = selectedMealType == MealType.SNACK,
-            modifier = Modifier.weight(1.2f),
-            onClick = { onMealTypeSelected(MealType.SNACK) }
-        )
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            MealTypeButton(
+                title = "Завтрак",
+                isSelected = selectedMealType == MealType.BREAKFAST,
+                modifier = Modifier.weight(1.2f),
+                onClick = { onMealTypeSelected(MealType.BREAKFAST) }
+            )
+            MealTypeButton(
+                title = "Обед",
+                isSelected = selectedMealType == MealType.LUNCH,
+                modifier = Modifier.weight(1f),
+                onClick = { onMealTypeSelected(MealType.LUNCH) }
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            MealTypeButton(
+                title = "Ужин",
+                isSelected = selectedMealType == MealType.DINNER,
+                modifier = Modifier.weight(1f),
+                onClick = { onMealTypeSelected(MealType.DINNER) }
+            )
+            MealTypeButton(
+                title = "Перекус",
+                isSelected = selectedMealType == MealType.SNACK,
+                modifier = Modifier.weight(1.2f),
+                onClick = { onMealTypeSelected(MealType.SNACK) }
+            )
+        }
     }
 }
 
@@ -623,7 +630,7 @@ fun MealTypeButton(
     ) {
         Text(
             text = title,
-            fontSize = 10.sp,
+            fontSize = 14.sp,
             color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
         )
     }
