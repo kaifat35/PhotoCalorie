@@ -42,7 +42,7 @@ class RecognizeFoodUseCase @Inject constructor(
             val bestLabel = best.label.lowercase().trim()
             val confidence = best.confidence
             //точность
-            if (confidence < 0.33f) {
+            if (confidence < 0.25f) {
                 return Result.LowConfidence(bestLabel)
             }
 

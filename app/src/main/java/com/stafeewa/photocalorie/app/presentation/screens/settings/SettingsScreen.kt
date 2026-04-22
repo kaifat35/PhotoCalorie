@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -43,20 +42,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.Language
+import com.stafeewa.photocalorie.app.domain.entity.MinTrainingExamplesOption
 import com.stafeewa.photocalorie.app.domain.entity.ThemeMode
+import com.stafeewa.photocalorie.app.domain.entity.TrainingFrequencyOption
 import com.stafeewa.photocalorie.app.presentation.ui.theme.textFieldColors
 
 @Composable
@@ -250,13 +249,17 @@ fun SettingsScreen(
                                 title = stringResource(R.string.training_frequency),
                                 subtitle = stringResource(R.string.training_frequency_hint)
                             ) {
-                                NumericSettingsTextField(
-                                    value = currentState.trainingFrequencyHours,
-                                    onValueCommitted = {
+                                SettingsDropdown(
+                                    items = currentState.trainingFrequencyOptions,
+                                    selectedItem = TrainingFrequencyOption.fromHours(
+                                        currentState.trainingFrequencyHours
+                                    ),
+                                    onItemSelected = {
                                         viewModel.processCommand(
-                                            SettingsCommand.SetTrainingFrequencyHours(it)
+                                            SettingsCommand.SetTrainingFrequencyHours(it.hours)
                                         )
-                                    }
+                                    },
+                                    itemAsString = { it.title }
                                 )
                             }
                         }
@@ -265,13 +268,17 @@ fun SettingsScreen(
                                 title = stringResource(R.string.min_training_examples),
                                 subtitle = stringResource(R.string.min_training_examples_hint)
                             ) {
-                                NumericSettingsTextField(
-                                    value = currentState.minTrainingExamples,
-                                    onValueCommitted = {
+                                SettingsDropdown(
+                                    items = currentState.minTrainingExamplesOptions,
+                                    selectedItem = MinTrainingExamplesOption.fromCount(
+                                        currentState.minTrainingExamples
+                                    ),
+                                    onItemSelected = {
                                         viewModel.processCommand(
-                                            SettingsCommand.SetMinTrainingExamples(it)
+                                            SettingsCommand.SetMinTrainingExamples(it.count)
                                         )
-                                    }
+                                    },
+                                    itemAsString = { it.title }
                                 )
                             }
                         }
@@ -287,29 +294,6 @@ fun SettingsScreen(
         }
     )
 }
-@Composable
-private fun NumericSettingsTextField(
-    value: Int,
-    onValueCommitted: (Int) -> Unit
-) {
-    var text by remember(value) { mutableStateOf(value.toString()) }
-
-    TextField(
-        modifier = Modifier.fillMaxWidth(),
-        value = text,
-        onValueChange = { newValue ->
-            if (newValue.all { it.isDigit() }) {
-                text = newValue
-                newValue.toIntOrNull()?.let(onValueCommitted)
-            }
-        },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        singleLine = true,
-        shape = RoundedCornerShape(30.dp),
-        colors = textFieldColors()
-    )
-}
-
 
 @Composable
 private fun SettingsCard(

@@ -270,6 +270,8 @@ fun ProfileScreen(
                                     keyboardType = KeyboardType.Text,
                                     imeAction = ImeAction.Done
                                 ),
+                                singleLine = true,
+                                maxLines = 1,
                                 shape = RoundedCornerShape(30.dp),
                                 colors = textFieldColors()
                             )
@@ -381,6 +383,8 @@ fun ProfileScreen(
                                     keyboardType = KeyboardType.Decimal,
                                     imeAction = ImeAction.Done
                                 ),
+                                singleLine = true,
+                                maxLines = 1,
                                 shape = RoundedCornerShape(30.dp),
                                 colors = textFieldColors()
                             )
@@ -410,6 +414,8 @@ fun ProfileScreen(
                                     keyboardType = KeyboardType.Decimal,
                                     imeAction = ImeAction.Done
                                 ),
+                                singleLine = true,
+                                maxLines = 1,
                                 shape = RoundedCornerShape(30.dp),
                                 colors = textFieldColors()
                             )
@@ -439,6 +445,8 @@ fun ProfileScreen(
                                     keyboardType = KeyboardType.Number,
                                     imeAction = ImeAction.Done
                                 ),
+                                singleLine = true,
+                                maxLines = 1,
                                 shape = RoundedCornerShape(30.dp),
                                 colors = textFieldColors()
                             )
@@ -459,6 +467,8 @@ fun ProfileScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                                singleLine = true,
+                                maxLines = 1,
                                 shape = RoundedCornerShape(30.dp),
                                 colors = textFieldColors()
                             )

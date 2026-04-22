@@ -226,6 +226,11 @@ fun RecognitionResultDialog(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
 
+                            MealTypeSelector(
+                                selectedMealType = selectedMealType,
+                                onMealTypeSelected = { selectedMealType = it }
+                            )
+
                             OutlinedTextField(
                                 value = manualName,
                                 onValueChange = { manualName = it },
@@ -278,7 +283,7 @@ fun RecognitionResultDialog(
 
                     is RecognitionResult.LowConfidence -> {
                         Text(
-                            text = "Не удалось распознать блюдо с достаточной уверенностью (менее 40%).",
+                            text = "Не удалось распознать блюдо с достаточной уверенностью (менее 25%).",
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -314,6 +319,11 @@ fun RecognitionResultDialog(
                                 text = "Добавьте блюдо вручную:",
                                 color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.padding(top = 8.dp)
+                            )
+
+                            MealTypeSelector(
+                                selectedMealType = selectedMealType,
+                                onMealTypeSelected = { selectedMealType = it }
                             )
 
                             OutlinedTextField(
@@ -585,6 +595,12 @@ fun MealTypeSelector(
             isSelected = selectedMealType == MealType.DINNER,
             modifier = Modifier.weight(1f),
             onClick = { onMealTypeSelected(MealType.DINNER) }
+        )
+        MealTypeButton(
+            title = "Перекус",
+            isSelected = selectedMealType == MealType.SNACK,
+            modifier = Modifier.weight(1.2f),
+            onClick = { onMealTypeSelected(MealType.SNACK) }
         )
     }
 }

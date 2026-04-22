@@ -222,7 +222,7 @@ private fun CaptureAreaOverlay(modifier: Modifier = Modifier) {
                 .fillMaxSize()
                 .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
         ) {
-            drawRect(color = Color(0xFF93F7AC).copy(alpha = 0.45f))
+            drawRect(color = Color(0xFFF8FFF9).copy(alpha = 0.18f))
 
             val holeWidth = size.width * 0.72f
             val holeHeight = size.height * 0.52f
@@ -252,7 +252,7 @@ private fun CaptureAreaOverlay(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 92.dp)
-                .background(Color.Black.copy(alpha = 0.35f))
+                .background(Color.White.copy(alpha = 0.18f))
                 .padding(horizontal = 12.dp, vertical = 6.dp)
         )
     }

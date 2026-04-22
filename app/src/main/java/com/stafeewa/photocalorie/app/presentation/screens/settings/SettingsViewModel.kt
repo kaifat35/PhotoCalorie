@@ -6,7 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.domain.entity.Interval
 import com.stafeewa.photocalorie.app.domain.entity.Language
+import com.stafeewa.photocalorie.app.domain.entity.MinTrainingExamplesOption
 import com.stafeewa.photocalorie.app.domain.entity.ThemeMode
+import com.stafeewa.photocalorie.app.domain.entity.TrainingFrequencyOption
 import com.stafeewa.photocalorie.app.domain.usecase.settings.GetSettingsUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateIntervalUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateLanguageUseCase
@@ -153,6 +155,8 @@ sealed interface SettingsState {
         val themeMode: ThemeMode,
         val languages: List<Language> = Language.entries,
         val intervals: List<Interval> = Interval.entries,
-        val themeModes: List<ThemeMode> = ThemeMode.entries
+        val themeModes: List<ThemeMode> = ThemeMode.entries,
+        val trainingFrequencyOptions: List<TrainingFrequencyOption> = TrainingFrequencyOption.entries,
+        val minTrainingExamplesOptions: List<MinTrainingExamplesOption> = MinTrainingExamplesOption.entries
     ) : SettingsState
 }

@@ -294,7 +294,7 @@ private fun Subscriptions(
                                 painter = painterResource(R.drawable.magnifier),
                                 contentDescription = "Поиск",
                                 modifier = Modifier.size(32.dp),
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
