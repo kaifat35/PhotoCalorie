@@ -9,6 +9,7 @@ import com.stafeewa.photocalorie.app.ml.FoodClassifier
 import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
+import java.io.File
 import javax.inject.Inject
 
 class RecognizeFoodUseCase @Inject constructor(
@@ -119,5 +120,15 @@ class RecognizeFoodUseCase @Inject constructor(
         }
 
         return 20
+    }
+
+    fun loadTrainedWeights(context: Context) {
+        val weightsFile = File(context.filesDir, "trained_weights.ckpt")
+        if (weightsFile.exists()) {
+            val interpreter = foodClassifier.getInterpreter() // нужно добавить метод getInterpreter в FoodClassifier
+            val restore = interpreter.getSignatureRunner("restore")
+            restore.inputs["checkpoint_path"] = weightsFile.absolutePath
+            restore.run()
+        }
     }
 }

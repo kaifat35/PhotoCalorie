@@ -1,5 +1,6 @@
 package com.stafeewa.photocalorie.app.presentation.screens.camera
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,7 +52,8 @@ fun RecognitionResultDialog(
     productRepository: ProductRepository,
     onDismiss: () -> Unit,
     onConfirm: (name: String, mealType: MealType, portion: Double, protein: Double, fat: Double, carbs: Double) -> Unit,
-    onAddToDatabase: (name: String, mealType: MealType, protein: Double, fat: Double, carbs: Double) -> Unit
+    onAddToDatabase: (name: String, mealType: MealType, protein: Double, fat: Double, carbs: Double) -> Unit,
+    bitmap: Bitmap? = null
 ) {
     var selectedMealType by remember { mutableStateOf(MealType.LUNCH) }
     var portion by remember { mutableStateOf("100") }

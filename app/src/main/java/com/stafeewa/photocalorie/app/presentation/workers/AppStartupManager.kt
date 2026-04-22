@@ -1,4 +1,4 @@
-package com.stafeewa.photocalorie.app.presentation.startup
+package com.stafeewa.photocalorie.app.presentation.workers
 
 import com.stafeewa.photocalorie.app.domain.usecase.recipe.StartRefreshDataUseCase
 import kotlinx.coroutines.CoroutineScope

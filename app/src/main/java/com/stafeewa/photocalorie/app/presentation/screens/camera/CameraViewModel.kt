@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
+import com.stafeewa.photocalorie.app.domain.repository.TrainingRepository
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.AddRecognizedFoodToDatabaseUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.RecognizeFoodUseCase
 import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileOutputStream
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
 
@@ -26,6 +28,7 @@ import javax.inject.Inject
 class CameraViewModel @Inject constructor(
     private val recognizeFoodUseCase: RecognizeFoodUseCase,
     private val addRecognizedFoodToDatabaseUseCase: AddRecognizedFoodToDatabaseUseCase,
+    private val trainingRepository: TrainingRepository,
     val productRepository: ProductRepository
 ) : ViewModel() {
 
@@ -78,6 +81,19 @@ class CameraViewModel @Inject constructor(
             productRepository.getProductByName(russianName) ?: product
         } else {
             product
+        }
+    }
+    fun saveTrainingExample(bitmap: Bitmap, label: String) {
+        viewModelScope.launch {
+            try {
+                val file = File(context.cacheDir, "train_${System.currentTimeMillis()}.jpg")
+                FileOutputStream(file).use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
+                }
+                trainingRepository.saveTrainingExample(file.absolutePath, label)
+            } catch (e: Exception) {
+                // Логируйте ошибку
+            }
         }
     }
 
