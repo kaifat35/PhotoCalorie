@@ -122,13 +122,9 @@ class RecognizeFoodUseCase @Inject constructor(
         return 20
     }
 
-    fun loadTrainedWeights(context: Context) {
+    fun restoreTrainedWeights() {
         val weightsFile = File(context.filesDir, "trained_weights.ckpt")
-        if (weightsFile.exists()) {
-            val interpreter = foodClassifier.getInterpreter() // нужно добавить метод getInterpreter в FoodClassifier
-            val restore = interpreter.getSignatureRunner("restore")
-            restore.inputs["checkpoint_path"] = weightsFile.absolutePath
-            restore.run()
-        }
+        if (!weightsFile.exists()) return
+        foodClassifier.restore(weightsFile.absolutePath)
     }
 }

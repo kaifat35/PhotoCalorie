@@ -14,4 +14,8 @@ class FoodClassifier(private val context: Context) {
     fun close() {
         tfliteClassifier.close()
     }
+
+    fun restore(checkpointPath: String) {
+        tfliteClassifier.restore(checkpointPath)
+    }
 }

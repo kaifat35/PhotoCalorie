@@ -123,6 +123,20 @@ class TFLiteClassifier(private val context: Context) {
         interpreter?.close()
         interpreter = null
     }
+    fun restore(checkpointPath: String) {
+        val checkpointFile = File(checkpointPath)
+        if (!checkpointFile.exists()) return
+
+        runCatching {
+            interpreter?.runSignature(
+                mapOf("checkpoint_path" to arrayOf(checkpointPath)),
+                mutableMapOf(),
+                "restore"
+            )
+        }.onFailure { error ->
+            Log.e(tag, "Failed to restore checkpoint", error)
+        }
+    }
 }
 
 data class LabelResult(val label: String, val confidence: Float)

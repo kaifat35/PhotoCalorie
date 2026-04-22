@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.Bitmap
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -70,8 +69,6 @@ fun CameraScreen(
     var cameraExecutor by remember { mutableStateOf<ExecutorService?>(null) }
 
     var showResultDialog by remember { mutableStateOf(false) }
-
-    var currentBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(Unit) {
         cameraPermissionState.launchPermissionRequest()
@@ -205,6 +202,7 @@ fun CameraScreen(
             },
             onConfirm = { name, mealType, portion, protein, fat, carbs ->
                 foodIntakeViewModel.addFoodEntry(name, mealType, portion, protein, fat, carbs)
+                viewModel.onRecognitionConfirmed(name)
                 showResultDialog = false
                 viewModel.clearResult()
             },

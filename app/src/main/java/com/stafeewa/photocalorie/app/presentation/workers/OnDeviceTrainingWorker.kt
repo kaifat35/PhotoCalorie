@@ -1,94 +1,69 @@
 package com.stafeewa.photocalorie.app.presentation.workers
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import androidx.work.Worker
+import androidx.hilt.work.HiltWorker
+import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import coil3.Bitmap
 import com.stafeewa.photocalorie.app.domain.repository.TrainingRepository
 import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.runBlocking
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import org.tensorflow.lite.Interpreter
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import javax.inject.Inject
+import kotlin.math.min
 
-@AndroidEntryPoint
-class OnDeviceTrainingWorker(
-    context: Context,
-    params: WorkerParameters
-) : Worker(context, params) {
-
-    @Inject lateinit var trainingRepository: TrainingRepository
+@HiltWorker
+class OnDeviceTrainingWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val trainingRepository: TrainingRepository
+) : CoroutineWorker(context, params) {
 
     companion object {
-        private const val MODEL_FILE = "food_model_ondevice.tflite"
+        const val UNIQUE_WORK_NAME = "on_device_training_once"
+        private const val MODEL_FILE = "food_model.tflite"
         private const val WEIGHTS_FILE = "trained_weights.ckpt"
         private const val IMG_SIZE = 224
         private const val BATCH_SIZE = 8
     }
 
-    override fun doWork(): Result {
+    override suspend fun doWork(): Result {
         return try {
-            val examples = runBlocking { trainingRepository.getUnusedExamples() }
+            val examples = trainingRepository.getUnusedExamples()
             if (examples.isEmpty()) return Result.success()
 
-            // Загружаем модель
-            val model = loadModelFile()
-            val interpreter = Interpreter(model)
+            val interpreter = Interpreter(loadModelBuffer())
 
-            // Загружаем сохранённые веса (если есть)
-            val weightsFile = File(applicationContext.filesDir, WEIGHTS_FILE)
-            if (weightsFile.exists()) {
-                val restore = interpreter.getSignatureRunner("restore")
-                restore.inputs["checkpoint_path"] = weightsFile.absolutePath
-                restore.run()
-            }
-
-            val train = interpreter.getSignatureRunner("train")
-            val save = interpreter.getSignatureRunner("save")
-
-            // Список всех возможных меток (101 класс)
-            val allLabels = EnglishToRussianMap.map.keys.toList()
-            val numClasses = allLabels.size
-
-            // Подготовка данных
-            val images = mutableListOf<ByteBuffer>()
-            val labels = mutableListOf<FloatArray>()
-
-            for (ex in examples) {
-                val bitmap = BitmapFactory.decodeFile(ex.imagePath) ?: continue
-                val resized = Bitmap.createScaledBitmap(bitmap, IMG_SIZE, IMG_SIZE, true)
-                val byteBuffer = convertBitmapToByteBuffer(resized)
-                images.add(byteBuffer)
-
-                // one-hot encoding
-                val labelIndex = allLabels.indexOf(ex.label)
-                val oneHot = FloatArray(numClasses) { 0f }
-                if (labelIndex >= 0) oneHot[labelIndex] = 1f
-                labels.add(oneHot)
-            }
-
-            // Обучаем батчами
-            for (i in 0 until images.size step BATCH_SIZE) {
-                val end = min(i + BATCH_SIZE, images.size)
-                val batchImages = images.subList(i, end).toTypedArray()
-                val batchLabels = labels.subList(i, end).toTypedArray()
-
-                train.inputs["x"] = batchImages
-                train.inputs["y"] = batchLabels
-                train.run()
-            }
-
-            // Сохраняем обновлённые веса
             val checkpointPath = File(applicationContext.filesDir, WEIGHTS_FILE).absolutePath
-            save.inputs["checkpoint_path"] = checkpointPath
-            save.run()
+            restore(interpreter, checkpointPath)
 
-            // Помечаем примеры как использованные
-            runBlocking {
+            val labelsVocabulary = EnglishToRussianMap.map.keys.toList()
+            val prepared = examples.mapNotNull { example ->
+                val bitmap = BitmapFactory.decodeFile(example.imagePath) ?: return@mapNotNull null
+                val imageBuffer = convertBitmapToByteBuffer(bitmap)
+                val labelIndex = labelsVocabulary.indexOf(example.label)
+                if (labelIndex < 0) return@mapNotNull null
+
+                val oneHot = FloatArray(labelsVocabulary.size)
+                oneHot[labelIndex] = 1f
+                imageBuffer to oneHot
+            }
+
+            if (prepared.isNotEmpty()) {
+                for (start in prepared.indices step BATCH_SIZE) {
+                    val end = min(start + BATCH_SIZE, prepared.size)
+                    val batch = prepared.subList(start, end)
+
+                    val x = Array(batch.size) { index -> batch[index].first }
+                    val y = Array(batch.size) { index -> batch[index].second }
+                    train(interpreter, x, y)
+                }
+
+                save(interpreter, checkpointPath)
                 trainingRepository.markAsUsed(examples.map { it.id })
                 trainingRepository.deleteUsed()
             }
@@ -96,31 +71,60 @@ class OnDeviceTrainingWorker(
             interpreter.close()
             Result.success()
         } catch (e: Exception) {
-            e.printStackTrace()
             Result.failure()
         }
     }
 
-    private fun loadModelFile(): ByteBuffer {
-        val assetFile = applicationContext.assets.openFd(MODEL_FILE)
-        val inputStream = assetFile.createInputStream()
-        val bytes = inputStream.readBytes()
-        return ByteBuffer.wrap(bytes)
+    private fun loadModelBuffer(): ByteBuffer {
+        val bytes = applicationContext.assets.open(MODEL_FILE).use { it.readBytes() }
+        return ByteBuffer.allocateDirect(bytes.size).order(ByteOrder.nativeOrder()).apply {
+            put(bytes)
+            rewind()
+        }
+    }
+
+    private fun train(interpreter: Interpreter, x: Array<ByteBuffer>, y: Array<FloatArray>) {
+        interpreter.runSignature(
+            mapOf("x" to x, "y" to y),
+            mutableMapOf(),
+            "train"
+        )
+    }
+
+    private fun save(interpreter: Interpreter, checkpointPath: String) {
+        interpreter.runSignature(
+            mapOf("checkpoint_path" to arrayOf(checkpointPath)),
+            mutableMapOf(),
+            "save"
+        )
+    }
+
+    private fun restore(interpreter: Interpreter, checkpointPath: String) {
+        val checkpointFile = File(checkpointPath)
+        if (!checkpointFile.exists()) return
+
+        interpreter.runSignature(
+            mapOf("checkpoint_path" to arrayOf(checkpointPath)),
+            mutableMapOf(),
+            "restore"
+        )
     }
 
     private fun convertBitmapToByteBuffer(bitmap: Bitmap): ByteBuffer {
+        val resized = Bitmap.createScaledBitmap(bitmap, IMG_SIZE, IMG_SIZE, true)
         val byteBuffer = ByteBuffer.allocateDirect(4 * IMG_SIZE * IMG_SIZE * 3)
         byteBuffer.order(ByteOrder.nativeOrder())
+
         val pixels = IntArray(IMG_SIZE * IMG_SIZE)
-        bitmap.getPixels(pixels, 0, IMG_SIZE, 0, 0, IMG_SIZE, IMG_SIZE)
+        resized.getPixels(pixels, 0, IMG_SIZE, 0, 0, IMG_SIZE, IMG_SIZE)
+
         for (pixel in pixels) {
-            val r = ((pixel shr 16) and 0xFF) / 255.0f
-            val g = ((pixel shr 8) and 0xFF) / 255.0f
-            val b = (pixel and 0xFF) / 255.0f
-            byteBuffer.putFloat(r)
-            byteBuffer.putFloat(g)
-            byteBuffer.putFloat(b)
+            byteBuffer.putFloat(((pixel shr 16) and 0xFF) / 255.0f)
+            byteBuffer.putFloat(((pixel shr 8) and 0xFF) / 255.0f)
+            byteBuffer.putFloat((pixel and 0xFF) / 255.0f)
         }
+
+        byteBuffer.rewind()
         return byteBuffer
     }
 }

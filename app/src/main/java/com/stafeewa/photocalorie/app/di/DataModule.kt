@@ -6,16 +6,19 @@ import androidx.work.WorkManager
 import com.stafeewa.photocalorie.app.data.local.PhotoCalorieDao
 import com.stafeewa.photocalorie.app.data.local.PhotoCalorieDatabase
 import com.stafeewa.photocalorie.app.data.local.ProductDao
+import com.stafeewa.photocalorie.app.data.local.TrainingExampleDao
 import com.stafeewa.photocalorie.app.data.remote.RecipesApiService
 import com.stafeewa.photocalorie.app.data.repository.PhotoCalorieRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.FoodIntakeRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.ProductRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.SettingsRepositoryImpl
+import com.stafeewa.photocalorie.app.data.repository.TrainingRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.UserProfileRepositoryImpl
 import com.stafeewa.photocalorie.app.domain.repository.FoodIntakeRepository
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.repository.RecipeRepository
 import com.stafeewa.photocalorie.app.domain.repository.SettingsRepository
+import com.stafeewa.photocalorie.app.domain.repository.TrainingRepository
 import com.stafeewa.photocalorie.app.domain.repository.UserProfileRepository
 import dagger.Binds
 import dagger.Module
@@ -64,6 +67,12 @@ interface DataModule {
     fun bindFoodIntakeRepository(
         impl: FoodIntakeRepositoryImpl
     ): FoodIntakeRepository
+
+    @Binds
+    @Singleton
+    fun bindTrainingRepository(
+        impl: TrainingRepositoryImpl
+    ): TrainingRepository
 
     companion object {
 
@@ -135,6 +144,12 @@ interface DataModule {
         fun providesProductDao(
             database: PhotoCalorieDatabase
         ): ProductDao = database.productDao()
+
+        @Provides
+        @Singleton
+        fun providesTrainingExampleDao(
+            database: PhotoCalorieDatabase
+        ): TrainingExampleDao = database.trainingExampleDao()
     }
 }
 

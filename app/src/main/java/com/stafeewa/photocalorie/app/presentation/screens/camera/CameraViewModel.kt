@@ -7,14 +7,20 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.repository.TrainingRepository
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.AddRecognizedFoodToDatabaseUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.RecognizeFoodUseCase
+import com.stafeewa.photocalorie.app.presentation.workers.OnDeviceTrainingWorker
 import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,6 +35,8 @@ class CameraViewModel @Inject constructor(
     private val recognizeFoodUseCase: RecognizeFoodUseCase,
     private val addRecognizedFoodToDatabaseUseCase: AddRecognizedFoodToDatabaseUseCase,
     private val trainingRepository: TrainingRepository,
+    private val workManager: WorkManager,
+    @ApplicationContext private val appContext: Context,
     val productRepository: ProductRepository
 ) : ViewModel() {
 
@@ -37,6 +45,13 @@ class CameraViewModel @Inject constructor(
 
     private val _isProcessing = MutableStateFlow(false)
     val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
+    private var lastRecognizedBitmap: Bitmap? = null
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            recognizeFoodUseCase.restoreTrainedWeights()
+        }
+    }
 
     fun captureAndRecognize(
         imageCapture: ImageCapture,
@@ -56,7 +71,9 @@ class CameraViewModel @Inject constructor(
                         _recognitionResult.value = RecognitionResult.Error("Ошибка чтения фото")
                         return
                     }
-                    recognizeFood(cropToCaptureArea(bitmap))
+                    val cropped = cropToCaptureArea(bitmap)
+                    lastRecognizedBitmap = cropped
+                    recognizeFood(cropped)
                 }
 
                 override fun onError(exception: ImageCaptureException) {
@@ -83,18 +100,43 @@ class CameraViewModel @Inject constructor(
             product
         }
     }
-    fun saveTrainingExample(bitmap: Bitmap, label: String) {
-        viewModelScope.launch {
+    fun onRecognitionConfirmed(foodName: String) {
+        val bitmap = lastRecognizedBitmap ?: return
+        val englishLabel = resolveEnglishLabel(foodName)
+        saveTrainingExample(bitmap, englishLabel)
+    }
+
+    private fun saveTrainingExample(bitmap: Bitmap, label: String) {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                val file = File(context.cacheDir, "train_${System.currentTimeMillis()}.jpg")
+                val trainingDir = File(appContext.filesDir, "training_examples").apply { mkdirs() }
+                val file = File(trainingDir, "train_${System.currentTimeMillis()}.jpg")
                 FileOutputStream(file).use { out ->
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
                 }
                 trainingRepository.saveTrainingExample(file.absolutePath, label)
+                enqueueTraining()
             } catch (e: Exception) {
-                // Логируйте ошибку
+                // no-op
             }
         }
+    }
+
+    private fun resolveEnglishLabel(foodName: String): String {
+        val normalized = foodName.trim()
+        return EnglishToRussianMap.map.entries
+            .firstOrNull { (_, ru) -> ru.equals(normalized, ignoreCase = true) }
+            ?.key
+            ?: normalized.lowercase().replace(' ', '_')
+    }
+
+    private fun enqueueTraining() {
+        val request = OneTimeWorkRequestBuilder<OnDeviceTrainingWorker>().build()
+        workManager.enqueueUniqueWork(
+            OnDeviceTrainingWorker.UNIQUE_WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            request
+        )
     }
 
     private fun recognizeFood(bitmap: Bitmap) {
@@ -173,6 +215,7 @@ class CameraViewModel @Inject constructor(
 
     fun clearResult() {
         _recognitionResult.value = null
+        lastRecognizedBitmap = null
     }
 
     override fun onCleared() {
