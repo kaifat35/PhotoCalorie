@@ -119,4 +119,8 @@
     <string name="light_theme">Light</string>
     <string name="dark_theme">Dark</string>
     <string name="select_theme">Choose app theme</string>
+    <string name="training_frequency">Training frequency (hours)</string>
+    <string name="training_frequency_hint">How often to run on-device training while charging and on Wi‑Fi</string>
+    <string name="min_training_examples">Minimum training examples</string>
+    <string name="min_training_examples_hint">Worker starts only when enough accumulated examples are available</string>
 </resources>

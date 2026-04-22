@@ -108,7 +108,6 @@ fun RecognitionResultDialog(
             ) {
                 when (result) {
                     is RecognitionResult.Success -> {
-                        // ... (без изменений, как в оригинале)
                         Text(
                             text = "${result.product.name} (${(result.confidence * 100).toInt()}%)",
                             color = MaterialTheme.colorScheme.primary,
@@ -151,7 +150,6 @@ fun RecognitionResultDialog(
                     }
 
                     is RecognitionResult.MultipleMatches -> {
-                        // ... (без изменений)
                         Text(
                             text = "Найдено несколько похожих блюд:",
                             color = MaterialTheme.colorScheme.onSurface
@@ -222,7 +220,7 @@ fun RecognitionResultDialog(
                                 Text("📝 Добавить вручную (без сохранения)", color = MaterialTheme.colorScheme.onSurface)
                             }
                         } else {
-                            // ... (ручной ввод)
+                            // (ручной ввод)
                             Text(
                                 text = "Добавьте блюдо вручную:",
                                 color = MaterialTheme.colorScheme.onSurface

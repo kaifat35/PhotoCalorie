@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -49,6 +50,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -244,6 +246,36 @@ fun SettingsScreen(
                             }
                         }
                         item {
+                            SettingsCard(
+                                title = stringResource(R.string.training_frequency),
+                                subtitle = stringResource(R.string.training_frequency_hint)
+                            ) {
+                                NumericSettingsTextField(
+                                    value = currentState.trainingFrequencyHours,
+                                    onValueCommitted = {
+                                        viewModel.processCommand(
+                                            SettingsCommand.SetTrainingFrequencyHours(it)
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                        item {
+                            SettingsCard(
+                                title = stringResource(R.string.min_training_examples),
+                                subtitle = stringResource(R.string.min_training_examples_hint)
+                            ) {
+                                NumericSettingsTextField(
+                                    value = currentState.minTrainingExamples,
+                                    onValueCommitted = {
+                                        viewModel.processCommand(
+                                            SettingsCommand.SetMinTrainingExamples(it)
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                        item {
                             Spacer(modifier = Modifier.height(32.dp))
                         }
 
@@ -255,6 +287,29 @@ fun SettingsScreen(
         }
     )
 }
+@Composable
+private fun NumericSettingsTextField(
+    value: Int,
+    onValueCommitted: (Int) -> Unit
+) {
+    var text by remember(value) { mutableStateOf(value.toString()) }
+
+    TextField(
+        modifier = Modifier.fillMaxWidth(),
+        value = text,
+        onValueChange = { newValue ->
+            if (newValue.all { it.isDigit() }) {
+                text = newValue
+                newValue.toIntOrNull()?.let(onValueCommitted)
+            }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        singleLine = true,
+        shape = RoundedCornerShape(30.dp),
+        colors = textFieldColors()
+    )
+}
+
 
 @Composable
 private fun SettingsCard(

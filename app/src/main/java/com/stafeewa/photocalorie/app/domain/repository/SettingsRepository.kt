@@ -15,4 +15,8 @@ interface SettingsRepository {
     suspend fun updateNotificationEnabled(enabled: Boolean)
 
     suspend fun updateWifiOnly(wifiOnly: Boolean)
+
+    suspend fun updateTrainingFrequencyHours(hours: Int)
+
+    suspend fun updateMinTrainingExamples(count: Int)
 }

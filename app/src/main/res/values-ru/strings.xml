@@ -119,4 +119,8 @@
     <string name="light_theme">Светлая</string>
     <string name="dark_theme">Тёмная</string>
     <string name="select_theme">Выберите тему приложения</string>
+    <string name="training_frequency">Частота дообучения (часы)</string>
+    <string name="training_frequency_hint">Как часто запускать on-device обучение при зарядке и Wi‑Fi</string>
+    <string name="min_training_examples">Минимум примеров для обучения</string>
+    <string name="min_training_examples_hint">Worker запускается только при достаточном количестве накопленных примеров</string>
 </resources>

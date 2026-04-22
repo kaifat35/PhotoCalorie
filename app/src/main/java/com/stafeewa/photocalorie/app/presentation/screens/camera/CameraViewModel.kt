@@ -7,8 +7,6 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
@@ -16,10 +14,9 @@ import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.repository.TrainingRepository
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.AddRecognizedFoodToDatabaseUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.RecognizeFoodUseCase
-import com.stafeewa.photocalorie.app.presentation.workers.OnDeviceTrainingWorker
 import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -115,7 +112,6 @@ class CameraViewModel @Inject constructor(
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
                 }
                 trainingRepository.saveTrainingExample(file.absolutePath, label)
-                enqueueTraining()
             } catch (e: Exception) {
                 // no-op
             }
@@ -130,14 +126,6 @@ class CameraViewModel @Inject constructor(
             ?: normalized.lowercase().replace(' ', '_')
     }
 
-    private fun enqueueTraining() {
-        val request = OneTimeWorkRequestBuilder<OnDeviceTrainingWorker>().build()
-        workManager.enqueueUniqueWork(
-            OnDeviceTrainingWorker.UNIQUE_WORK_NAME,
-            ExistingWorkPolicy.REPLACE,
-            request
-        )
-    }
 
     private fun recognizeFood(bitmap: Bitmap) {
         viewModelScope.launch {

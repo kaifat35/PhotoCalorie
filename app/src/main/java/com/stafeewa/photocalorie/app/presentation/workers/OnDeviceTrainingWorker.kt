@@ -15,6 +15,7 @@ import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.min
+import androidx.work.Data
 
 @HiltWorker
 class OnDeviceTrainingWorker @AssistedInject constructor(
@@ -24,16 +25,28 @@ class OnDeviceTrainingWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     companion object {
-        const val UNIQUE_WORK_NAME = "on_device_training_once"
+        const val UNIQUE_WORK_NAME = "on_device_training_periodic"
+        const val KEY_MIN_EXAMPLES = "min_examples"
         private const val MODEL_FILE = "food_model.tflite"
         private const val WEIGHTS_FILE = "trained_weights.ckpt"
         private const val IMG_SIZE = 224
         private const val BATCH_SIZE = 8
+        private const val EPOCHS = 3
+
+        fun inputData(minExamples: Int): Data {
+            return Data.Builder()
+                .putInt(KEY_MIN_EXAMPLES, TrainingScheduleConfig.normalizeMinExamples(minExamples))
+                .build()
+        }
     }
 
     override suspend fun doWork(): Result {
         return try {
             val examples = trainingRepository.getUnusedExamples()
+            val minExamplesRequired = TrainingScheduleConfig.normalizeMinExamples(
+                inputData.getInt(KEY_MIN_EXAMPLES, BATCH_SIZE)
+            )
+            if (examples.size < minExamplesRequired) return Result.success()
             if (examples.isEmpty()) return Result.success()
 
             val interpreter = Interpreter(loadModelBuffer())
@@ -54,13 +67,15 @@ class OnDeviceTrainingWorker @AssistedInject constructor(
             }
 
             if (prepared.isNotEmpty()) {
-                for (start in prepared.indices step BATCH_SIZE) {
-                    val end = min(start + BATCH_SIZE, prepared.size)
-                    val batch = prepared.subList(start, end)
+                repeat(EPOCHS) {
+                    for (start in prepared.indices step BATCH_SIZE) {
+                        val end = min(start + BATCH_SIZE, prepared.size)
+                        val batch = prepared.subList(start, end)
 
-                    val x = Array(batch.size) { index -> batch[index].first }
-                    val y = Array(batch.size) { index -> batch[index].second }
-                    train(interpreter, x, y)
+                        val x = Array(batch.size) { index -> batch[index].first }
+                        val y = Array(batch.size) { index -> batch[index].second }
+                        train(interpreter, x, y)
+                    }
                 }
 
                 save(interpreter, checkpointPath)

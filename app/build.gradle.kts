@@ -126,4 +126,5 @@ dependencies {
 
     //  TensorFlow Lite
     implementation(libs.tensorflow.lite)
+    implementation(kotlin("test"))
 }

@@ -6,7 +6,9 @@ data class Settings(
     val language: Language,
     val interval: Interval,
     val notificationsEnabled: Boolean,
-    val wifiOnly: Boolean
+    val wifiOnly: Boolean,
+    val trainingFrequencyHours: Int,
+    val minTrainingExamples: Int
 ) {
 
     companion object {
@@ -15,6 +17,8 @@ data class Settings(
         val DEFAULT_INTERVAL = Interval.MIN_15
         const val DEFAULT_NOTIFICATION_ENABLED = false
         const val DEFAULT_WIFI_ONLY = true
+        const val DEFAULT_TRAINING_FREQUENCY_HOURS = 24
+        const val DEFAULT_MIN_TRAINING_EXAMPLES = 8
     }
 }
 
