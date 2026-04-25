@@ -283,7 +283,7 @@ fun RecognitionResultDialog(
 
                     is RecognitionResult.LowConfidence -> {
                         Text(
-                            text = "Не удалось распознать блюдо с достаточной уверенностью (менее 25%).",
+                            text = "Не удалось распознать блюдо с достаточной уверенностью (менее 15%).",
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(8.dp))
