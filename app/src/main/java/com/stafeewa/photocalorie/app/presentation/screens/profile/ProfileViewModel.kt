@@ -184,11 +184,7 @@ class ProfileViewModel @Inject constructor(
                             activityLevel = command.activityLevel
                         )
                         _stateProfile.value = ProfileState.Success("Норма калорий рассчитана: ${calories.toInt()}")
-                        _uiMessages.emit(
-                            context.getString(
-                                R.string.calorie_rate_is_calculated,
-                                calories.toInt()
-                            ))
+                        _uiMessages.emit(context.getString(R.string.calorie_rate_is_calculated, calories.toInt()))
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка расчета нормы калорий")
                         _uiMessages.emit(e.message ?: context.getString(R.string.error_calorie_rate_is_calculated))
