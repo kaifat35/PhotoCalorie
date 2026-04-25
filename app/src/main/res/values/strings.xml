@@ -109,7 +109,7 @@
     <string name="Login">Login</string>
     <string name="Gender">Gender</string>
     <string name="Choose_a_gender">Choose a gender</string>
-    <string name="Height_m">Height, m</string>
+    <string name="Height_m">Height, sm</string>
     <string name="Weight_kg">Weight, kg</string>
     <string name="Age">Age</string>
     <string name="Mail">Email</string>

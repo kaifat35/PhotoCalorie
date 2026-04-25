@@ -109,7 +109,7 @@
     <string name="Login">Логин</string>
     <string name="Gender">Пол</string>
     <string name="Choose_a_gender">Выберите пол</string>
-    <string name="Height_m">Рост, м</string>
+    <string name="Height_m">Рост, cм</string>
     <string name="Weight_kg">Вес, кг</string>
     <string name="Age">Возраст</string>
     <string name="Mail">Почта</string>

@@ -183,6 +183,12 @@ class ProfileViewModel @Inject constructor(
                             age = age,
                             activityLevel = command.activityLevel
                         )
+                        // Сохраняем рассчитанную норму в базу данных
+                        updateDailyCaloriesUseCase(calories)
+                        // Обновляем локальное состояние (редактируемый профиль)
+                        _editableProfile.update {
+                            it.copy(dailyCalories = calories, isUserEdited = true)
+                        }
                         _stateProfile.value = ProfileState.Success("Норма калорий рассчитана: ${calories.toInt()}")
                         _uiMessages.emit(context.getString(R.string.calorie_rate_is_calculated, calories.toInt()))
                     } catch (e: Exception) {
