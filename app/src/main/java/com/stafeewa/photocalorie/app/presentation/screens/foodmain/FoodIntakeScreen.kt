@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -56,7 +55,6 @@ import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.FoodEntry
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.utils.toUserVisibleFoodName
-
 
 @Composable
 fun FoodIntakeScreen(
@@ -339,6 +337,7 @@ fun FoodIntakeScreen(
         )
     }
 }
+
 @Composable
 fun MealSection(
     title: String,
@@ -472,7 +471,7 @@ fun MealSection(
                     tint = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
                         .size(24.dp)
-                        .clickable { onAddClick()}
+                        .clickable { onAddClick() }
                 )
             }
         }
