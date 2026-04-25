@@ -2,7 +2,6 @@ package com.stafeewa.photocalorie.app.presentation.screens.profile
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.domain.entity.ActivityLevel
@@ -172,7 +171,6 @@ class ProfileViewModel @Inject constructor(
                         }
                         _stateProfile.value = ProfileState.Success("Изображение обновлено")
                     } catch (e: Exception) {
-                        Log.e("ProfileViewModel", "Error updating image", e)
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления изображения")
                     }
                 }

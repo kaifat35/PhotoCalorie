@@ -1,6 +1,5 @@
 package com.stafeewa.photocalorie.app.data.repository
 
-import android.util.Log
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -56,7 +55,6 @@ class PhotoCalorieRepositoryImpl @Inject constructor(
             if (e is CancellationException) {
                 throw e
             }
-            Log.e("RecipeRepository", e.stackTraceToString())
             listOf()
         }
     }
