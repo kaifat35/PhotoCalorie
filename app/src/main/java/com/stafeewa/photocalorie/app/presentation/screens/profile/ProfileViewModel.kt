@@ -59,6 +59,9 @@ class ProfileViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    // Сохраняем последнюю успешную конфигурацию для восстановления после очистки сообщений
+    private var lastConfig: ProfileState.Configuration? = null
+
     private val fileHelper = FileHelper(context)
 
     init {
@@ -71,7 +74,6 @@ class ProfileViewModel @Inject constructor(
 
             observeUserProfileUseCase()
                 .collect { profile ->
-                    // Сохраняем исходные данные
                     val loadedProfile = EditableProfile(
                         userId = profile.userId,
                         login = profile.login,
@@ -85,26 +87,24 @@ class ProfileViewModel @Inject constructor(
                         dailyCalories = profile.dailyCalories
                     )
                     _originalProfile.value = loadedProfile
-
-                    // Обновляем редактируемый профиль ТОЛЬКО если он не был изменён пользователем
                     if (!_editableProfile.value.isUserEdited) {
                         _editableProfile.value = loadedProfile
                     }
 
-                    _stateProfile.update {
-                        ProfileState.Configuration(
-                            userId = profile.userId,
-                            login = profile.login,
-                            email = profile.email,
-                            password = profile.password,
-                            gender = profile.gender,
-                            height = profile.height,
-                            weight = profile.weight,
-                            age = profile.age,
-                            imageUri = profile.imageUri,
-                            dailyCalories = profile.dailyCalories
-                        )
-                    }
+                    val configState = ProfileState.Configuration(
+                        userId = profile.userId,
+                        login = profile.login,
+                        email = profile.email,
+                        password = profile.password,
+                        gender = profile.gender,
+                        height = profile.height,
+                        weight = profile.weight,
+                        age = profile.age,
+                        imageUri = profile.imageUri,
+                        dailyCalories = profile.dailyCalories
+                    )
+                    lastConfig = configState
+                    _stateProfile.update { configState }
                     _isLoading.value = false
                 }
         }
@@ -113,32 +113,19 @@ class ProfileViewModel @Inject constructor(
     fun processCommand(command: ProfileCommand) {
         when (command) {
             is ProfileCommand.UpdateLogin -> {
-                // Обновляем только локальное состояние, не трогаем БД
                 _editableProfile.update {
-                    it.copy(
-                        login = command.login,
-                        isUserEdited = true
-                    )
+                    it.copy(login = command.login, isUserEdited = true)
                 }
             }
-
             is ProfileCommand.UpdateMail -> {
                 _editableProfile.update {
-                    it.copy(
-                        email = command.email,
-                        isUserEdited = true
-                    )
+                    it.copy(email = command.email, isUserEdited = true)
                 }
             }
-
             is ProfileCommand.UpdateGender -> {
                 _editableProfile.update {
-                    it.copy(
-                        gender = command.gender,
-                        isUserEdited = true
-                    )
+                    it.copy(gender = command.gender, isUserEdited = true)
                 }
-                // Обновляем БД сразу для пола (так как это не вызывает проблем с курсором)
                 viewModelScope.launch {
                     try {
                         updateGenderUseCase(command.gender)
@@ -148,7 +135,6 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
             }
-
             is ProfileCommand.UpdateImage -> {
                 viewModelScope.launch {
                     try {
@@ -164,10 +150,7 @@ class ProfileViewModel @Inject constructor(
                         }
                         updateImageUseCase(localImagePath)
                         _editableProfile.update {
-                            it.copy(
-                                imageUri = localImagePath,
-                                isUserEdited = true
-                            )
+                            it.copy(imageUri = localImagePath, isUserEdited = true)
                         }
                         _stateProfile.value = ProfileState.Success("Изображение обновлено")
                     } catch (e: Exception) {
@@ -175,7 +158,6 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
             }
-
             is ProfileCommand.Calculate -> {
                 viewModelScope.launch {
                     try {
@@ -183,7 +165,6 @@ class ProfileViewModel @Inject constructor(
                         val height = profile.heightStr.toDoubleOrNull() ?: 0.0
                         val weight = profile.weightStr.toDoubleOrNull() ?: 0.0
                         val age = profile.ageStr.toIntOrNull() ?: 0
-
                         val calories = calculateDailyCaloriesUseCase(
                             gender = command.gender,
                             height = height,
@@ -197,7 +178,6 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
             }
-
             ProfileCommand.SaveProfile -> {
                 viewModelScope.launch {
                     try {
@@ -205,7 +185,6 @@ class ProfileViewModel @Inject constructor(
                         val height = profile.heightStr.toDoubleOrNull()
                         val weight = profile.weightStr.toDoubleOrNull()
                         val age = profile.ageStr.toIntOrNull()
-
                         updateUserProfileUseCase(
                             login = profile.login,
                             email = profile.email,
@@ -217,7 +196,6 @@ class ProfileViewModel @Inject constructor(
                             imageUri = profile.imageUri,
                             dailyCalories = profile.dailyCalories
                         )
-                        // После сохранения сбрасываем флаг редактирования
                         _editableProfile.update { it.copy(isUserEdited = false) }
                         _stateProfile.value = ProfileState.Success("Профиль сохранен")
                     } catch (e: Exception) {
@@ -225,7 +203,6 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
             }
-
             ProfileCommand.DeleteProfile -> {
                 viewModelScope.launch {
                     try {
@@ -239,34 +216,21 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
             }
-
             is ProfileCommand.UpdateHeightStr -> {
                 _editableProfile.update {
-                    it.copy(
-                        heightStr = command.heightStr,
-                        isUserEdited = true
-                    )
+                    it.copy(heightStr = command.heightStr, isUserEdited = true)
                 }
             }
-
             is ProfileCommand.UpdateWeightStr -> {
                 _editableProfile.update {
-                    it.copy(
-                        weightStr = command.weightStr,
-                        isUserEdited = true
-                    )
+                    it.copy(weightStr = command.weightStr, isUserEdited = true)
                 }
             }
-
             is ProfileCommand.UpdateAgeStr -> {
                 _editableProfile.update {
-                    it.copy(
-                        ageStr = command.ageStr,
-                        isUserEdited = true
-                    )
+                    it.copy(ageStr = command.ageStr, isUserEdited = true)
                 }
             }
-
             is ProfileCommand.UpdatePassword -> {
                 viewModelScope.launch {
                     try {
@@ -277,16 +241,31 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
             }
+            else -> {}
+        }
+    }
 
-            else -> {
-                // Остальные команды (UpdateAge, UpdateDailyCalories, UpdateHeight, UpdateWeight)
-                // не используются напрямую, так как мы работаем через Str версии
+    fun clearSuccess() {
+        _stateProfile.update { current ->
+            if (current is ProfileState.Success) {
+                lastConfig ?: ProfileState.Initial
+            } else {
+                current
+            }
+        }
+    }
+
+    fun clearError() {
+        _stateProfile.update { current ->
+            if (current is ProfileState.Error) {
+                lastConfig ?: ProfileState.Initial
+            } else {
+                current
             }
         }
     }
 }
 
-// Обновлённый EditableProfile с флагом редактирования
 data class EditableProfile(
     val userId: Int? = null,
     val login: String = "",
@@ -298,25 +277,22 @@ data class EditableProfile(
     val ageStr: String = "",
     val imageUri: String? = null,
     val dailyCalories: Double? = null,
-    val isUserEdited: Boolean = false  // ← флаг, что пользователь редактирует
+    val isUserEdited: Boolean = false
 ) {
     fun getHeight(): Double? = heightStr.toDoubleOrNull()
     fun getWeight(): Double? = weightStr.toDoubleOrNull()
     fun getAge(): Int? = ageStr.toIntOrNull()
 }
 
-// Обновлённые команды (убираем ненужные)
 sealed interface ProfileCommand {
     data class UpdateLogin(val login: String) : ProfileCommand
     data class UpdateMail(val email: String) : ProfileCommand
     data class UpdateGender(val gender: String?) : ProfileCommand
     data class UpdateImage(val imageUri: String?) : ProfileCommand
     data class UpdatePassword(val password: String) : ProfileCommand
-
     data class UpdateHeightStr(val heightStr: String) : ProfileCommand
     data class UpdateWeightStr(val weightStr: String) : ProfileCommand
     data class UpdateAgeStr(val ageStr: String) : ProfileCommand
-
     data class Calculate(
         val gender: String,
         val height: Double,
@@ -324,7 +300,6 @@ sealed interface ProfileCommand {
         val age: Int,
         val activityLevel: ActivityLevel = ActivityLevel.MODERATE
     ) : ProfileCommand
-
     data object SaveProfile : ProfileCommand
     data object DeleteProfile : ProfileCommand
 }

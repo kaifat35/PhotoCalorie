@@ -3,8 +3,8 @@ package com.stafeewa.photocalorie.app.domain.entity
 data class Product(
     val id: Long = 0,
     val name: String,
-    val mealType: MealType,  // Для какого приёма пищи подходит
-    val defaultPortion: Double = 100.0,  // Стандартная порция в граммах
+    val mealType: MealType,
+    val defaultPortion: Double = 100.0,
     val proteinPer100g: Double,
     val fatPer100g: Double,
     val carbsPer100g: Double,

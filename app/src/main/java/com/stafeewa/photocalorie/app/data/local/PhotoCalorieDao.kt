@@ -75,5 +75,5 @@ interface PhotoCalorieDao {
     suspend fun getTodayTotalCalories(): Double?
 
     @Delete
-    suspend fun deleteFoodEntry(entry: FoodEntryDbModel)  // ← удаление по объекту
+    suspend fun deleteFoodEntry(entry: FoodEntryDbModel)
 }

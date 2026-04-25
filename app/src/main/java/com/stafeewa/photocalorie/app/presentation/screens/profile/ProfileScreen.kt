@@ -32,6 +32,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -39,10 +41,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -54,7 +57,6 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -77,6 +79,8 @@ fun ProfileScreen(
     val stateProfile by viewModel.stateProfile.collectAsStateWithLifecycle()
     val editableProfile by viewModel.editableProfile.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var bmrMenu by rememberSaveable { mutableStateOf(false) }
     val genderLevels = listOf(stringResource(R.string.Male), stringResource(R.string.Female))
@@ -89,7 +93,6 @@ fun ProfileScreen(
         }
     }
 
-    // Функция для получения Uri из пути к файлу
     fun getImageUriFromPath(imagePath: String?): Uri? {
         return if (!imagePath.isNullOrEmpty()) {
             try {
@@ -107,17 +110,17 @@ fun ProfileScreen(
         }
     }
 
-    // Обработка состояний успеха/ошибки
+    // Отображение Snackbar при успехе или ошибке
     LaunchedEffect(stateProfile) {
         when (val state = stateProfile) {
             is ProfileState.Success -> {
-                // Можно показать Snackbar или Toast
+                snackbarHostState.showSnackbar(state.message ?: "Профиль сохранён")
+                viewModel.clearSuccess()
             }
-
             is ProfileState.Error -> {
-                // Можно показать Snackbar или Toast с ошибкой
+                snackbarHostState.showSnackbar(state.message ?: "Ошибка сохранения")
+                viewModel.clearError()
             }
-
             else -> {}
         }
     }
@@ -125,6 +128,7 @@ fun ProfileScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -136,7 +140,6 @@ fun ProfileScreen(
                         fontFamily = FontFamily(Font(R.font.jura)),
                         fontSize = 24.sp,
                     )
-
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -177,7 +180,6 @@ fun ProfileScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-
                         Text(
                             text = stringResource(R.string.Your_profile),
                             style = MaterialTheme.typography.headlineMedium.copy(
@@ -188,6 +190,7 @@ fun ProfileScreen(
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
+
                         // Аватар пользователя
                         Box(
                             contentAlignment = Alignment.Center,
@@ -197,7 +200,6 @@ fun ProfileScreen(
                                 .clickable { imagePicker.launch("image/*") }
                         ) {
                             val imageUri = getImageUriFromPath(editableProfile.imageUri)
-
                             if (imageUri != null) {
                                 Image(
                                     painter = rememberAsyncImagePainter(
@@ -273,7 +275,6 @@ fun ProfileScreen(
                             )
                         }
 
-                        // Кнопка "Пол"
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 text = stringResource(R.string.Gender),
@@ -312,7 +313,6 @@ fun ProfileScreen(
                                 }
                             }
 
-                            // Подменю "Пол"
                             if (bmrMenu) {
                                 Column(
                                     modifier = Modifier
@@ -365,12 +365,9 @@ fun ProfileScreen(
                             OutlinedTextField(
                                 value = editableProfile.heightStr,
                                 onValueChange = { newValue ->
-                                    // Разрешаем ввод только цифр и одной точки
                                     if (newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
                                         viewModel.processCommand(
-                                            ProfileCommand.UpdateHeightStr(
-                                                newValue
-                                            )
+                                            ProfileCommand.UpdateHeightStr(newValue)
                                         )
                                     }
                                 },
@@ -399,9 +396,7 @@ fun ProfileScreen(
                                 onValueChange = { newValue ->
                                     if (newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
                                         viewModel.processCommand(
-                                            ProfileCommand.UpdateWeightStr(
-                                                newValue
-                                            )
+                                            ProfileCommand.UpdateWeightStr(newValue)
                                         )
                                     }
                                 },
@@ -428,11 +423,9 @@ fun ProfileScreen(
                             OutlinedTextField(
                                 value = editableProfile.ageStr,
                                 onValueChange = { newValue ->
-                                    if (newValue.matches(Regex("^\\d*$"))) { // только цифры
+                                    if (newValue.matches(Regex("^\\d*$"))) {
                                         viewModel.processCommand(
-                                            ProfileCommand.UpdateAgeStr(
-                                                newValue
-                                            )
+                                            ProfileCommand.UpdateAgeStr(newValue)
                                         )
                                     }
                                 },
@@ -497,7 +490,6 @@ fun ProfileScreen(
                                             )
                                         )
                                     }
-
                                     else -> {}
                                 }
                                 onCalculateRate()
@@ -516,10 +508,8 @@ fun ButtonSaveProfile(
     onSaveProfile: () -> Unit
 ) {
     Button(
-        onClick = {
-            onSaveProfile()
-        },
-        modifier = Modifier
+        onClick = { onSaveProfile() },
+        modifier = modifier
             .wrapContentSize()
             .height(44.dp),
         shape = RoundedCornerShape(30.dp),
@@ -543,10 +533,8 @@ fun ButtonCalculateRate(
     onCalculateRate: () -> Unit
 ) {
     Button(
-        onClick = {
-            onCalculateRate()
-        },
-        modifier = Modifier
+        onClick = { onCalculateRate() },
+        modifier = modifier
             .wrapContentSize()
             .height(44.dp),
         shape = RoundedCornerShape(30.dp),
