@@ -21,8 +21,11 @@ import com.stafeewa.photocalorie.app.domain.usecase.userprofile.UpdateWeightUseC
 import com.stafeewa.photocalorie.app.utils.FileHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -58,6 +61,9 @@ class ProfileViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _uiMessages = MutableSharedFlow<String>()
+    val uiMessages: SharedFlow<String> = _uiMessages.asSharedFlow()
 
     // Сохраняем последнюю успешную конфигурацию для восстановления после очистки сообщений
     private var lastConfig: ProfileState.Configuration? = null
@@ -130,8 +136,10 @@ class ProfileViewModel @Inject constructor(
                     try {
                         updateGenderUseCase(command.gender)
                         _stateProfile.value = ProfileState.Success("Пол обновлен")
+                        _uiMessages.emit("Пол обновлен")
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления пола")
+                        _uiMessages.emit(e.message ?: "Ошибка обновления пола")
                     }
                 }
             }
@@ -153,8 +161,10 @@ class ProfileViewModel @Inject constructor(
                             it.copy(imageUri = localImagePath, isUserEdited = true)
                         }
                         _stateProfile.value = ProfileState.Success("Изображение обновлено")
+                        _uiMessages.emit("Изображение обновлено")
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления изображения")
+                        _uiMessages.emit(e.message ?: "Ошибка обновления изображения")
                     }
                 }
             }
@@ -173,8 +183,10 @@ class ProfileViewModel @Inject constructor(
                             activityLevel = command.activityLevel
                         )
                         _stateProfile.value = ProfileState.Success("Норма калорий рассчитана: ${calories.toInt()}")
+                        _uiMessages.emit("Норма калорий рассчитана: ${calories.toInt()}")
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка расчета нормы калорий")
+                        _uiMessages.emit(e.message ?: "Ошибка расчета нормы калорий")
                     }
                 }
             }
@@ -198,8 +210,10 @@ class ProfileViewModel @Inject constructor(
                         )
                         _editableProfile.update { it.copy(isUserEdited = false) }
                         _stateProfile.value = ProfileState.Success("Профиль сохранен")
+                        _uiMessages.emit("Профиль сохранен")
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка сохранения профиля")
+                        _uiMessages.emit(e.message ?: "Ошибка сохранения профиля")
                     }
                 }
             }
@@ -211,8 +225,10 @@ class ProfileViewModel @Inject constructor(
                         _stateProfile.value = ProfileState.Initial
                         _editableProfile.value = EditableProfile()
                         _stateProfile.value = ProfileState.Success("Профиль удален")
+                        _uiMessages.emit("Профиль удален")
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка удаления профиля")
+                        _uiMessages.emit(e.message ?: "Ошибка удаления профиля")
                     }
                 }
             }
@@ -236,32 +252,14 @@ class ProfileViewModel @Inject constructor(
                     try {
                         updatePasswordUseCase(command.password)
                         _stateProfile.value = ProfileState.Success("Пароль обновлен")
+                        _uiMessages.emit("Пароль обновлен")
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка обновления пароля")
+                        _uiMessages.emit(e.message ?: "Ошибка обновления пароля")
                     }
                 }
             }
             else -> {}
-        }
-    }
-
-    fun clearSuccess() {
-        _stateProfile.update { current ->
-            if (current is ProfileState.Success) {
-                lastConfig ?: ProfileState.Initial
-            } else {
-                current
-            }
-        }
-    }
-
-    fun clearError() {
-        _stateProfile.update { current ->
-            if (current is ProfileState.Error) {
-                lastConfig ?: ProfileState.Initial
-            } else {
-                current
-            }
         }
     }
 }

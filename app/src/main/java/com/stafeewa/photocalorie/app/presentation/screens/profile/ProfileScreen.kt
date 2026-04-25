@@ -42,7 +42,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -79,7 +78,6 @@ fun ProfileScreen(
     val stateProfile by viewModel.stateProfile.collectAsStateWithLifecycle()
     val editableProfile by viewModel.editableProfile.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var bmrMenu by rememberSaveable { mutableStateOf(false) }
@@ -110,18 +108,9 @@ fun ProfileScreen(
         }
     }
 
-    // Отображение Snackbar при успехе или ошибке
-    LaunchedEffect(stateProfile) {
-        when (val state = stateProfile) {
-            is ProfileState.Success -> {
-                snackbarHostState.showSnackbar(state.message ?: "Профиль сохранён")
-                viewModel.clearSuccess()
-            }
-            is ProfileState.Error -> {
-                snackbarHostState.showSnackbar(state.message ?: "Ошибка сохранения")
-                viewModel.clearError()
-            }
-            else -> {}
+    LaunchedEffect(Unit) {
+        viewModel.uiMessages.collect { message ->
+            snackbarHostState.showSnackbar(message)
         }
     }
 
@@ -478,20 +467,14 @@ fun ProfileScreen(
                         ButtonCalculateRate(
                             modifier = Modifier,
                             onCalculateRate = {
-                                when (val state = stateProfile) {
-                                    is ProfileState.Configuration -> {
-                                        val config = state
-                                        viewModel.processCommand(
-                                            ProfileCommand.Calculate(
-                                                gender = config.gender ?: "",
-                                                height = config.height ?: 0.0,
-                                                weight = config.weight ?: 0.0,
-                                                age = config.age ?: 0
-                                            )
-                                        )
-                                    }
-                                    else -> {}
-                                }
+                                viewModel.processCommand(
+                                    ProfileCommand.Calculate(
+                                        gender = editableProfile.gender ?: "",
+                                        height = editableProfile.getHeight() ?: 0.0,
+                                        weight = editableProfile.getWeight() ?: 0.0,
+                                        age = editableProfile.getAge() ?: 0
+                                    )
+                                )
                                 onCalculateRate()
                             }
                         )
