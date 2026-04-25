@@ -11,7 +11,6 @@ import com.stafeewa.photocalorie.app.domain.usecase.foodintake.AddFoodEntryWithV
 import com.stafeewa.photocalorie.app.domain.usecase.foodintake.GetDailyIntakeUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.foodintake.GetTodayEntriesUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.foodintake.RemoveFoodEntryUseCase
-import com.stafeewa.photocalorie.app.domain.usecase.foodintake.UpdateFoodEntryUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.userprofile.ObserveUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -30,7 +29,6 @@ class FoodIntakeViewModel @Inject constructor(
     private val addFoodEntryUseCase: AddFoodEntryUseCase,
     private val addFoodEntryWithValidationUseCase: AddFoodEntryWithValidationUseCase,
     private val removeFoodEntryUseCase: RemoveFoodEntryUseCase,
-    private val updateFoodEntryUseCase: UpdateFoodEntryUseCase,
     private val getTodayEntriesUseCase: GetTodayEntriesUseCase,
     private val getDailyIntakeUseCase: GetDailyIntakeUseCase,
     private val productRepository: ProductRepository
@@ -93,14 +91,8 @@ class FoodIntakeViewModel @Inject constructor(
     val productSearchResults: StateFlow<List<Product>> = _productSearchResults.asStateFlow()
     private var searchJob: Job? = null
 
-    fun searchProducts(query: String) {
-        searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            productRepository.searchProducts(query).collect { products ->
-                _productSearchResults.value = products
-            }
-        }
-    }
+    private val _allEntries = MutableStateFlow<List<FoodEntry>>(emptyList())
+    val allEntries: StateFlow<List<FoodEntry>> = _allEntries.asStateFlow()
 
     init {
         loadData()
@@ -128,12 +120,22 @@ class FoodIntakeViewModel @Inject constructor(
                 _lunchEntries.value = entries.filter { it.mealType == MealType.LUNCH }
                 _dinnerEntries.value = entries.filter { it.mealType == MealType.DINNER }
                 _snackEntries.value = entries.filter { it.mealType == MealType.SNACK }
+                _allEntries.value = entries
             }
             .launchIn(viewModelScope)
     }
 
     private fun updateRemainingCalories() {
         _remainingCalories.value = _calorieGoal.value - _totalCalories.value
+    }
+
+    fun searchProducts(query: String) {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            productRepository.searchProducts(query).collect { products ->
+                _productSearchResults.value = products
+            }
+        }
     }
 
     fun addFoodEntry(
@@ -147,8 +149,12 @@ class FoodIntakeViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             val result = runCatching {
-                val resolvedProduct = resolveMlKitProduct(name)
-                if (resolvedProduct != null && protein == 0.0 && fat == 0.0 && carbs == 0.0) {
+                val resolvedProduct = if (protein == 0.0 && fat == 0.0 && carbs == 0.0) {
+                    resolveMlKitProduct(name)
+                } else {
+                    null
+                }
+                if (resolvedProduct != null) {
                     val kbju = resolvedProduct.calculateKbjuForPortion(portion)
                     addFoodEntryWithValidationUseCase(
                         name = resolvedProduct.name,
@@ -178,7 +184,6 @@ class FoodIntakeViewModel @Inject constructor(
                             _successMessage.value = "${response.entry.name} добавлен"
                             clearSuccessMessageAfterDelay()
                         }
-
                         is AddFoodEntryWithValidationUseCase.Result.Error -> {
                             _errorMessage.value = response.message
                             clearErrorMessageAfterDelay()
@@ -192,7 +197,7 @@ class FoodIntakeViewModel @Inject constructor(
         }
     }
 
-    suspend fun resolveMlKitProduct(label: String): Product? {
+    private suspend fun resolveMlKitProduct(label: String): Product? {
         if (label.isBlank()) return null
 
         val variants = buildSearchVariants(label)

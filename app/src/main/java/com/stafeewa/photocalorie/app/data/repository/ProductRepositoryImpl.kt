@@ -6,9 +6,7 @@ import com.stafeewa.photocalorie.app.data.mapper.toDomain
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
-import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -13,11 +13,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -259,6 +264,7 @@ fun FoodIntakeScreen(
                     }
 
                     item { Spacer(modifier = Modifier.height(12.dp)) }
+
                     // Перекус
                     item {
                         MealSection(
@@ -275,8 +281,35 @@ fun FoodIntakeScreen(
                         )
                     }
 
-                    item { Spacer(modifier = Modifier.height(12.dp)) }
+                    item { Spacer(modifier = Modifier.height(24.dp)) }
 
+                    // Кнопка "Рекомендации"
+                    item {
+                        FloatingActionButton(
+                            onClick = { navController.navigate("recommendation") },
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Lightbulb,
+                                    contentDescription = "Рекомендации",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Рекомендации",
+                                    fontSize = 16.sp,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
+                    }
+
+                    item { Spacer(modifier = Modifier.height(32.dp)) }
                 }
 
                 // Индикатор загрузки

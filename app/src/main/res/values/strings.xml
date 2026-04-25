@@ -123,4 +123,7 @@
     <string name="training_frequency_hint">How often to run on-device training while charging and on Wi‑Fi</string>
     <string name="min_training_examples">Minimum training examples</string>
     <string name="min_training_examples_hint">Worker starts only when enough accumulated examples are available</string>
+    <string name="recommendations">Recommendations</string>
+    <string name="remaining_calories">Remaining calories</string>
+    <string name="recommended_dishes">Recommended dishes</string>
 </resources>

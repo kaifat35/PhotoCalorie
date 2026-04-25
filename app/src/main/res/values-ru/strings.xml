@@ -123,4 +123,7 @@
     <string name="training_frequency_hint">Как часто запускать on-device обучение при зарядке и Wi‑Fi</string>
     <string name="min_training_examples">Минимум примеров для обучения</string>
     <string name="min_training_examples_hint">Worker запускается только при достаточном количестве накопленных примеров</string>
+    <string name="recommendations">Рекомендации</string>
+    <string name="remaining_calories">Осталось калорий</string>
+    <string name="recommended_dishes">Рекомендуемые блюда</string>
 </resources>

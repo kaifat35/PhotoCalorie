@@ -1,6 +1,5 @@
 package com.stafeewa.photocalorie.app.presentation.navigation
 
-import android.os.Bundle
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -24,17 +23,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.presentation.screens.camera.CameraScreen
 import com.stafeewa.photocalorie.app.presentation.screens.foodmain.FoodIntakeScreen
+import com.stafeewa.photocalorie.app.presentation.screens.foodmain.FoodIntakeViewModel
 import com.stafeewa.photocalorie.app.presentation.screens.profile.ProfileScreen
 import com.stafeewa.photocalorie.app.presentation.screens.recipes.RecipeScreen
+import com.stafeewa.photocalorie.app.presentation.screens.recommendation.RecommendationScreen
 import com.stafeewa.photocalorie.app.presentation.screens.settings.SettingsScreen
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.stafeewa.photocalorie.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +71,22 @@ fun NavGraph(
                 onCalculateRate = {},
                 onNavigateToSettings = {
                     navController.navigate(Destination.SETTINGS.route)
+                }
+            )
+        }
+        //Рекомендации
+        composable("recommendation") {
+            val foodIntakeViewModel: FoodIntakeViewModel = hiltViewModel()
+            RecommendationScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onAddProduct = { product, mealType, portion ->
+                    foodIntakeViewModel.addFoodEntry(
+                        product.name, mealType, portion,
+                        product.proteinPer100g * portion/100,
+                        product.fatPer100g * portion/100,
+                        product.carbsPer100g * portion/100
+                    )
+                    navController.popBackStack()
                 }
             )
         }
