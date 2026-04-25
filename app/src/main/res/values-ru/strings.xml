@@ -126,4 +126,8 @@
     <string name="recommendations">Рекомендации</string>
     <string name="remaining_calories">Осталось калорий</string>
     <string name="recommended_dishes">Рекомендуемые блюда</string>
+    <string name="profile_save">Профиль сохранен</string>
+    <string name="error_save_profile">Ошибка сохранения профиля</string>
+    <string name="calorie_rate_is_calculated">Норма калорий рассчитана: %1$d</string>
+    <string name="error_calorie_rate_is_calculated">Ошибка расчета нормы калорий</string>
 </resources>

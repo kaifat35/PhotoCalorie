@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.ActivityLevel
 import com.stafeewa.photocalorie.app.domain.usecase.userprofile.CalculateDailyCaloriesUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.userprofile.DeleteUserUseCase
@@ -183,10 +184,14 @@ class ProfileViewModel @Inject constructor(
                             activityLevel = command.activityLevel
                         )
                         _stateProfile.value = ProfileState.Success("Норма калорий рассчитана: ${calories.toInt()}")
-                        _uiMessages.emit("Норма калорий рассчитана: ${calories.toInt()}")
+                        _uiMessages.emit(
+                            context.getString(
+                                R.string.calorie_rate_is_calculated,
+                                calories.toInt()
+                            ))
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка расчета нормы калорий")
-                        _uiMessages.emit(e.message ?: "Ошибка расчета нормы калорий")
+                        _uiMessages.emit(e.message ?: context.getString(R.string.error_calorie_rate_is_calculated))
                     }
                 }
             }
@@ -210,10 +215,10 @@ class ProfileViewModel @Inject constructor(
                         )
                         _editableProfile.update { it.copy(isUserEdited = false) }
                         _stateProfile.value = ProfileState.Success("Профиль сохранен")
-                        _uiMessages.emit("Профиль сохранен")
+                        _uiMessages.emit(context.getString(R.string.profile_save))
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка сохранения профиля")
-                        _uiMessages.emit(e.message ?: "Ошибка сохранения профиля")
+                        _uiMessages.emit(e.message ?: context.getString(R.string.error_save_profile))
                     }
                 }
             }

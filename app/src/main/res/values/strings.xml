@@ -126,4 +126,8 @@
     <string name="recommendations">Recommendations</string>
     <string name="remaining_calories">Remaining calories</string>
     <string name="recommended_dishes">Recommended dishes</string>
+    <string name="profile_save">Profile saved</string>
+    <string name="error_save_profile">Error saving profile</string>
+    <string name="calorie_rate_is_calculated">Calorie rate is calculated: %1$d</string>
+    <string name="error_calorie_rate_is_calculated">Error calculating calorie rate</string>
 </resources>
