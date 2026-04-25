@@ -32,15 +32,15 @@ class UserProfileRepositoryImpl @Inject constructor(
                 dailyCalories = 2000.0
             )
             appDao.insertUser(defaultUser)
-            currentUser = defaultUser
+            currentUser = appDao.getCurrentUser()
         }
 
-        emit(currentUser.toUserProfile())
+        currentUser?.let { emit(it.toUserProfile()) }
 
         appDao.getCurrentUserFlow()
             .distinctUntilChanged()
             .collect { updatedUser ->
-                if (updatedUser != null && updatedUser.id == currentUser?.id) {
+                if (updatedUser != null) {
                     emit(updatedUser.toUserProfile())
                 }
             }

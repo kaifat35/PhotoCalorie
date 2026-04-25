@@ -50,6 +50,12 @@ class ProfileViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
+    private companion object {
+        const val MAX_HEIGHT_CM = 300.0
+        const val MAX_WEIGHT_KG = 300.0
+        const val MAX_AGE_YEARS = 100
+    }
+
     private val _stateProfile = MutableStateFlow<ProfileState>(ProfileState.Initial)
     val stateProfile: StateFlow<ProfileState> = _stateProfile.asStateFlow()
 
@@ -176,6 +182,11 @@ class ProfileViewModel @Inject constructor(
                         val height = profile.heightStr.toDoubleOrNull() ?: 0.0
                         val weight = profile.weightStr.toDoubleOrNull() ?: 0.0
                         val age = profile.ageStr.toIntOrNull() ?: 0
+                        validatePhysicalParams(height, weight, age)?.let { error ->
+                            _stateProfile.value = ProfileState.Error(error)
+                            _uiMessages.emit(error)
+                            return@launch
+                        }
                         val calories = calculateDailyCaloriesUseCase(
                             gender = command.gender,
                             height = height,
@@ -204,6 +215,11 @@ class ProfileViewModel @Inject constructor(
                         val height = profile.heightStr.toDoubleOrNull()
                         val weight = profile.weightStr.toDoubleOrNull()
                         val age = profile.ageStr.toIntOrNull()
+                        validatePhysicalParams(height, weight, age)?.let { error ->
+                            _stateProfile.value = ProfileState.Error(error)
+                            _uiMessages.emit(error)
+                            return@launch
+                        }
                         updateUserProfileUseCase(
                             login = profile.login,
                             email = profile.email,
@@ -268,6 +284,18 @@ class ProfileViewModel @Inject constructor(
             }
             else -> {}
         }
+    }
+    private fun validatePhysicalParams(height: Double?, weight: Double?, age: Int?): String? {
+        if (height != null && height > MAX_HEIGHT_CM) {
+            return "Рост не должен превышать 300.0 см"
+        }
+        if (weight != null && weight > MAX_WEIGHT_KG) {
+            return "Вес не должен превышать 300.0 кг"
+        }
+        if (age != null && age > MAX_AGE_YEARS) {
+            return "Возраст не должен превышать 100 лет"
+        }
+        return null
     }
 }
 
