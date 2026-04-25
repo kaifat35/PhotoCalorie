@@ -1,7 +1,6 @@
 package com.stafeewa.photocalorie.app.presentation.screens.profile
 
 import android.net.Uri
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -101,7 +100,6 @@ fun ProfileScreen(
                     null
                 }
             } catch (e: Exception) {
-                Log.e("ProfileScreen", "Error creating URI from path", e)
                 null
             }
         } else {
@@ -114,12 +112,10 @@ fun ProfileScreen(
         when (val state = stateProfile) {
             is ProfileState.Success -> {
                 // Можно показать Snackbar или Toast
-                println("Success: ${state.message}")
             }
 
             is ProfileState.Error -> {
                 // Можно показать Snackbar или Toast с ошибкой
-                println("Error: ${state.message}")
             }
 
             else -> {}

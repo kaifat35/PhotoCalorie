@@ -1,7 +1,6 @@
 package com.stafeewa.photocalorie.app.data.background
 
 import android.content.Context
-import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -21,13 +20,11 @@ class RefreshDataWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, workerParameters) {
 
     override suspend fun doWork(): Result {
-        Log.d("RefreshDataWorker", "Start")
         val settings = getSettingsUseCase().first()
         val updatedTopics = updateSubscribedRecipesUseCase()
         if (updatedTopics.isNotEmpty() && settings.notificationsEnabled) {
             notificationHelper.showNewRecipesNotification(updatedTopics)
         }
-        Log.d("RefreshDataWorker", "Finish")
         return Result.success()
     }
 }

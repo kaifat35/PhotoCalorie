@@ -2,7 +2,6 @@ package com.stafeewa.photocalorie.app.ml
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.util.Log
 import org.tensorflow.lite.Interpreter
 import java.io.File
 import java.nio.ByteBuffer
@@ -13,56 +12,37 @@ class TFLiteClassifier(private val context: Context) {
     private var interpreter: Interpreter? = null
     private val inputSize = 224
     private val modelFileName = "food_model.tflite"
-    private val tag = "TFLiteClassifier"
 
     init {
         loadModel()
     }
 
     private fun loadModel() {
-        try {
-            val modelFile = copyModelToCache()
-            val options = Interpreter.Options()
-            // Используем только CPU (GPU delegate отключён для избежания ошибок)
-            interpreter = Interpreter(modelFile, options)
-            Log.d(tag, "Model loaded successfully (CPU)")
-            val outputShape = interpreter?.getOutputTensor(0)?.shape()
-            Log.d(tag, "Output shape: ${outputShape?.joinToString()}")
-        } catch (e: Exception) {
-            Log.e(tag, "Failed to load model", e)
-            throw e
-        }
+        val modelFile = copyModelToCache()
+        val options = Interpreter.Options()
+        // Используем только CPU (GPU delegate отключён для избежания ошибок)
+        interpreter = Interpreter(modelFile, options)
     }
 
     private fun copyModelToCache(): File {
         val cacheFile = File(context.cacheDir, modelFileName)
         if (cacheFile.exists()) {
-            Log.d(tag, "Model already in cache")
             return cacheFile
         }
-        try {
-            context.assets.open(modelFileName).use { input ->
-                cacheFile.outputStream().use { output ->
-                    input.copyTo(output)
-                }
+
+        context.assets.open(modelFileName).use { input ->
+            cacheFile.outputStream().use { output ->
+                input.copyTo(output)
             }
-            Log.d(tag, "Model copied to cache")
-        } catch (e: Exception) {
-            Log.e(tag, "Failed to copy model from assets", e)
-            throw e
         }
+
         return cacheFile
     }
 
     suspend fun recognizeFood(bitmap: Bitmap): List<LabelResult> {
         return try {
-            Log.d(tag, "Recognizing...")
             val outputSize = getNumClasses()
             if (outputSize <= 1) {
-                Log.w(
-                    tag,
-                    "Model has $outputSize class. Multi-food recognition requires at least 2 labels."
-                )
                 return emptyList()
             }
 
@@ -84,18 +64,13 @@ class TFLiteClassifier(private val context: Context) {
             inputBuffer.rewind()
 
             val outputBuffer = Array(1) { FloatArray(outputSize) }
-
             interpreter?.run(inputBuffer, outputBuffer)
-            Log.d(tag, "All outputs: ${outputBuffer[0].mapIndexed { i, s -> "$i:$s" }.take(10)}")
 
-            val results = outputBuffer[0].mapIndexed { index, score ->
-                LabelResult(getLabelForIndex(index), score)
-            }.filter { it.confidence > 0.1 }.sortedByDescending { it.confidence }
-
-            Log.d(tag, "Results: ${results.take(3)}")
-            results
-        } catch (e: Exception) {
-            Log.e(tag, "Error during recognition", e)
+            outputBuffer[0]
+                .mapIndexed { index, score -> LabelResult(getLabelForIndex(index), score) }
+                .filter { it.confidence > 0.1f }
+                .sortedByDescending { it.confidence }
+        } catch (_: Exception) {
             emptyList()
         }
     }
@@ -104,8 +79,7 @@ class TFLiteClassifier(private val context: Context) {
         return try {
             val outputShape = interpreter?.getOutputTensor(0)?.shape() ?: return 0
             outputShape[1]
-        } catch (e: Exception) {
-            Log.e(tag, "Failed to get classes count", e)
+        } catch (_: Exception) {
             0
         }
     }
@@ -114,7 +88,7 @@ class TFLiteClassifier(private val context: Context) {
         return try {
             val labels = context.assets.open("labels.txt").bufferedReader().readLines()
             if (index < labels.size) labels[index] else "Класс $index"
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             "Класс $index"
         }
     }
@@ -123,6 +97,7 @@ class TFLiteClassifier(private val context: Context) {
         interpreter?.close()
         interpreter = null
     }
+
     fun restore(checkpointPath: String) {
         val checkpointFile = File(checkpointPath)
         if (!checkpointFile.exists()) return
@@ -133,8 +108,6 @@ class TFLiteClassifier(private val context: Context) {
                 mutableMapOf(),
                 "restore"
             )
-        }.onFailure { error ->
-            Log.e(tag, "Failed to restore checkpoint", error)
         }
     }
 }

@@ -3,7 +3,6 @@ package com.stafeewa.photocalorie.app.utils
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.util.Log
 import java.io.File
 import java.io.FileOutputStream
 
@@ -40,7 +39,6 @@ class FileHelper(private val context: Context) {
                 outputFile.absolutePath
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error copying image to internal storage", e)
             null
         }
     }
@@ -64,7 +62,6 @@ class FileHelper(private val context: Context) {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting file name from URI", e)
             null
         }
     }
@@ -92,7 +89,6 @@ class FileHelper(private val context: Context) {
                     oldFile.delete()
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error deleting old profile image", e)
             }
         }
     }

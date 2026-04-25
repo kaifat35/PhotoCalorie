@@ -116,7 +116,6 @@ fun CameraScreen(
                                 imageCapture
                             )
                         } catch (e: Exception) {
-                            e.printStackTrace()
                         }
                     }, ContextCompat.getMainExecutor(context))
 

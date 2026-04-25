@@ -47,7 +47,6 @@ class RecognizeFoodUseCase @Inject constructor(
             }
 
             val russianLabel = EnglishToRussianMap.map[bestLabel] ?: bestLabel
-            android.util.Log.d("FoodRecognition", "Translated: $russianLabel")
 
             // Сначала ищем точное совпадение в БД
             val exactProduct = productRepository.getProductByName(russianLabel)

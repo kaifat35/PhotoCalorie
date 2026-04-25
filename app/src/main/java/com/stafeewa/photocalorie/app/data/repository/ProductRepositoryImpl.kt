@@ -48,9 +48,6 @@ class ProductRepositoryImpl @Inject constructor(
         val productsToAdd = allDefaultProducts.filter { it.name !in existingNames }
         if (productsToAdd.isNotEmpty()) {
             addProducts(productsToAdd)
-            android.util.Log.d("ProductRepo", "Added ${productsToAdd.size} new products")
-        } else {
-            android.util.Log.d("ProductRepo", "No new products to add")
         }
     }
     override suspend fun getProductByName(name: String): Product? {
