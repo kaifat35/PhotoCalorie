@@ -238,12 +238,10 @@ fun AddFoodDialog(
                         ) {
                             LazyColumn {
                                 items(searchResults) { product ->
-                                    val displayName = if (isRussian) {
-                                        product.name.toUserVisibleFoodName()
-                                    } else {
-                                        // Попытка получить английское название по русскому
-                                        EnglishToRussianMap.getEnglishName(product.name) ?: product.name.toUserVisibleFoodName()
-                                    }
+                                    val displayName = EnglishToRussianMap.getLocalizedName(
+                                        russianName = product.name.toUserVisibleFoodName(),
+                                        languageCode = if (isRussian) "ru" else "en"
+                                    )
                                     ProductSearchItem(
                                         product = product,
                                         onClick = {
@@ -260,11 +258,10 @@ fun AddFoodDialog(
                     }
 
                     if (selectedProduct != null) {
-                        val selectedDisplayName = if (isRussian) {
-                            selectedProduct!!.name.toUserVisibleFoodName()
-                        } else {
-                            EnglishToRussianMap.getEnglishName(selectedProduct!!.name) ?: selectedProduct!!.name.toUserVisibleFoodName()
-                        }
+                        val selectedDisplayName = EnglishToRussianMap.getLocalizedName(
+                            russianName = selectedProduct!!.name.toUserVisibleFoodName(),
+                            languageCode = if (isRussian) "ru" else "en"
+                        )
                         Text(
                             text = stringResource(R.string.selected_dish, selectedDisplayName),
                             color = MaterialTheme.colorScheme.primary,
@@ -341,8 +338,12 @@ fun AddFoodDialog(
                     } else if (selectedProduct != null) {
                         val portionValue = portion.toDoubleOrNull() ?: 100.0
                         val kbju = selectedProduct!!.calculateKbjuForPortion(portionValue)
+                        val localizedSelectedName = EnglishToRussianMap.getLocalizedName(
+                            russianName = selectedProduct!!.name.toUserVisibleFoodName(),
+                            languageCode = if (isRussian) "ru" else "en"
+                        )
                         onConfirm(
-                            selectedProduct!!.name.toUserVisibleFoodName(),
+                            localizedSelectedName,
                             mealType,
                             portionValue,
                             kbju.protein,

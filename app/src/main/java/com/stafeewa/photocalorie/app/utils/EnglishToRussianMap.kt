@@ -116,4 +116,16 @@ object EnglishToRussianMap {
     fun getEnglishName(russianName: String): String? {
         return map.entries.find { it.value.equals(russianName, ignoreCase = true) }?.key
     }
+
+    fun getEnglishDisplayName(russianName: String): String? {
+        return getEnglishName(russianName)?.replace("_", " ")
+    }
+
+    fun getLocalizedName(russianName: String, languageCode: String): String {
+        return if (languageCode.equals("ru", ignoreCase = true)) {
+            russianName
+        } else {
+            getEnglishDisplayName(russianName) ?: russianName
+        }
+    }
 }
