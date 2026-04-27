@@ -108,4 +108,8 @@ object EnglishToRussianMap {
         "tuna_tartare" to "Тартар из тунца",
         "waffles" to "Вафли"
     )
+
+    val reverseMap: Map<String, String> = map.entries.associate { (en, ru) ->
+        ru.lowercase() to en
+    }
 }

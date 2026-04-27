@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
@@ -94,7 +95,11 @@ fun AddFoodDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (isManualMode) "Добавить вручную" else "Добавить ${getMealTypeName(mealType)}",
+                    text = if (isManualMode) {
+                        stringResource(R.string.add_manually)
+                    } else {
+                        stringResource(R.string.add_food_for_meal, getMealTypeName(mealType))
+                    },
                     fontFamily = FontFamily(Font(R.font.jura)),
                     fontSize = 24.sp,
                     color = MaterialTheme.colorScheme.onSurface
@@ -119,7 +124,11 @@ fun AddFoodDialog(
                         painter = painterResource(
                             id = if (isManualMode) R.drawable.ic_search else R.drawable.ic_edit
                         ),
-                        contentDescription = if (isManualMode) "Поиск" else "Ручной ввод",
+                        contentDescription = if (isManualMode) {
+                            stringResource(R.string.search)
+                        } else {
+                            stringResource(R.string.add_manually)
+                        },
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(28.dp)
                     )
@@ -135,16 +144,16 @@ fun AddFoodDialog(
                     OutlinedTextField(
                         value = manualName,
                         onValueChange = { manualName = it },
-                        label = { Text("Название блюда", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+                        label = { Text(stringResource(R.string.dish_name), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                         modifier = Modifier.fillMaxWidth(),
                         textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
-                        placeholder = { Text("Например: Мой фирменный салат", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) }
+                        placeholder = { Text(stringResource(R.string.manual_dish_name_hint), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) }
                     )
 
                     OutlinedTextField(
                         value = manualProtein,
                         onValueChange = { manualProtein = it },
-                        label = { Text("Белки (на 100г)", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+                        label = { Text(stringResource(R.string.proteins_per_100g), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
@@ -153,7 +162,7 @@ fun AddFoodDialog(
                     OutlinedTextField(
                         value = manualFat,
                         onValueChange = { manualFat = it },
-                        label = { Text("Жиры (на 100г)", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+                        label = { Text(stringResource(R.string.fats_per_100g), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
@@ -162,7 +171,7 @@ fun AddFoodDialog(
                     OutlinedTextField(
                         value = manualCarbs,
                         onValueChange = { manualCarbs = it },
-                        label = { Text("Углеводы (на 100г)", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+                        label = { Text(stringResource(R.string.carbs_per_100g), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
@@ -171,7 +180,7 @@ fun AddFoodDialog(
                     OutlinedTextField(
                         value = portion,
                         onValueChange = { portion = it },
-                        label = { Text("Вес порции (г)", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+                        label = { Text(stringResource(R.string.portion_weight_grams), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
@@ -186,7 +195,7 @@ fun AddFoodDialog(
                     if (manualName.isNotBlank() && (proteinValue > 0 || fatValue > 0 || carbsValue > 0)) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
                         Text(
-                            text = "КБЖУ на ${portionValue.toInt()} г:",
+                            text = stringResource(R.string.kbju_for_portion, portionValue.toInt()),
                             color = MaterialTheme.colorScheme.onSurface,
                             fontFamily = FontFamily(Font(R.font.jura)),
                             fontSize = 16.sp
@@ -195,10 +204,10 @@ fun AddFoodDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            NutrientInfo("Калории", "${((proteinValue * 4 + fatValue * 9 + carbsValue * 4) * factor).toInt()} ккал", MaterialTheme.colorScheme.tertiary)
-                            NutrientInfo("Белки", "${(proteinValue * factor).toInt()} г", MaterialTheme.colorScheme.secondary)
-                            NutrientInfo("Жиры", "${(fatValue * factor).toInt()} г", MaterialTheme.colorScheme.error)
-                            NutrientInfo("Углеводы", "${(carbsValue * factor).toInt()} г", Color(0xFF9C27B0))
+                            NutrientInfo(stringResource(R.string.calories), "${((proteinValue * 4 + fatValue * 9 + carbsValue * 4) * factor).toInt()} ${stringResource(R.string.kcal_short)}", MaterialTheme.colorScheme.tertiary)
+                            NutrientInfo(stringResource(R.string.proteins), "${(proteinValue * factor).toInt()} ${stringResource(R.string.grams_short)}", MaterialTheme.colorScheme.secondary)
+                            NutrientInfo(stringResource(R.string.fats), "${(fatValue * factor).toInt()} ${stringResource(R.string.grams_short)}", MaterialTheme.colorScheme.error)
+                            NutrientInfo(stringResource(R.string.carbohydrates), "${(carbsValue * factor).toInt()} ${stringResource(R.string.grams_short)}", Color(0xFF9C27B0))
                         }
                     }
 
@@ -209,10 +218,10 @@ fun AddFoodDialog(
                             searchQuery = it
                             selectedProduct = null
                         },
-                        label = { Text("Название блюда", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+                        label = { Text(stringResource(R.string.dish_name), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                         modifier = Modifier.fillMaxWidth(),
                         textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
-                        placeholder = { Text("Например: Овсяная каша", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) }
+                        placeholder = { Text(stringResource(R.string.search_dish_name_hint), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) }
                     )
 
                     if (showProductList && searchResults.isNotEmpty()) {
@@ -227,7 +236,7 @@ fun AddFoodDialog(
                                         product = product,
                                         onClick = {
                                             selectedProduct = product
-                                            searchQuery = product.name
+                                            searchQuery = product.name.toUserVisibleFoodName()
                                             showProductList = false
                                             portion = product.defaultPortion.toInt().toString()
                                         }
@@ -241,7 +250,7 @@ fun AddFoodDialog(
                         HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
 
                         Text(
-                            text = "Выбрано: ${selectedProduct!!.name.toUserVisibleFoodName()}",
+                            text = stringResource(R.string.selected_dish, selectedProduct!!.name.toUserVisibleFoodName()),
                             color = MaterialTheme.colorScheme.primary,
                             fontFamily = FontFamily(Font(R.font.jura)),
                             fontSize = 16.sp
@@ -251,16 +260,16 @@ fun AddFoodDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            NutrientInfo("Калории", "${selectedProduct!!.caloriesPer100g.toInt()} ккал", MaterialTheme.colorScheme.tertiary)
-                            NutrientInfo("Белки", "${selectedProduct!!.proteinPer100g.toInt()} г", MaterialTheme.colorScheme.secondary)
-                            NutrientInfo("Жиры", "${selectedProduct!!.fatPer100g.toInt()} г", MaterialTheme.colorScheme.error)
-                            NutrientInfo("Углеводы", "${selectedProduct!!.carbsPer100g.toInt()} г", Color(0xFF9C27B0))
+                            NutrientInfo(stringResource(R.string.calories), "${selectedProduct!!.caloriesPer100g.toInt()} ${stringResource(R.string.kcal_short)}", MaterialTheme.colorScheme.tertiary)
+                            NutrientInfo(stringResource(R.string.proteins), "${selectedProduct!!.proteinPer100g.toInt()} ${stringResource(R.string.grams_short)}", MaterialTheme.colorScheme.secondary)
+                            NutrientInfo(stringResource(R.string.fats), "${selectedProduct!!.fatPer100g.toInt()} ${stringResource(R.string.grams_short)}", MaterialTheme.colorScheme.error)
+                            NutrientInfo(stringResource(R.string.carbohydrates), "${selectedProduct!!.carbsPer100g.toInt()} ${stringResource(R.string.grams_short)}", Color(0xFF9C27B0))
                         }
 
                         OutlinedTextField(
                             value = portion,
                             onValueChange = { portion = it },
-                            label = { Text("Вес порции (г)", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+                            label = { Text(stringResource(R.string.portion_weight_grams), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
@@ -269,7 +278,7 @@ fun AddFoodDialog(
                         if (calculatedKbju != null && portion.toDoubleOrNull() != null) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
                             Text(
-                                text = "КБЖУ на ${portion.toDoubleOrNull()?.toInt()} г:",
+                                text = stringResource(R.string.kbju_for_portion, portion.toDoubleOrNull()?.toInt() ?: 0),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 16.sp
@@ -278,15 +287,15 @@ fun AddFoodDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                NutrientInfo("Калории", "${calculatedKbju.calories.toInt()} ккал", MaterialTheme.colorScheme.tertiary)
-                                NutrientInfo("Белки", "${calculatedKbju.protein.toInt()} г", MaterialTheme.colorScheme.secondary)
-                                NutrientInfo("Жиры", "${calculatedKbju.fat.toInt()} г", MaterialTheme.colorScheme.error)
-                                NutrientInfo("Углеводы", "${calculatedKbju.carbs.toInt()} г", Color(0xFF9C27B0))
+                                NutrientInfo(stringResource(R.string.calories), "${calculatedKbju.calories.toInt()} ${stringResource(R.string.kcal_short)}", MaterialTheme.colorScheme.tertiary)
+                                NutrientInfo(stringResource(R.string.proteins), "${calculatedKbju.protein.toInt()} ${stringResource(R.string.grams_short)}", MaterialTheme.colorScheme.secondary)
+                                NutrientInfo(stringResource(R.string.fats), "${calculatedKbju.fat.toInt()} ${stringResource(R.string.grams_short)}", MaterialTheme.colorScheme.error)
+                                NutrientInfo(stringResource(R.string.carbohydrates), "${calculatedKbju.carbs.toInt()} ${stringResource(R.string.grams_short)}", Color(0xFF9C27B0))
                             }
                         }
                     } else if (searchQuery.length >= 2 && searchResults.isEmpty()) {
                         Text(
-                            text = "Ничего не найдено. Нажмите на иконку руки для ручного ввода",
+                            text = stringResource(R.string.not_found_switch_to_manual),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                             fontSize = 14.sp
                         )
@@ -305,7 +314,7 @@ fun AddFoodDialog(
                         val factor = portionValue / 100.0
 
                         onConfirm(
-                            manualName.ifEmpty { "Новое блюдо" },
+                            manualName.ifEmpty { stringResource(R.string.new_dish) },
                             mealType,
                             portionValue,
                             proteinValue * factor,
@@ -336,12 +345,12 @@ fun AddFoodDialog(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("Добавить", color = MaterialTheme.colorScheme.onPrimary)
+                Text(stringResource(R.string.add), color = MaterialTheme.colorScheme.onPrimary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Отмена", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             }
         },
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -371,22 +380,22 @@ fun ProductSearchItem(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "${product.caloriesPer100g.toInt()} ккал",
+                text = "${product.caloriesPer100g.toInt()} ${stringResource(R.string.kcal_short)}",
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 fontSize = 12.sp
             )
             Text(
-                text = "Б: ${product.proteinPer100g.toInt()}г",
+                text = stringResource(R.string.nutrient_short_proteins, product.proteinPer100g.toInt()),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 fontSize = 12.sp
             )
             Text(
-                text = "Ж: ${product.fatPer100g.toInt()}г",
+                text = stringResource(R.string.nutrient_short_fats, product.fatPer100g.toInt()),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 fontSize = 12.sp
             )
             Text(
-                text = "У: ${product.carbsPer100g.toInt()}г",
+                text = stringResource(R.string.nutrient_short_carbs, product.carbsPer100g.toInt()),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 fontSize = 12.sp
             )
@@ -416,11 +425,12 @@ fun NutrientInfo(
     }
 }
 
+@Composable
 private fun getMealTypeName(mealType: MealType): String {
     return when (mealType) {
-        MealType.BREAKFAST -> "завтрак"
-        MealType.LUNCH -> "обед"
-        MealType.DINNER -> "ужин"
-        MealType.SNACK -> "перекус"
+        MealType.BREAKFAST -> stringResource(R.string.breakfast)
+        MealType.LUNCH -> stringResource(R.string.lunch)
+        MealType.DINNER -> stringResource(R.string.dinner)
+        MealType.SNACK -> stringResource(R.string.snack)
     }
 }

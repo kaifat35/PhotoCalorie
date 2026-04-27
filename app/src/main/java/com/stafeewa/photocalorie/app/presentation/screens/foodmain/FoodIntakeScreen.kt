@@ -467,7 +467,7 @@ fun MealSection(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.plus),
-                    contentDescription = "Добавить",
+                    contentDescription = stringResource(R.string.add),
                     tint = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
                         .size(24.dp)
