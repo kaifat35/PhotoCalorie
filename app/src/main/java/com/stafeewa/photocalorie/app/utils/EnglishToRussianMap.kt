@@ -106,7 +106,12 @@ object EnglishToRussianMap {
         "takoyaki" to "Такояки",
         "tiramisu" to "Тирамису",
         "tuna_tartare" to "Тартар из тунца",
-        "waffles" to "Вафли"
+        "waffles" to "Вафли",
+
+        "borsch" to "Борщ",
+        "buckwheat_with_meat" to "Гречка",
+        "fried_egg" to "Яичница",
+        "semolina_porridge" to "Манная каша",
     )
 
     val reverseMap: Map<String, String> = map.entries.associate { (en, ru) ->

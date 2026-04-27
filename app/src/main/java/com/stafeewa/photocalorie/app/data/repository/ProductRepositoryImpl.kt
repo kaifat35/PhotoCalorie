@@ -1200,7 +1200,13 @@ class ProductRepositoryImpl @Inject constructor(
         "Такояки" to Nutrition(6.0, 8.0, 20.0, 175.0),
         "Тирамису" to Nutrition(4.0, 15.0, 30.0, 275.0),
         "Тартар из тунца" to Nutrition(18.0, 8.0, 2.0, 158.0),
-        "Вафли" to Nutrition(5.0, 8.0, 30.0, 210.0)
+        "Вафли" to Nutrition(5.0, 8.0, 30.0, 210.0),
+
+
+        "Борщ" to Nutrition(5.0, 8.0, 30.0, 210.0),
+        "Гречка" to Nutrition(5.0, 8.0, 30.0, 210.0),
+        "Яичница" to Nutrition(5.0, 8.0, 30.0, 210.0),
+        "Манная каша" to Nutrition(5.0, 8.0, 30.0, 210.0),
     )
 
     private data class Nutrition(

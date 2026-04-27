@@ -12,6 +12,10 @@ class TFLiteClassifier(private val context: Context) {
     private var interpreter: Interpreter? = null
     private val inputSize = 224
     private val modelFileName = "food_model.tflite"
+    private val labels: List<String> by lazy {
+        runCatching { context.assets.open("labels.txt").bufferedReader().readLines() }
+            .getOrDefault(emptyList())
+    }
 
     init {
         loadModel()
@@ -41,14 +45,9 @@ class TFLiteClassifier(private val context: Context) {
 
     suspend fun recognizeFood(bitmap: Bitmap): List<LabelResult> {
         return try {
-            val outputSize = getNumClasses()
-            if (outputSize <= 1) {
-                return emptyList()
-            }
-
             val scaledBitmap = Bitmap.createScaledBitmap(bitmap, inputSize, inputSize, true)
             val inputBuffer = ByteBuffer.allocateDirect(1 * inputSize * inputSize * 3 * 4)
-            inputBuffer.order(ByteOrder.nativeOrder())
+                .order(ByteOrder.nativeOrder())
 
             val pixels = IntArray(inputSize * inputSize)
             scaledBitmap.getPixels(pixels, 0, inputSize, 0, 0, inputSize, inputSize)
@@ -63,34 +62,52 @@ class TFLiteClassifier(private val context: Context) {
             }
             inputBuffer.rewind()
 
-            val outputBuffer = Array(1) { FloatArray(outputSize) }
-            interpreter?.run(inputBuffer, outputBuffer)
+            val output = runInferSignature(inputBuffer) ?: runDefaultInference(inputBuffer)
+            if (output.isEmpty()) {
+                return emptyList()
+            }
 
-            outputBuffer[0]
+            output
                 .mapIndexed { index, score -> LabelResult(getLabelForIndex(index), score) }
-                .filter { it.confidence > 0.1f }
                 .sortedByDescending { it.confidence }
+                .take(5)
+                .filter { it.confidence > 0.01f }
         } catch (_: Exception) {
             emptyList()
         }
     }
 
-    private fun getNumClasses(): Int {
-        return try {
-            val outputShape = interpreter?.getOutputTensor(0)?.shape() ?: return 0
-            outputShape[1]
-        } catch (_: Exception) {
-            0
-        }
+    private fun runInferSignature(inputBuffer: ByteBuffer): FloatArray? {
+        val tflite = interpreter ?: return null
+        return runCatching {
+            val classes = getNumClassesFromInferSignature().takeIf { it > 1 } ?: return null
+            val outputs = mutableMapOf<String, Any>("output" to Array(1) { FloatArray(classes) })
+            tflite.runSignature(mapOf("x" to inputBuffer), outputs, "infer")
+            outputs["output"] as? Array<FloatArray>
+        }.getOrNull()?.firstOrNull()
+    }
+
+    private fun runDefaultInference(inputBuffer: ByteBuffer): FloatArray {
+        val classes = getNumClassesFromDefaultTensor().takeIf { it > 1 } ?: return FloatArray(0)
+        val outputBuffer = Array(1) { FloatArray(classes) }
+        interpreter?.run(inputBuffer, outputBuffer)
+        return outputBuffer[0]
+    }
+
+    private fun getNumClassesFromInferSignature(): Int {
+        return runCatching {
+            interpreter?.getOutputTensorFromSignature("output", "infer")?.shape()?.lastOrNull() ?: 0
+        }.getOrDefault(0)
+    }
+
+    private fun getNumClassesFromDefaultTensor(): Int {
+        return runCatching {
+            interpreter?.getOutputTensor(0)?.shape()?.lastOrNull() ?: 0
+        }.getOrDefault(0)
     }
 
     private fun getLabelForIndex(index: Int): String {
-        return try {
-            val labels = context.assets.open("labels.txt").bufferedReader().readLines()
-            if (index < labels.size) labels[index] else "Класс $index"
-        } catch (_: Exception) {
-            "Класс $index"
-        }
+        return labels.getOrNull(index) ?: "Класс $index"
     }
 
     fun close() {
