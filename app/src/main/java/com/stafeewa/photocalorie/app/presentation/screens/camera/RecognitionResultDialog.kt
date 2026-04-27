@@ -39,8 +39,8 @@ import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
-import kotlinx.coroutines.flow.first
 import com.stafeewa.photocalorie.app.utils.toUserVisibleFoodName
+import kotlinx.coroutines.flow.first
 
 private enum class ManualAddMode {
     SAVE_AND_ADD,
@@ -66,12 +66,10 @@ fun RecognitionResultDialog(
     var manualFat by remember { mutableStateOf("") }
     var manualCarbs by remember { mutableStateOf("") }
 
-    // Состояние для диалога поиска по локальной БД
     var showLocalSearchDialog by remember { mutableStateOf(false) }
     var localSearchQuery by remember { mutableStateOf("") }
     var localSearchResults by remember { mutableStateOf<List<Product>>(emptyList()) }
 
-    // Загрузка результатов поиска при изменении запроса
     LaunchedEffect(localSearchQuery) {
         if (localSearchQuery.isNotBlank()) {
             val results = productRepository.searchProducts(localSearchQuery).first()
@@ -120,10 +118,18 @@ fun RecognitionResultDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            NutrientInfoDialog(stringResource(R.string.calories), "${result.product.caloriesPer100g.toInt()} ${stringResource(R.string.kcal_short)}", MaterialTheme.colorScheme.tertiary)
-                            NutrientInfoDialog(stringResource(R.string.proteins), "${result.product.proteinPer100g.toInt()} ${stringResource(R.string.grams_short)}", MaterialTheme.colorScheme.secondary)
-                            NutrientInfoDialog(stringResource(R.string.fats), "${result.product.fatPer100g.toInt()} ${stringResource(R.string.grams_short)}", MaterialTheme.colorScheme.error)
-                            NutrientInfoDialog(stringResource(R.string.carbohydrates), "${result.product.carbsPer100g.toInt()} ${stringResource(R.string.grams_short)}", Color(0xFF9C27B0))
+                            NutrientInfoDialog(stringResource(R.string.calories),
+                                "${result.product.caloriesPer100g.toInt()} ${stringResource(R.string.kcal_short)}",
+                                MaterialTheme.colorScheme.tertiary)
+                            NutrientInfoDialog(stringResource(R.string.proteins),
+                                "${result.product.proteinPer100g.toInt()} ${stringResource(R.string.grams_short)}",
+                                MaterialTheme.colorScheme.secondary)
+                            NutrientInfoDialog(stringResource(R.string.fats),
+                                "${result.product.fatPer100g.toInt()} ${stringResource(R.string.grams_short)}",
+                                MaterialTheme.colorScheme.error)
+                            NutrientInfoDialog(stringResource(R.string.carbohydrates),
+                                "${result.product.carbsPer100g.toInt()} ${stringResource(R.string.grams_short)}",
+                                Color(0xFF9C27B0))
                         }
 
                         MealTypeSelector(
@@ -134,7 +140,8 @@ fun RecognitionResultDialog(
                         OutlinedTextField(
                             value = portion,
                             onValueChange = { portion = it },
-                            label = { Text(stringResource(R.string.portion_weight_grams), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+                            label = { Text(stringResource(R.string.portion_weight_grams),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface)
@@ -203,7 +210,7 @@ fun RecognitionResultDialog(
 
                     is RecognitionResult.NotFound -> {
                         Text(
-                            text = stringResource(R.string.dish_not_found_in_database, result.suggestedName.toUserVisibleFoodName()),
+                            text = stringResource(R.string.dish_not_found_in_database, result.suggestedName),
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
@@ -212,7 +219,7 @@ fun RecognitionResultDialog(
                                 onClick = {
                                     isAddingToDatabase = true
                                     manualAddMode = ManualAddMode.SAVE_AND_ADD
-                                    manualName = result.suggestedName.toUserVisibleFoodName()
+                                    manualName = result.suggestedName
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                 modifier = Modifier.fillMaxWidth()
@@ -224,7 +231,7 @@ fun RecognitionResultDialog(
                                 onClick = {
                                     isAddingToDatabase = true
                                     manualAddMode = ManualAddMode.ADD_ONLY
-                                    manualName = result.suggestedName.toUserVisibleFoodName()
+                                    manualName = result.suggestedName
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                 modifier = Modifier.fillMaxWidth()
@@ -232,7 +239,6 @@ fun RecognitionResultDialog(
                                 Text(stringResource(R.string.add_manually_without_saving), color = MaterialTheme.colorScheme.onSurface)
                             }
                         } else {
-                            // (ручной ввод)
                             Text(
                                 text = stringResource(R.string.add_dish_manually_label),
                                 color = MaterialTheme.colorScheme.onSurface
@@ -314,7 +320,7 @@ fun RecognitionResultDialog(
                                 onClick = {
                                     isAddingToDatabase = true
                                     manualAddMode = ManualAddMode.ADD_ONLY
-                                    manualName = result.suggestedName.toUserVisibleFoodName()
+                                    manualName = result.suggestedName
                                 },
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
@@ -332,7 +338,6 @@ fun RecognitionResultDialog(
                         }
 
                         if (isAddingToDatabase) {
-                            // Ручной ввод (как в NotFound)
                             Text(
                                 text = stringResource(R.string.add_dish_manually_label),
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -485,7 +490,6 @@ fun RecognitionResultDialog(
 
                                 val finalName = manualName.ifBlank { result.suggestedName }
 
-                                // Не сохраняем в базу при LowConfidence – только добавляем в дневник
                                 onConfirm(
                                     finalName,
                                     selectedMealType,
@@ -526,7 +530,6 @@ fun RecognitionResultDialog(
         textContentColor = MaterialTheme.colorScheme.onSurface
     )
 
-    // Диалог выбора из локальной базы
     if (showLocalSearchDialog) {
         AlertDialog(
             onDismissRequest = { showLocalSearchDialog = false },
@@ -543,7 +546,6 @@ fun RecognitionResultDialog(
                         items(localSearchResults) { product ->
                             TextButton(
                                 onClick = {
-                                    // Добавляем выбранный продукт в дневник
                                     val factor = portion.toDoubleOrNull()?.div(100) ?: 1.0
                                     onConfirm(
                                         product.name,

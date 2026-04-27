@@ -2,6 +2,7 @@ package com.stafeewa.photocalorie.app.domain.usecase.foodrecognition
 
 import android.content.Context
 import android.graphics.Bitmap
+import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
@@ -36,7 +37,7 @@ class RecognizeFoodUseCase @Inject constructor(
         return try {
             val results = foodClassifier.recognizeFood(bitmap)
             if (results.isEmpty()) {
-                return Result.NotFound("Не удалось распознать блюдо")
+                return Result.NotFound(context.getString(R.string.Couldnt_recognize_the_dish))
             }
             val best = results.first()
             val bestLabel = best.label.lowercase().trim()
