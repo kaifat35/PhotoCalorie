@@ -112,4 +112,8 @@ object EnglishToRussianMap {
     val reverseMap: Map<String, String> = map.entries.associate { (en, ru) ->
         ru.lowercase() to en
     }
+
+    fun getEnglishName(russianName: String): String? {
+        return map.entries.find { it.value.equals(russianName, ignoreCase = true) }?.key
+    }
 }

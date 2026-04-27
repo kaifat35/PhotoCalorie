@@ -43,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
+import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
 import com.stafeewa.photocalorie.app.utils.toUserVisibleFoodName
 
 @Composable
@@ -61,6 +62,8 @@ fun AddFoodDialog(
     val viewModel: FoodIntakeViewModel = hiltViewModel()
     val context = LocalContext.current
     val newDishString = stringResource(R.string.new_dish)
+    val isRussian = context.resources.configuration.locales.get(0).language == "ru"
+
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
@@ -235,14 +238,21 @@ fun AddFoodDialog(
                         ) {
                             LazyColumn {
                                 items(searchResults) { product ->
+                                    val displayName = if (isRussian) {
+                                        product.name.toUserVisibleFoodName()
+                                    } else {
+                                        // Попытка получить английское название по русскому
+                                        EnglishToRussianMap.getEnglishName(product.name) ?: product.name.toUserVisibleFoodName()
+                                    }
                                     ProductSearchItem(
                                         product = product,
                                         onClick = {
                                             selectedProduct = product
-                                            searchQuery = product.name.toUserVisibleFoodName()
+                                            searchQuery = displayName
                                             showProductList = false
                                             portion = product.defaultPortion.toInt().toString()
-                                        }
+                                        },
+                                        displayName = displayName
                                     )
                                 }
                             }
@@ -250,10 +260,13 @@ fun AddFoodDialog(
                     }
 
                     if (selectedProduct != null) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
-
+                        val selectedDisplayName = if (isRussian) {
+                            selectedProduct!!.name.toUserVisibleFoodName()
+                        } else {
+                            EnglishToRussianMap.getEnglishName(selectedProduct!!.name) ?: selectedProduct!!.name.toUserVisibleFoodName()
+                        }
                         Text(
-                            text = stringResource(R.string.selected_dish, selectedProduct!!.name.toUserVisibleFoodName()),
+                            text = stringResource(R.string.selected_dish, selectedDisplayName),
                             color = MaterialTheme.colorScheme.primary,
                             fontFamily = FontFamily(Font(R.font.jura)),
                             fontSize = 16.sp
@@ -365,8 +378,9 @@ fun AddFoodDialog(
 @Composable
 fun ProductSearchItem(
     product: Product,
-    onClick: () -> Unit
-) {
+    onClick: () -> Unit,
+    displayName: String
+    ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -374,7 +388,7 @@ fun ProductSearchItem(
             .padding(12.dp)
     ) {
         Text(
-            text = product.name.toUserVisibleFoodName(),
+            text = displayName,
             color = MaterialTheme.colorScheme.onSurface,
             fontFamily = FontFamily(Font(R.font.jura)),
             fontSize = 18.sp
