@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.Tensor
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -51,6 +52,7 @@ class TFLiteClassifier(private val context: Context) {
             val tflite = interpreter ?: return emptyList()
             val inputSize = getInputSize(tflite)
             val inputType = tflite.getInputTensor(0).dataType()
+            val inputQuantParams = tflite.getInputTensor(0).quantizationParams()
             val scaledBitmap = Bitmap.createScaledBitmap(bitmap, inputSize, inputSize, true)
             val inputBuffer = ByteBuffer.allocateDirect(1 * inputSize * inputSize * 3 * bytesPerChannel(inputType))
                 .order(ByteOrder.nativeOrder())
@@ -64,7 +66,8 @@ class TFLiteClassifier(private val context: Context) {
                     red = (pixel shr 16) and 0xFF,
                     green = (pixel shr 8) and 0xFF,
                     blue = pixel and 0xFF,
-                    type = inputType
+                    type = inputType,
+                    quantParams = inputQuantParams
                 )
             }
             inputBuffer.rewind()
@@ -110,9 +113,8 @@ class TFLiteClassifier(private val context: Context) {
             DataType.UINT8, DataType.INT8 -> {
                 val outputBuffer = Array(1) { ByteArray(classes) }
                 tflite.run(inputBuffer, outputBuffer)
-                // Преобразуем байты в FloatArray, нормализуя в диапазон [0,1]
-                val byteArray = outputBuffer[0]
-                FloatArray(classes) { (byteArray[it].toInt() and 0xFF).toFloat() / 255f }
+                val quantParams = outputTensor.quantizationParams()
+                dequantizeOutput(outputBuffer[0], quantParams, outputTensor.dataType())
             }
             else -> {
                 // fallback: пробуем как Float
@@ -138,7 +140,8 @@ class TFLiteClassifier(private val context: Context) {
         red: Int,
         green: Int,
         blue: Int,
-        type: DataType
+        type: DataType,
+        quantParams: Tensor.QuantizationParams
     ) {
         when (type) {
             DataType.FLOAT32 -> {
@@ -147,9 +150,9 @@ class TFLiteClassifier(private val context: Context) {
                 inputBuffer.putFloat(blue / 255.0f)
             }
             DataType.UINT8, DataType.INT8 -> {
-                inputBuffer.put(red.toByte())
-                inputBuffer.put(green.toByte())
-                inputBuffer.put(blue.toByte())
+                inputBuffer.put(quantizeInputValue(red / 255.0f, quantParams, type))
+                inputBuffer.put(quantizeInputValue(green / 255.0f, quantParams, type))
+                inputBuffer.put(quantizeInputValue(blue / 255.0f, quantParams, type))
             }
             else -> {
                 inputBuffer.putFloat(red / 255.0f)
@@ -159,6 +162,49 @@ class TFLiteClassifier(private val context: Context) {
         }
     }
 
+    private fun quantizeInputValue(
+        normalizedValue: Float,
+        quantParams: Tensor.QuantizationParams?,
+        type: DataType
+    ): Byte {
+        val scale = quantParams?.scale ?: 0f
+        val zeroPoint = quantParams?.zeroPoint ?: 0
+        if (scale <= 0f) {
+            val fallback = (normalizedValue * 255f).toInt()
+            return fallback.coerceIn(0, 255).toByte()
+        }
+
+        val quantized = (normalizedValue / scale + zeroPoint).toInt()
+        return when (type) {
+            DataType.INT8 -> quantized.coerceIn(-128, 127).toByte()
+            else -> quantized.coerceIn(0, 255).toByte()
+        }
+    }
+
+    private fun dequantizeOutput(
+        output: ByteArray,
+        quantParams: Tensor.QuantizationParams,
+        type: DataType
+    ): FloatArray {
+        val scale = quantParams.scale
+        val zeroPoint = quantParams.zeroPoint
+        if (scale <= 0f) {
+            return FloatArray(output.size) { i ->
+                when (type) {
+                    DataType.INT8 -> output[i].toInt().toFloat()
+                    else -> (output[i].toInt() and 0xFF).toFloat()
+                }
+            }
+        }
+
+        return FloatArray(output.size) { i ->
+            val raw = when (type) {
+                DataType.INT8 -> output[i].toInt()
+                else -> output[i].toInt() and 0xFF
+            }
+            (raw - zeroPoint) * scale
+        }
+    }
     private fun normalizeToProbabilities(rawScores: FloatArray): FloatArray {
         if (rawScores.isEmpty()) return rawScores
         val isProbabilityLike = rawScores.all { it in 0.0f..1.0f } &&
