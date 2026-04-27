@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -60,9 +61,9 @@ fun AddFoodDialog(
     ) -> Unit
 ) {
     val viewModel: FoodIntakeViewModel = hiltViewModel()
-    val context = LocalContext.current
     val newDishString = stringResource(R.string.new_dish)
-    val isRussian = context.resources.configuration.locales.get(0).language == "ru"
+    val configuration = LocalConfiguration.current
+    val isRussian = configuration.locales.get(0).language == "ru"
 
 
     var searchQuery by remember { mutableStateOf("") }
