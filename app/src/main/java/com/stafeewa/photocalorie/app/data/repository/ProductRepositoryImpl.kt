@@ -6,6 +6,7 @@ import com.stafeewa.photocalorie.app.data.mapper.toDomain
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
+import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -1242,6 +1243,17 @@ class ProductRepositoryImpl @Inject constructor(
         if ("клецки" in normalizedName) base += listOf("dumplings")
         if ("пюре" in normalizedName) base += listOf("puree")
         if ("крокеты" in normalizedName) base += listOf("croquettes")
+
+        addEnglishDictionaryKeywords(name, base)
         return base.toList()
+    }
+
+    private fun addEnglishDictionaryKeywords(name: String, keywords: MutableSet<String>) {
+        val englishName = EnglishToRussianMap.getEnglishName(name) ?: return
+        val englishPhrase = englishName.replace("_", " ").lowercase()
+
+        keywords += englishName.lowercase()
+        keywords += englishPhrase
+        keywords += englishPhrase.split(" ").filter { it.length > 2 }
     }
 }
