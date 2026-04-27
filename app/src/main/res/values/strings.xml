@@ -130,4 +130,11 @@
     <string name="error_save_profile">Error saving profile</string>
     <string name="calorie_rate_is_calculated" formatted="true">Calorie rate is calculated: %1$d</string>
     <string name="error_calorie_rate_is_calculated">Error calculating calorie rate</string>
+    <string name="nutrient_progress_proteins">Proteins: %1$d / %2$d g</string>
+    <string name="nutrient_progress_fats">Fats: %1$d / %2$d g</string>
+    <string name="nutrient_progress_carbs">Carbohydrates: %1$d / %2$d g</string>
+    <string name="no_recommendations_available">You have reached your target. No recommendations.</string>
+    <string name="recommendations_error">Error: %1$s</string>
+    <string name="calories_per_100g">%1$d kcal / 100 g</string>
+    <string name="grams_short">g</string>
 </resources>

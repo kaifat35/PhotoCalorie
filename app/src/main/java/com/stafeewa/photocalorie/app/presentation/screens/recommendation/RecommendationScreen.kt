@@ -44,7 +44,8 @@ fun RecommendationScreen(
                 title = { Text(stringResource(R.string.recommendations)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                        Icon(Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.back))
                     }
                 }
             )
@@ -69,7 +70,8 @@ fun RecommendationScreen(
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
@@ -81,9 +83,27 @@ fun RecommendationScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text("Белки: ${data.proteinConsumed.toInt()} / ${data.targetProtein.toInt()} г")
-                                Text("Жиры: ${data.fatConsumed.toInt()} / ${data.targetFat.toInt()} г")
-                                Text("Углеводы: ${data.carbsConsumed.toInt()} / ${data.targetCarbs.toInt()} г")
+                                Text(
+                                    stringResource(
+                                        R.string.nutrient_progress_proteins,
+                                        data.proteinConsumed.toInt(),
+                                        data.targetProtein.toInt()
+                                    )
+                                )
+                                Text(
+                                    stringResource(
+                                        R.string.nutrient_progress_fats,
+                                        data.fatConsumed.toInt(),
+                                        data.targetFat.toInt()
+                                    )
+                                )
+                                Text(
+                                    stringResource(
+                                        R.string.nutrient_progress_carbs,
+                                        data.carbsConsumed.toInt(),
+                                        data.targetCarbs.toInt()
+                                    )
+                                )
                             }
                         }
                     }
@@ -105,7 +125,7 @@ fun RecommendationScreen(
                         }
                     } else {
                         item {
-                            Text("Вы уже достигли нормы! Рекомендаций нет.")
+                            Text(stringResource(R.string.no_recommendations_available))
                         }
                     }
                     item {
@@ -119,7 +139,10 @@ fun RecommendationScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Ошибка: ${(uiState as RecommendationUiState.Error).message}",
+                        text = stringResource(
+                            R.string.recommendations_error,
+                            (uiState as RecommendationUiState.Error).message
+                        ),
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -156,13 +179,16 @@ fun RecommendationProductCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${product.caloriesPer100g.toInt()} ккал / 100г",
+                    text = stringResource(
+                        R.string.calories_per_100g,
+                        product.caloriesPer100g.toInt()
+                    ),
                     fontSize = 14.sp
                 )
                 OutlinedTextField(
                     value = portion.toInt().toString(),
                     onValueChange = { portion = it.toDoubleOrNull() ?: 100.0 },
-                    label = { Text("г") },
+                    label = { Text(stringResource(R.string.grams_short)) },
                     modifier = Modifier.width(80.dp)
                 )
             }
@@ -180,7 +206,7 @@ fun RecommendationProductCard(
                 onClick = { onAdd(selectedMealType, portion) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Добавить")
+                Text(stringResource(R.string.add))
             }
         }
     }
@@ -200,13 +226,13 @@ fun MealTypeSelector(
             modifier = Modifier.fillMaxWidth()
         ) {
             MealTypeButton(
-                title = "Завтрак",
+                title = stringResource(R.string.breakfast),
                 isSelected = selectedMealType == MealType.BREAKFAST,
                 onClick = { onMealTypeSelected(MealType.BREAKFAST) },
                 modifier = Modifier.weight(1f)
             )
             MealTypeButton(
-                title = "Обед",
+                title = stringResource(R.string.lunch),
                 isSelected = selectedMealType == MealType.LUNCH,
                 onClick = { onMealTypeSelected(MealType.LUNCH) },
                 modifier = Modifier.weight(1f)
@@ -217,13 +243,13 @@ fun MealTypeSelector(
             modifier = Modifier.fillMaxWidth()
         ) {
             MealTypeButton(
-                title = "Ужин",
+                title = stringResource(R.string.dinner),
                 isSelected = selectedMealType == MealType.DINNER,
                 onClick = { onMealTypeSelected(MealType.DINNER) },
                 modifier = Modifier.weight(1f)
             )
             MealTypeButton(
-                title = "Перекус",
+                title = stringResource(R.string.snack),
                 isSelected = selectedMealType == MealType.SNACK,
                 onClick = { onMealTypeSelected(MealType.SNACK) },
                 modifier = Modifier.weight(1f)

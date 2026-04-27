@@ -130,4 +130,11 @@
     <string name="error_save_profile">Ошибка сохранения профиля</string>
     <string name="calorie_rate_is_calculated" formatted="true">Норма калорий рассчитана: %1$d</string>
     <string name="error_calorie_rate_is_calculated">Ошибка расчета нормы калорий</string>
+    <string name="nutrient_progress_proteins">Белки: %1$d / %2$d г</string>
+    <string name="nutrient_progress_fats">Жиры: %1$d / %2$d г</string>
+    <string name="nutrient_progress_carbs">Углеводы: %1$d / %2$d г</string>
+    <string name="no_recommendations_available">Вы уже достигли нормы! Рекомендаций нет.</string>
+    <string name="recommendations_error">Ошибка: %1$s</string>
+    <string name="calories_per_100g">%1$d ккал / 100 г</string>
+    <string name="grams_short">г</string>
 </resources>

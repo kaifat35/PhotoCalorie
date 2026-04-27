@@ -66,6 +66,17 @@ import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.presentation.ui.theme.textFieldColors
 import java.io.File
 
+private const val GENDER_MALE = "male"
+private const val GENDER_FEMALE = "female"
+
+private fun normalizeGender(gender: String?): String? {
+    return when (gender?.trim()?.lowercase()) {
+        "мужской", "male" -> GENDER_MALE
+        "женский", "female" -> GENDER_FEMALE
+        else -> null
+    }
+}
+
 @ExperimentalMaterial3Api
 @Composable
 fun ProfileScreen(
@@ -81,7 +92,7 @@ fun ProfileScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var bmrMenu by rememberSaveable { mutableStateOf(false) }
-    val genderLevels = listOf(stringResource(R.string.Male), stringResource(R.string.Female))
+    val genderLevels = listOf(GENDER_MALE, GENDER_FEMALE)
 
     val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -292,8 +303,11 @@ fun ProfileScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Text(
-                                        editableProfile.gender
-                                            ?: stringResource(R.string.Choose_a_gender),
+                                        when (normalizeGender(editableProfile.gender)) {
+                                            GENDER_MALE -> stringResource(R.string.Male)
+                                            GENDER_FEMALE -> stringResource(R.string.Female)
+                                            else -> stringResource(R.string.Choose_a_gender)
+                                        },
                                         color = MaterialTheme.colorScheme.onSurface,
                                         fontFamily = FontFamily(Font(R.font.jura)),
                                         fontSize = 24.sp
@@ -318,6 +332,11 @@ fun ProfileScreen(
                                         .padding(vertical = 8.dp)
                                 ) {
                                     genderLevels.forEach { level ->
+                                        val localizedLevel = when (level) {
+                                            GENDER_MALE -> stringResource(R.string.Male)
+                                            GENDER_FEMALE -> stringResource(R.string.Female)
+                                            else -> level
+                                        }
                                         Button(
                                             onClick = {
                                                 viewModel.processCommand(
@@ -330,13 +349,16 @@ fun ProfileScreen(
                                                 .height(44.dp),
                                             shape = RoundedCornerShape(0.dp),
                                             colors = ButtonDefaults.buttonColors(
-                                                containerColor = if (editableProfile.gender == level) MaterialTheme.colorScheme.surfaceVariant
-                                                else Color.Transparent,
+                                                containerColor = if (normalizeGender(editableProfile.gender) == level) {
+                                                    MaterialTheme.colorScheme.surfaceVariant
+                                                } else {
+                                                    Color.Transparent
+                                                },
                                                 contentColor = Color.White
                                             )
                                         ) {
                                             Text(
-                                                level,
+                                                localizedLevel,
                                                 color = MaterialTheme.colorScheme.onSurface,
                                                 fontFamily = FontFamily(Font(R.font.jura)),
                                                 fontSize = 24.sp,
@@ -474,7 +496,7 @@ fun ProfileScreen(
                             onCalculateRate = {
                                 viewModel.processCommand(
                                     ProfileCommand.Calculate(
-                                        gender = editableProfile.gender ?: "",
+                                        gender = normalizeGender(editableProfile.gender) ?: "",
                                         height = editableProfile.getHeight() ?: 0.0,
                                         weight = editableProfile.getWeight() ?: 0.0,
                                         age = editableProfile.getAge() ?: 0

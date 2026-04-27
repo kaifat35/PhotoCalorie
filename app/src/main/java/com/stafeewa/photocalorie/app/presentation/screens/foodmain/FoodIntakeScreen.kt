@@ -294,12 +294,12 @@ fun FoodIntakeScreen(
                             ) {
                                 Icon(
                                     Icons.Default.Lightbulb,
-                                    contentDescription = "Рекомендации",
+                                    contentDescription = stringResource(R.string.recommendations),
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Рекомендации",
+                                    text = stringResource(R.string.recommendations),
                                     fontSize = 16.sp,
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
