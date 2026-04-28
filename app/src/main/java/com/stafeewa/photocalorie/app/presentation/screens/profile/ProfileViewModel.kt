@@ -72,7 +72,7 @@ class ProfileViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _uiMessages = MutableSharedFlow<UiMessage>()
+    private val _uiMessages = MutableSharedFlow<UiMessage>(extraBufferCapacity = 1)
     val uiMessages: SharedFlow<UiMessage> = _uiMessages.asSharedFlow()
 
     private var lastConfig: ProfileState.Configuration? = null

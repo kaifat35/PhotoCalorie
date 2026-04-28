@@ -42,7 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -93,7 +93,7 @@ fun ProfileScreen(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val configuration = LocalConfiguration.current
-    val scope = rememberCoroutineScope()
+    val currentContext by rememberUpdatedState(context)
 
     var bmrMenu by rememberSaveable { mutableStateOf(false) }
     val genderLevels = listOf(GENDER_MALE, GENDER_FEMALE)
@@ -120,15 +120,14 @@ fun ProfileScreen(
     }
 
     // Обработка сообщений из ViewModel (тосты)
-    @Suppress("QueryingResourceValuesInCompose")
     LaunchedEffect(configuration) {
         viewModel.uiMessages.collect { message ->
             val text = when (message) {
                 is UiMessage.Resource -> {
                     if (message.args.isNotEmpty()) {
-                        stringResource(message.resId, *message.args)
+                        currentContext.getString(message.resId, *message.args)
                     } else {
-                        stringResource(message.resId)
+                        currentContext.getString(message.resId)
                     }
                 }
                 is UiMessage.Plain -> message.text
