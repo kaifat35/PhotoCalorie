@@ -50,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -87,9 +88,9 @@ fun ProfileScreen(
     onNavigateToSettings: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
-    val stateProfile by viewModel.stateProfile.collectAsStateWithLifecycle()
     val editableProfile by viewModel.editableProfile.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -119,7 +120,7 @@ fun ProfileScreen(
 
     // Обработка сообщений из ViewModel (тосты)
     @Suppress("QueryingResourceValuesInCompose")
-    LaunchedEffect(Unit) {
+    LaunchedEffect(configuration) {
         viewModel.uiMessages.collect { message ->
             val text = when (message) {
                 is UiMessage.Resource -> {
@@ -132,27 +133,6 @@ fun ProfileScreen(
                 is UiMessage.Plain -> message.text
             }
             snackbarHostState.showSnackbar(text)
-        }
-    }
-
-    // Отображение успешного состояния (например, после сохранения)
-    @Suppress("QueryingResourceValuesInCompose")
-    LaunchedEffect(stateProfile) {
-        when (stateProfile) {
-            is ProfileState.Success -> {
-                val success = stateProfile as ProfileState.Success
-                val message = if (success.args.isNotEmpty()) {
-                    context.getString(success.messageResId, *success.args)
-                } else {
-                    context.getString(success.messageResId)
-                }
-                snackbarHostState.showSnackbar(message)
-            }
-            is ProfileState.Error -> {
-                val error = stateProfile as ProfileState.Error
-                snackbarHostState.showSnackbar(error.message)
-            }
-            else -> {}
         }
     }
 
