@@ -200,7 +200,11 @@ class ProfileViewModel @Inject constructor(
                         _editableProfile.update {
                             it.copy(dailyCalories = calories, isUserEdited = true)
                         }
-                        _stateProfile.value = ProfileState.Success("Норма калорий рассчитана: ${calories.toInt()}")
+                        _stateProfile.value = ProfileState.Success(
+                            context.getString(
+                                R.string.The_calorie_rate_is_calculated,
+                                calories.toInt()
+                            ))
                         _uiMessages.emit(context.getString(R.string.calorie_rate_is_calculated, calories.toInt()))
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка расчета нормы калорий")
@@ -232,7 +236,7 @@ class ProfileViewModel @Inject constructor(
                             dailyCalories = profile.dailyCalories
                         )
                         _editableProfile.update { it.copy(isUserEdited = false) }
-                        _stateProfile.value = ProfileState.Success("Профиль сохранен")
+                        _stateProfile.value = ProfileState.Success(context.getString(R.string.save_profile))
                         _uiMessages.emit(context.getString(R.string.profile_save))
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(e.message ?: "Ошибка сохранения профиля")
@@ -287,13 +291,13 @@ class ProfileViewModel @Inject constructor(
     }
     private fun validatePhysicalParams(height: Double?, weight: Double?, age: Int?): String? {
         if (height != null && height > MAX_HEIGHT_CM) {
-            return "Рост не должен превышать 300.0 см"
+            return context.getString(R.string.height_should_not_exceed_300_cm)
         }
         if (weight != null && weight > MAX_WEIGHT_KG) {
-            return "Вес не должен превышать 300.0 кг"
+            return context.getString(R.string.The_weight_should_not_exceed_300_kg)
         }
         if (age != null && age > MAX_AGE_YEARS) {
-            return "Возраст не должен превышать 100 лет"
+            return context.getString(R.string.The_age_should_not_exceed_100_years)
         }
         return null
     }
