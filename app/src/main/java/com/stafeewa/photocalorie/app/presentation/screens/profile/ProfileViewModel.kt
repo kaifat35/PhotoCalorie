@@ -2,6 +2,7 @@ package com.stafeewa.photocalorie.app.presentation.screens.profile
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.R
@@ -31,6 +32,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+sealed class UiMessage {
+    data class Resource(@StringRes val resId: Int, val args: Array<out Any> = emptyArray()) : UiMessage()
+    data class Plain(val text: String) : UiMessage()
+}
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -66,8 +72,8 @@ class ProfileViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _uiMessages = MutableSharedFlow<String>()
-    val uiMessages: SharedFlow<String> = _uiMessages.asSharedFlow()
+    private val _uiMessages = MutableSharedFlow<UiMessage>()
+    val uiMessages: SharedFlow<UiMessage> = _uiMessages.asSharedFlow()
 
     private var lastConfig: ProfileState.Configuration? = null
     private val fileHelper = FileHelper(context)
@@ -128,11 +134,11 @@ class ProfileViewModel @Inject constructor(
                 viewModelScope.launch {
                     try {
                         updateGenderUseCase(command.gender)
-                        _stateProfile.value = ProfileState.Success(context.getString(R.string.gender_updated))
-                        _uiMessages.emit(context.getString(R.string.gender_updated))
+                        _stateProfile.value = ProfileState.Success(R.string.gender_updated)
+                        _uiMessages.emit(UiMessage.Resource(R.string.gender_updated))
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(context.getString(R.string.error_updating_gender))
-                        _uiMessages.emit(context.getString(R.string.error_updating_gender))
+                        _uiMessages.emit(UiMessage.Plain(context.getString(R.string.error_updating_gender)))
                     }
                 }
             }
@@ -151,11 +157,11 @@ class ProfileViewModel @Inject constructor(
                         }
                         updateImageUseCase(localImagePath)
                         _editableProfile.update { it.copy(imageUri = localImagePath, isUserEdited = true) }
-                        _stateProfile.value = ProfileState.Success(context.getString(R.string.image_updated))
-                        _uiMessages.emit(context.getString(R.string.image_updated))
+                        _stateProfile.value = ProfileState.Success(R.string.image_updated)
+                        _uiMessages.emit(UiMessage.Resource(R.string.image_updated))
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(context.getString(R.string.error_updating_image))
-                        _uiMessages.emit(context.getString(R.string.error_updating_image))
+                        _uiMessages.emit(UiMessage.Plain(context.getString(R.string.error_updating_image)))
                     }
                 }
             }
@@ -168,7 +174,7 @@ class ProfileViewModel @Inject constructor(
                         val age = profile.ageStr.toIntOrNull() ?: 0
                         validatePhysicalParams(height, weight, age)?.let { error ->
                             _stateProfile.value = ProfileState.Error(error)
-                            _uiMessages.emit(error)
+                            _uiMessages.emit(UiMessage.Plain(error))
                             return@launch
                         }
                         val calories = calculateDailyCaloriesUseCase(
@@ -180,12 +186,12 @@ class ProfileViewModel @Inject constructor(
                         )
                         updateDailyCaloriesUseCase(calories)
                         _editableProfile.update { it.copy(dailyCalories = calories, isUserEdited = true) }
-                        val successMessage = context.getString(R.string.The_calorie_rate_is_calculated, calories.toInt())
-                        _stateProfile.value = ProfileState.Success(successMessage)
-                        _uiMessages.emit(successMessage)
+                        val caloriesInt = calories.toInt()
+                        _stateProfile.value = ProfileState.Success(R.string.The_calorie_rate_is_calculated, arrayOf(caloriesInt))
+                        _uiMessages.emit(UiMessage.Resource(R.string.The_calorie_rate_is_calculated, arrayOf(caloriesInt)))
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(context.getString(R.string.error_calculating_calories))
-                        _uiMessages.emit(context.getString(R.string.error_calculating_calories))
+                        _uiMessages.emit(UiMessage.Plain(context.getString(R.string.error_calculating_calories)))
                     }
                 }
             }
@@ -198,7 +204,7 @@ class ProfileViewModel @Inject constructor(
                         val age = profile.ageStr.toIntOrNull()
                         validatePhysicalParams(height, weight, age)?.let { error ->
                             _stateProfile.value = ProfileState.Error(error)
-                            _uiMessages.emit(error)
+                            _uiMessages.emit(UiMessage.Plain(error))
                             return@launch
                         }
                         updateUserProfileUseCase(
@@ -213,11 +219,11 @@ class ProfileViewModel @Inject constructor(
                             dailyCalories = profile.dailyCalories
                         )
                         _editableProfile.update { it.copy(isUserEdited = false) }
-                        _stateProfile.value = ProfileState.Success(context.getString(R.string.save_profile))
-                        _uiMessages.emit(context.getString(R.string.save_profile))
+                        _stateProfile.value = ProfileState.Success(R.string.save_profile)
+                        _uiMessages.emit(UiMessage.Resource(R.string.save_profile))
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(context.getString(R.string.error_saving_profile))
-                        _uiMessages.emit(context.getString(R.string.error_saving_profile))
+                        _uiMessages.emit(UiMessage.Plain(context.getString(R.string.error_saving_profile)))
                     }
                 }
             }
@@ -228,11 +234,11 @@ class ProfileViewModel @Inject constructor(
                         deleteUserUseCase(userId)
                         _stateProfile.value = ProfileState.Initial
                         _editableProfile.value = EditableProfile()
-                        _stateProfile.value = ProfileState.Success(context.getString(R.string.profile_deleted))
-                        _uiMessages.emit(context.getString(R.string.profile_deleted))
+                        _stateProfile.value = ProfileState.Success(R.string.profile_deleted)
+                        _uiMessages.emit(UiMessage.Resource(R.string.profile_deleted))
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(context.getString(R.string.error_deleting_profile))
-                        _uiMessages.emit(context.getString(R.string.error_deleting_profile))
+                        _uiMessages.emit(UiMessage.Plain(context.getString(R.string.error_deleting_profile)))
                     }
                 }
             }
@@ -249,11 +255,11 @@ class ProfileViewModel @Inject constructor(
                 viewModelScope.launch {
                     try {
                         updatePasswordUseCase(command.password)
-                        _stateProfile.value = ProfileState.Success(context.getString(R.string.password_updated))
-                        _uiMessages.emit(context.getString(R.string.password_updated))
+                        _stateProfile.value = ProfileState.Success(R.string.password_updated)
+                        _uiMessages.emit(UiMessage.Resource(R.string.password_updated))
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(context.getString(R.string.error_updating_password))
-                        _uiMessages.emit(context.getString(R.string.error_updating_password))
+                        _uiMessages.emit(UiMessage.Plain(context.getString(R.string.error_updating_password)))
                     }
                 }
             }
@@ -274,6 +280,7 @@ class ProfileViewModel @Inject constructor(
         return null
     }
 }
+
 
 data class EditableProfile(
     val userId: Int? = null,
@@ -315,7 +322,7 @@ sealed interface ProfileCommand {
 
 sealed interface ProfileState {
     data object Initial : ProfileState
-    data class Success(val message: String) : ProfileState
+    data class Success(@StringRes val messageResId: Int, val args: Array<out Any> = emptyArray()) : ProfileState
     data class Error(val message: String) : ProfileState
     data class Configuration(
         val userId: Int?,

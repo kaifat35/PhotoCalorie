@@ -42,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -81,15 +82,16 @@ private fun normalizeGender(gender: String?): String? {
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
-    onCalculateRate: () -> Unit,
-    onSaveProfile: () -> Unit,
-    onNavigateToSettings: () -> Unit,
+    onCalculateRate: () -> Unit = {},
+    onSaveProfile: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val stateProfile by viewModel.stateProfile.collectAsStateWithLifecycle()
     val editableProfile by viewModel.editableProfile.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     var bmrMenu by rememberSaveable { mutableStateOf(false) }
     val genderLevels = listOf(GENDER_MALE, GENDER_FEMALE)
@@ -106,11 +108,7 @@ fun ProfileScreen(
         return if (!imagePath.isNullOrEmpty()) {
             try {
                 val file = File(imagePath)
-                if (file.exists()) {
-                    Uri.fromFile(file)
-                } else {
-                    null
-                }
+                if (file.exists()) Uri.fromFile(file) else null
             } catch (e: Exception) {
                 null
             }
@@ -119,9 +117,42 @@ fun ProfileScreen(
         }
     }
 
+    // Обработка сообщений из ViewModel (тосты)
+    @Suppress("QueryingResourceValuesInCompose")
     LaunchedEffect(Unit) {
         viewModel.uiMessages.collect { message ->
-            snackbarHostState.showSnackbar(message)
+            val text = when (message) {
+                is UiMessage.Resource -> {
+                    if (message.args.isNotEmpty()) {
+                        context.getString(message.resId, *message.args)
+                    } else {
+                        context.getString(message.resId)
+                    }
+                }
+                is UiMessage.Plain -> message.text
+            }
+            snackbarHostState.showSnackbar(text)
+        }
+    }
+
+    // Отображение успешного состояния (например, после сохранения)
+    @Suppress("QueryingResourceValuesInCompose")
+    LaunchedEffect(stateProfile) {
+        when (stateProfile) {
+            is ProfileState.Success -> {
+                val success = stateProfile as ProfileState.Success
+                val message = if (success.args.isNotEmpty()) {
+                    context.getString(success.messageResId, *success.args)
+                } else {
+                    context.getString(success.messageResId)
+                }
+                snackbarHostState.showSnackbar(message)
+            }
+            is ProfileState.Error -> {
+                val error = stateProfile as ProfileState.Error
+                snackbarHostState.showSnackbar(error.message)
+            }
+            else -> {}
         }
     }
 
