@@ -170,4 +170,14 @@
     <string name="The_weight_should_not_exceed_300_kg">Вес не должен превышать 300.0 кг</string>
     <string name="The_age_should_not_exceed_100_years">Возраст не должен превышать 100 лет</string>
     <string name="The_calorie_rate_is_calculated">Норма калорий рассчитана: %1$d</string>
+    <string name="gender_updated">Пол обновлён</string>
+    <string name="image_updated">Фото профиля обновлено</string>
+    <string name="password_updated">Пароль обновлён</string>
+    <string name="profile_deleted">Профиль удалён</string>
+    <string name="error_updating_gender">Не удалось обновить пол</string>
+    <string name="error_updating_image">Не удалось обновить фото</string>
+    <string name="error_updating_password">Не удалось обновить пароль</string>
+    <string name="error_deleting_profile">Не удалось удалить профиль</string>
+    <string name="error_saving_profile">Не удалось сохранить профиль</string>
+    <string name="error_calculating_calories">Не удалось рассчитать норму калорий</string>
 </resources>

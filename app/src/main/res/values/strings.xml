@@ -170,4 +170,14 @@
     <string name="The_weight_should_not_exceed_300_kg">Weight should not exceed 300.0 kg</string>
     <string name="The_age_should_not_exceed_100_years">Age should not exceed 100 years</string>
     <string name="The_calorie_rate_is_calculated">Calorie rate calculated: %1$d</string>
+    <string name="gender_updated">Gender updated</string>
+    <string name="image_updated">Profile photo updated</string>
+    <string name="password_updated">Password updated</string>
+    <string name="profile_deleted">Profile deleted</string>
+    <string name="error_updating_gender">Failed to update gender</string>
+    <string name="error_updating_image">Failed to update photo</string>
+    <string name="error_updating_password">Failed to update password</string>
+    <string name="error_deleting_profile">Failed to delete profile</string>
+    <string name="error_saving_profile">Failed to save profile</string>
+    <string name="error_calculating_calories">Failed to calculate calorie rate</string>
 </resources>
