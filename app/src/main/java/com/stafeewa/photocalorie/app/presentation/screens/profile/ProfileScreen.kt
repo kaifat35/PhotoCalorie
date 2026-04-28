@@ -88,10 +88,11 @@ fun ProfileScreen(
     onNavigateToSettings: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
+    val stateProfile by viewModel.stateProfile.collectAsStateWithLifecycle()
     val editableProfile by viewModel.editableProfile.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val configuration = LocalConfiguration.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val configuration = LocalConfiguration.current
     val scope = rememberCoroutineScope()
 
     var bmrMenu by rememberSaveable { mutableStateOf(false) }
@@ -125,9 +126,9 @@ fun ProfileScreen(
             val text = when (message) {
                 is UiMessage.Resource -> {
                     if (message.args.isNotEmpty()) {
-                        context.getString(message.resId, *message.args)
+                        stringResource(message.resId, *message.args)
                     } else {
-                        context.getString(message.resId)
+                        stringResource(message.resId)
                     }
                 }
                 is UiMessage.Plain -> message.text
@@ -135,6 +136,7 @@ fun ProfileScreen(
             snackbarHostState.showSnackbar(text)
         }
     }
+
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
