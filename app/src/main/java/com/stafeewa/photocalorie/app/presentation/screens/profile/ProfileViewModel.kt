@@ -137,8 +137,8 @@ class ProfileViewModel @Inject constructor(
                         _stateProfile.value = ProfileState.Success(R.string.gender_updated)
                         _uiMessages.emit(UiMessage.Resource(R.string.gender_updated))
                     } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(context.getString(R.string.error_updating_gender))
-                        _uiMessages.emit(UiMessage.Plain(context.getString(R.string.error_updating_gender)))
+                        _stateProfile.value = ProfileState.Error(R.string.error_updating_gender)
+                        _uiMessages.emit(UiMessage.Resource(R.string.error_updating_gender))
                     }
                 }
             }
@@ -160,8 +160,8 @@ class ProfileViewModel @Inject constructor(
                         _stateProfile.value = ProfileState.Success(R.string.image_updated)
                         _uiMessages.emit(UiMessage.Resource(R.string.image_updated))
                     } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(context.getString(R.string.error_updating_image))
-                        _uiMessages.emit(UiMessage.Plain(context.getString(R.string.error_updating_image)))
+                        _stateProfile.value = ProfileState.Error(R.string.error_updating_image)
+                        _uiMessages.emit(UiMessage.Resource(R.string.error_updating_image))
                     }
                 }
             }
@@ -172,9 +172,9 @@ class ProfileViewModel @Inject constructor(
                         val height = profile.heightStr.toDoubleOrNull() ?: 0.0
                         val weight = profile.weightStr.toDoubleOrNull() ?: 0.0
                         val age = profile.ageStr.toIntOrNull() ?: 0
-                        validatePhysicalParams(height, weight, age)?.let { error ->
-                            _stateProfile.value = ProfileState.Error(error)
-                            _uiMessages.emit(UiMessage.Plain(error))
+                        validatePhysicalParams(height, weight, age)?.let { errorResId ->
+                            _stateProfile.value = ProfileState.Error(errorResId)
+                            _uiMessages.emit(UiMessage.Resource(errorResId))
                             return@launch
                         }
                         val calories = calculateDailyCaloriesUseCase(
@@ -190,8 +190,8 @@ class ProfileViewModel @Inject constructor(
                         _stateProfile.value = ProfileState.Success(R.string.The_calorie_rate_is_calculated, arrayOf(caloriesInt))
                         _uiMessages.emit(UiMessage.Resource(R.string.The_calorie_rate_is_calculated, arrayOf(caloriesInt)))
                     } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(context.getString(R.string.error_calculating_calories))
-                        _uiMessages.emit(UiMessage.Plain(context.getString(R.string.error_calculating_calories)))
+                        _stateProfile.value = ProfileState.Error(R.string.error_calculating_calories)
+                        _uiMessages.emit(UiMessage.Resource(R.string.error_calculating_calories))
                     }
                 }
             }
@@ -202,9 +202,9 @@ class ProfileViewModel @Inject constructor(
                         val height = profile.heightStr.toDoubleOrNull()
                         val weight = profile.weightStr.toDoubleOrNull()
                         val age = profile.ageStr.toIntOrNull()
-                        validatePhysicalParams(height, weight, age)?.let { error ->
-                            _stateProfile.value = ProfileState.Error(error)
-                            _uiMessages.emit(UiMessage.Plain(error))
+                        validatePhysicalParams(height, weight, age)?.let { errorResId ->
+                            _stateProfile.value = ProfileState.Error(errorResId)
+                            _uiMessages.emit(UiMessage.Resource(errorResId))
                             return@launch
                         }
                         updateUserProfileUseCase(
@@ -222,8 +222,8 @@ class ProfileViewModel @Inject constructor(
                         _stateProfile.value = ProfileState.Success(R.string.save_profile)
                         _uiMessages.emit(UiMessage.Resource(R.string.save_profile))
                     } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(context.getString(R.string.error_saving_profile))
-                        _uiMessages.emit(UiMessage.Plain(context.getString(R.string.error_saving_profile)))
+                        _stateProfile.value = ProfileState.Error(R.string.error_saving_profile)
+                        _uiMessages.emit(UiMessage.Resource(R.string.error_saving_profile))
                     }
                 }
             }
@@ -237,8 +237,8 @@ class ProfileViewModel @Inject constructor(
                         _stateProfile.value = ProfileState.Success(R.string.profile_deleted)
                         _uiMessages.emit(UiMessage.Resource(R.string.profile_deleted))
                     } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(context.getString(R.string.error_deleting_profile))
-                        _uiMessages.emit(UiMessage.Plain(context.getString(R.string.error_deleting_profile)))
+                        _stateProfile.value = ProfileState.Error(R.string.error_deleting_profile)
+                        _uiMessages.emit(UiMessage.Resource(R.string.error_deleting_profile))
                     }
                 }
             }
@@ -258,8 +258,8 @@ class ProfileViewModel @Inject constructor(
                         _stateProfile.value = ProfileState.Success(R.string.password_updated)
                         _uiMessages.emit(UiMessage.Resource(R.string.password_updated))
                     } catch (e: Exception) {
-                        _stateProfile.value = ProfileState.Error(context.getString(R.string.error_updating_password))
-                        _uiMessages.emit(UiMessage.Plain(context.getString(R.string.error_updating_password)))
+                        _stateProfile.value = ProfileState.Error(R.string.error_updating_password)
+                        _uiMessages.emit(UiMessage.Resource(R.string.error_updating_password))
                     }
                 }
             }
@@ -267,15 +267,16 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    private fun validatePhysicalParams(height: Double?, weight: Double?, age: Int?): String? {
+    @StringRes
+    private fun validatePhysicalParams(height: Double?, weight: Double?, age: Int?): Int? {
         if (height != null && height > MAX_HEIGHT_CM) {
-            return context.getString(R.string.height_should_not_exceed_300_cm)
+            return R.string.height_should_not_exceed_300_cm
         }
         if (weight != null && weight > MAX_WEIGHT_KG) {
-            return context.getString(R.string.The_weight_should_not_exceed_300_kg)
+            return R.string.The_weight_should_not_exceed_300_kg
         }
         if (age != null && age > MAX_AGE_YEARS) {
-            return context.getString(R.string.The_age_should_not_exceed_100_years)
+            return R.string.The_age_should_not_exceed_100_years
         }
         return null
     }
@@ -323,7 +324,7 @@ sealed interface ProfileCommand {
 sealed interface ProfileState {
     data object Initial : ProfileState
     data class Success(@StringRes val messageResId: Int, val args: Array<out Any> = emptyArray()) : ProfileState
-    data class Error(val message: String) : ProfileState
+    data class Error(@StringRes val messageResId: Int, val args: Array<out Any> = emptyArray()) : ProfileState
     data class Configuration(
         val userId: Int?,
         val login: String,
