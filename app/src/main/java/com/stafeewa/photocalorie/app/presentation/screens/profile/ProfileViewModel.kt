@@ -86,6 +86,7 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             observeUserProfileUseCase().collect { profile ->
+                val dailyCalories = profile.dailyCalories ?: 2000.0  // дефолт 2000
                 val loadedProfile = EditableProfile(
                     userId = profile.userId,
                     login = profile.login,
@@ -96,7 +97,7 @@ class ProfileViewModel @Inject constructor(
                     weightStr = profile.weight?.toString() ?: "",
                     ageStr = profile.age?.toString() ?: "",
                     imageUri = profile.imageUri,
-                    dailyCalories = profile.dailyCalories
+                    dailyCalories = dailyCalories
                 )
                 _originalProfile.value = loadedProfile
                 if (!_editableProfile.value.isUserEdited) {
@@ -112,7 +113,7 @@ class ProfileViewModel @Inject constructor(
                     weight = profile.weight,
                     age = profile.age,
                     imageUri = profile.imageUri,
-                    dailyCalories = profile.dailyCalories
+                    dailyCalories = dailyCalories
                 )
                 lastConfig = configState
                 _stateProfile.update { configState }
