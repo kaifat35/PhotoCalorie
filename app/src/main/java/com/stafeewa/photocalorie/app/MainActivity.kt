@@ -37,8 +37,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
         // Инициализация базы продуктов при запуске приложения
         lifecycleScope.launch {
             productRepository.initDefaultProducts()

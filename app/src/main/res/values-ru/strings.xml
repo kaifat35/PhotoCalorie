@@ -180,4 +180,5 @@
     <string name="error_deleting_profile">Не удалось удалить профиль</string>
     <string name="error_saving_profile">Не удалось сохранить профиль</string>
     <string name="error_calculating_calories">Не удалось рассчитать норму калорий</string>
+    <string name="add_food_for_recommendations">Чтобы получить рекомендации, добавьте хотя бы одно блюдо в дневник.</string>
 </resources>

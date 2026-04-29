@@ -33,8 +33,10 @@ fun RecommendationScreen(
     val entries by foodIntakeViewModel.allEntries.collectAsState()
 
     LaunchedEffect(tdee, entries) {
-        if (tdee != null && entries.isNotEmpty()) {
-            viewModel.loadRecommendations(tdee!!, entries)
+        when {
+            tdee == null -> Unit
+            entries.isEmpty() -> viewModel.setEmptyDiaryState()
+            else -> viewModel.loadRecommendations(tdee!!, entries)
         }
     }
 
@@ -58,6 +60,15 @@ fun RecommendationScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
+                }
+            }
+            is RecommendationUiState.EmptyDiary -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                ) {
+                    Text(text = stringResource(R.string.add_food_for_recommendations),
+                        modifier = Modifier.padding(start = 32.dp)
+                    )
                 }
             }
             is RecommendationUiState.Success -> {

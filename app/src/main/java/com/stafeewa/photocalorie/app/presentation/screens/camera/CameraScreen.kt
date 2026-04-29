@@ -1,6 +1,7 @@
 package com.stafeewa.photocalorie.app.presentation.screens.camera
 
 import android.Manifest
+import android.content.res.Configuration
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
@@ -36,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
@@ -215,6 +217,9 @@ fun CameraScreen(
 
 @Composable
 private fun CaptureAreaOverlay(modifier: Modifier = Modifier) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     Box(modifier = modifier) {
         Canvas(
             modifier = Modifier
@@ -223,10 +228,14 @@ private fun CaptureAreaOverlay(modifier: Modifier = Modifier) {
         ) {
             drawRect(color = Color(0xFFF8FFF9).copy(alpha = 0.18f))
 
-            val holeWidth = size.width * 0.72f
-            val holeHeight = size.height * 0.52f
+            val holeWidth = if (isLandscape) size.width * 0.80f else size.width * 0.68f
+            val holeHeight = if (isLandscape) size.height * 0.58f else size.height * 0.55f
             val left = (size.width - holeWidth) / 2f
-            val top = (size.height - holeHeight) / 2f
+            val top = if (isLandscape) {
+                52.dp.toPx()
+            } else {
+                (size.height - holeHeight) / 2f
+            }
 
             drawRoundRect(
                 color = Color.Transparent,
@@ -250,7 +259,7 @@ private fun CaptureAreaOverlay(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 92.dp)
+                .padding(top = if (isLandscape) 4.dp else 92.dp)
                 .background(Color.White.copy(alpha = 0.18f))
                 .padding(horizontal = 12.dp, vertical = 6.dp)
         )
