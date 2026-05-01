@@ -1202,6 +1202,10 @@ class ProductRepositoryImpl @Inject constructor(
         "Тартар из тунца" to Nutrition(18.0, 8.0, 2.0, 158.0),
         "Вафли" to Nutrition(5.0, 8.0, 30.0, 210.0)
     )
+    
+    override suspend fun getAllProducts(): List<Product> {
+        return productDao.getAllProducts().map { it.toDomain() }
+    }
 
     private data class Nutrition(
         val protein: Double,

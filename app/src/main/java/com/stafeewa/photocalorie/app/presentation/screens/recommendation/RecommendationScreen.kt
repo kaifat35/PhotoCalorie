@@ -118,6 +118,15 @@ fun RecommendationScreen(
                             }
                         }
                     }
+                    item {
+                        Button(
+                            onClick = { viewModel.refreshRecommendations() },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                        ) {
+                            Text(stringResource(R.string.other_recommendations))
+                        }
+                    }
 
                     if (data.suggestedProducts.isNotEmpty()) {
                         item {

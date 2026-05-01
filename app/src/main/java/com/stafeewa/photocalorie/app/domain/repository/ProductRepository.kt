@@ -12,4 +12,5 @@ interface ProductRepository {
     suspend fun addProducts(products: List<Product>)
     suspend fun initDefaultProducts()
     suspend fun getProductByName(name: String): Product?
+    suspend fun getAllProducts(): List<Product>
 }

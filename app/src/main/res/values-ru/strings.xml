@@ -181,4 +181,6 @@
     <string name="error_saving_profile">Не удалось сохранить профиль</string>
     <string name="error_calculating_calories">Не удалось рассчитать норму калорий</string>
     <string name="add_food_for_recommendations">Чтобы получить рекомендации, добавьте хотя бы одно блюдо в дневник.</string>
+    <string name="other_recommendations">Другие рекомендации</string>
+    <string name="light_snack_title">Лёгкий перекус</string>
 </resources>

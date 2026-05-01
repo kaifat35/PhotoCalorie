@@ -181,4 +181,6 @@
     <string name="error_saving_profile">Failed to save profile</string>
     <string name="error_calculating_calories">Failed to calculate calorie rate</string>
     <string name="add_food_for_recommendations">Add at least one dish to the diary to get recommendations.</string>
+    <string name="other_recommendations">Other recommendations</string>
+    <string name="light_snack_title">Light snack</string>
 </resources>

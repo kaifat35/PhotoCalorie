@@ -20,12 +20,22 @@ class RecommendationViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<RecommendationUiState>(RecommendationUiState.Loading)
     val uiState = _uiState.asStateFlow()
+    private var lastTdee: Double? = null
+    private var lastEntries: List<FoodEntry>? = null
+
+    fun refreshRecommendations() {
+        val tdee = lastTdee ?: return
+        val entries = lastEntries ?: return
+        loadRecommendations(tdee, entries)
+    }
 
     fun setEmptyDiaryState() {
         _uiState.value = RecommendationUiState.EmptyDiary
     }
 
     fun loadRecommendations(tdee: Double, entries: List<FoodEntry>) {
+        lastTdee = tdee
+        lastEntries = entries
         viewModelScope.launch {
             _uiState.value = RecommendationUiState.Loading
             try {
