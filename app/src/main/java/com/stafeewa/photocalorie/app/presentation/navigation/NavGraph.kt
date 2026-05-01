@@ -33,6 +33,7 @@ import com.stafeewa.photocalorie.app.R
 import com.stafeewa.photocalorie.app.presentation.screens.camera.CameraScreen
 import com.stafeewa.photocalorie.app.presentation.screens.foodmain.FoodIntakeScreen
 import com.stafeewa.photocalorie.app.presentation.screens.foodmain.FoodIntakeViewModel
+import com.stafeewa.photocalorie.app.presentation.screens.history.HistoryScreen
 import com.stafeewa.photocalorie.app.presentation.screens.profile.ProfileScreen
 import com.stafeewa.photocalorie.app.presentation.screens.recipes.RecipeScreen
 import com.stafeewa.photocalorie.app.presentation.screens.recommendation.RecommendationScreen
@@ -97,6 +98,12 @@ fun NavGraph(
                 onBack = {
                     navController.popBackStack()
                 },
+            )
+        }
+
+        composable("history") { backStackEntry ->
+            HistoryScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

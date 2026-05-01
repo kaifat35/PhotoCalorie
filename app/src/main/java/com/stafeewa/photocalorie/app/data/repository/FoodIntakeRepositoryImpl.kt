@@ -64,4 +64,14 @@ class FoodIntakeRepositoryImpl @Inject constructor(
     override suspend fun getEntriesByMealType(mealType: MealType): List<FoodEntry> {
         return dao.getEntriesByMealType(mealType).map { it.toEntity() }
     }
+
+    override fun getEntriesBetween(startDate: Long, endDate: Long): Flow<List<FoodEntry>> {
+        return dao.getEntriesBetween(startDate, endDate).map { dbModels ->
+            dbModels.map { it.toEntity() }
+        }
+    }
+
+    override suspend fun deleteEntriesBetween(startDate: Long, endDate: Long) {
+        dao.deleteEntriesBetween(startDate, endDate)
+    }
 }

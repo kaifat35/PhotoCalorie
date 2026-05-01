@@ -76,4 +76,10 @@ interface PhotoCalorieDao {
 
     @Delete
     suspend fun deleteFoodEntry(entry: FoodEntryDbModel)
+
+    @Query("SELECT * FROM food_entry WHERE timestamp BETWEEN :start AND :end ORDER BY timestamp DESC")
+    fun getEntriesBetween(start: Long, end: Long): Flow<List<FoodEntryDbModel>>
+
+    @Query("DELETE FROM food_entry WHERE timestamp BETWEEN :start AND :end")
+    suspend fun deleteEntriesBetween(start: Long, end: Long)
 }
