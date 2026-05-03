@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.domain.entity.FoodEntry
 import com.stafeewa.photocalorie.app.domain.repository.RecommendationFeedbackRepository
-import com.stafeewa.photocalorie.app.domain.usecase.userprofile.GetRecommendationsUseCase
-import com.stafeewa.photocalorie.app.domain.usecase.userprofile.RecommendationResult
+import com.stafeewa.photocalorie.app.domain.usecase.recommendation.GetRecommendationsUseCase
+import com.stafeewa.photocalorie.app.domain.usecase.recommendation.RecommendationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
