@@ -120,6 +120,9 @@ fun HistoryScreen(
                             )
                         }
                     }
+                    item {
+                        Spacer(modifier = Modifier.height(56.dp))
+                    }
                 }
             }
         }
@@ -216,45 +219,6 @@ fun CustomRangeCalendarDialog(
         }
     )
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DatePickerDialog(
-    onDateSelected: (LocalDate) -> Unit,
-    onDismiss: () -> Unit,
-    initialDate: LocalDate
-) {
-    val calendar = Calendar.getInstance().apply {
-        set(initialDate.year, initialDate.monthValue - 1, initialDate.dayOfMonth)
-    }
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = calendar.timeInMillis
-    )
-
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        val selectedDate = LocalDate.ofEpochDay(millis / (24 * 60 * 60 * 1000))
-                        onDateSelected(selectedDate)
-                    } ?: onDismiss()
-                }
-            ) {
-                Text(stringResource(R.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        }
-    ) {
-        DatePicker(state = datePickerState)
-    }
-}
-
 @Composable
 fun StatisticsCard(statistics: NutritionStatistics, dateRange: String) {
     Card(

@@ -93,7 +93,7 @@ fun NavGraph(
             )
         }
 
-        // Настройки (скрыты из нижней навигации)
+        // Настройки
         composable(Destination.SETTINGS.route) {
             SettingsScreen(
                 onBack = {
