@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,7 +36,7 @@ import com.stafeewa.photocalorie.app.presentation.screens.foodmain.FoodIntakeScr
 import com.stafeewa.photocalorie.app.presentation.screens.foodmain.FoodIntakeViewModel
 import com.stafeewa.photocalorie.app.presentation.screens.history.HistoryScreen
 import com.stafeewa.photocalorie.app.presentation.screens.profile.ProfileScreen
-import com.stafeewa.photocalorie.app.presentation.screens.recipes.RecipeScreen
+import com.stafeewa.photocalorie.app.presentation.screens.recommendation.RecommendationRecipesScreen
 import com.stafeewa.photocalorie.app.presentation.screens.recommendation.RecommendationScreen
 import com.stafeewa.photocalorie.app.presentation.screens.settings.SettingsScreen
 
@@ -60,9 +61,9 @@ fun NavGraph(
             CameraScreen()
         }
 
-        // Рецепты
+        // Рецепты (в модуле рекомендаций)
         composable(Destination.RECIPES.route) {
-            RecipeScreen()
+            RecommendationRecipesScreen()
         }
 
         // Профиль
@@ -101,10 +102,8 @@ fun NavGraph(
             )
         }
 
-        composable("history") { backStackEntry ->
-            HistoryScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
+        composable(Destination.HISTORY.route) {
+            HistoryScreen()
         }
     }
 }
@@ -117,6 +116,7 @@ enum class Destination(
 ) {
     HOME("home", R.string.nav_home, Icons.Default.Home, R.string.nav_home),
     CAMERA("camera", R.string.nav_camera, Icons.Default.CameraAlt, R.string.nav_camera),
+    HISTORY("history", R.string.history, Icons.Default.History, R.string.history),
     RECIPES("recipes", R.string.nav_recipes, Icons.Default.Search, R.string.nav_recipes),
     PROFILE("profile", R.string.nav_profile, Icons.Default.Person, R.string.nav_profile),
     SETTINGS("settings", R.string.nav_settings, Icons.Default.Settings, R.string.nav_settings),
@@ -132,7 +132,7 @@ fun NavigationBarExample(modifier: Modifier = Modifier) {
         modifier = modifier,
         bottomBar = {
             NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
-                listOf(Destination.HOME, Destination.CAMERA, Destination.RECIPES, Destination.PROFILE).forEach { destination ->
+                listOf(Destination.HOME, Destination.CAMERA, Destination.HISTORY, Destination.PROFILE).forEach { destination ->
                     NavigationBarItem(
                         selected = selectedDestination == destination.ordinal,
                         onClick = {
