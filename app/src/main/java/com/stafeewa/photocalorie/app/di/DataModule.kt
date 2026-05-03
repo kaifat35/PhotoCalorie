@@ -7,11 +7,15 @@ import com.stafeewa.photocalorie.app.data.local.PhotoCalorieDao
 import com.stafeewa.photocalorie.app.data.local.PhotoCalorieDatabase
 import com.stafeewa.photocalorie.app.data.local.ProductDao
 import com.stafeewa.photocalorie.app.data.local.TrainingExampleDao
+import com.stafeewa.photocalorie.app.data.local.UserFoodPreferencesDao
+import com.stafeewa.photocalorie.app.data.local.RecommendationFeedbackDao
 import com.stafeewa.photocalorie.app.data.remote.RecipesApiService
 import com.stafeewa.photocalorie.app.data.repository.PhotoCalorieRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.FoodIntakeRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.ProductRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.SettingsRepositoryImpl
+import com.stafeewa.photocalorie.app.data.repository.UserFoodPreferencesRepositoryImpl
+import com.stafeewa.photocalorie.app.data.repository.RecommendationFeedbackRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.TrainingRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.UserProfileRepositoryImpl
 import com.stafeewa.photocalorie.app.domain.repository.FoodIntakeRepository
@@ -20,6 +24,8 @@ import com.stafeewa.photocalorie.app.domain.repository.RecipeRepository
 import com.stafeewa.photocalorie.app.domain.repository.SettingsRepository
 import com.stafeewa.photocalorie.app.domain.repository.TrainingRepository
 import com.stafeewa.photocalorie.app.domain.repository.UserProfileRepository
+import com.stafeewa.photocalorie.app.domain.repository.UserFoodPreferencesRepository
+import com.stafeewa.photocalorie.app.domain.repository.RecommendationFeedbackRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -73,6 +79,18 @@ interface DataModule {
     fun bindTrainingRepository(
         impl: TrainingRepositoryImpl
     ): TrainingRepository
+
+    @Binds
+    @Singleton
+    fun bindUserFoodPreferencesRepository(
+        impl: UserFoodPreferencesRepositoryImpl
+    ): UserFoodPreferencesRepository
+
+    @Binds
+    @Singleton
+    fun bindRecommendationFeedbackRepository(
+        impl: RecommendationFeedbackRepositoryImpl
+    ): RecommendationFeedbackRepository
 
     companion object {
 
@@ -150,6 +168,16 @@ interface DataModule {
         fun providesTrainingExampleDao(
             database: PhotoCalorieDatabase
         ): TrainingExampleDao = database.trainingExampleDao()
+
+        @Provides
+        @Singleton
+        fun providesUserFoodPreferencesDao(database: PhotoCalorieDatabase): UserFoodPreferencesDao =
+            database.userFoodPreferencesDao()
+
+        @Provides
+        @Singleton
+        fun providesRecommendationFeedbackDao(database: PhotoCalorieDatabase): RecommendationFeedbackDao =
+            database.recommendationFeedbackDao()
     }
 }
 
