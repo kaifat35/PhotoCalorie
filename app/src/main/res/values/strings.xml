@@ -207,4 +207,8 @@
     <string name="select_start_date">Select start date</string>
     <string name="select_end_date">Select end date</string>
     <string name="selected_range">Range: %s — %s</string>
+
+    <string name="like_recommendation">Like recommendation</string>
+    <string name="dislike_recommendation">Dislike recommendation</string>
+    <string name="personalized_recommendations_enabled">Personalized</string>
 </resources>

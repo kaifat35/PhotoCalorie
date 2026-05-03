@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ThumbDown
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -204,6 +206,10 @@ fun RecommendationScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                         ) {
                             Text(stringResource(R.string.other_recommendations))
+                            if (data.personalized) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(stringResource(R.string.personalized_recommendations_enabled), fontSize = 12.sp)
+                            }
                         }
                     }
 
@@ -214,12 +220,13 @@ fun RecommendationScreen(
                                 style = MaterialTheme.typography.titleLarge
                             )
                         }
-                        items(data.suggestedProducts) { product ->
+                        items(data.suggestedProducts) { item ->
                             RecommendationProductCard(
-                                product = product,
-                                onAdd = { mealType, portion ->
-                                    onAddProduct(product, mealType, portion)
-                                }
+                                product = item.product,
+                                reason = item.reason,
+                                onLike = { viewModel.sendFeedback(item.product.name, true) },
+                                onDislike = { viewModel.sendFeedback(item.product.name, false) },
+                                onAdd = { mealType, portion -> onAddProduct(item.product, mealType, portion) }
                             )
                         }
                     } else {
@@ -302,6 +309,9 @@ fun RecommendationScreen(
 @Composable
 fun RecommendationProductCard(
     product: Product,
+    reason: String,
+    onLike: () -> Unit,
+    onDislike: () -> Unit,
     onAdd: (MealType, Double) -> Unit
 ) {
     var selectedMealType by remember { mutableStateOf(MealType.LUNCH) }
@@ -318,6 +328,7 @@ fun RecommendationProductCard(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            Text(text = reason, style = MaterialTheme.typography.bodySmall)
             Spacer(modifier = Modifier.height(4.dp))
 
             Row(
@@ -349,11 +360,10 @@ fun RecommendationProductCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = { onAdd(selectedMealType, portion) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(R.string.add))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                IconButton(onClick = onLike) { Icon(Icons.Default.ThumbUp, contentDescription = stringResource(R.string.like_recommendation)) }
+                IconButton(onClick = onDislike) { Icon(Icons.Default.ThumbDown, contentDescription = stringResource(R.string.dislike_recommendation)) }
+                Button(onClick = { onAdd(selectedMealType, portion) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.add)) }
             }
         }
     }
