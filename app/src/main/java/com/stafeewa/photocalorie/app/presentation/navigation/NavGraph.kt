@@ -4,10 +4,9 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,7 +35,6 @@ import com.stafeewa.photocalorie.app.presentation.screens.foodmain.FoodIntakeScr
 import com.stafeewa.photocalorie.app.presentation.screens.foodmain.FoodIntakeViewModel
 import com.stafeewa.photocalorie.app.presentation.screens.history.HistoryScreen
 import com.stafeewa.photocalorie.app.presentation.screens.profile.ProfileScreen
-import com.stafeewa.photocalorie.app.presentation.screens.recommendation.RecommendationRecipesScreen
 import com.stafeewa.photocalorie.app.presentation.screens.recommendation.RecommendationScreen
 import com.stafeewa.photocalorie.app.presentation.screens.settings.SettingsScreen
 
@@ -60,22 +58,6 @@ fun NavGraph(
         composable(Destination.CAMERA.route) {
             CameraScreen()
         }
-
-        // Рецепты (в модуле рекомендаций)
-        composable(Destination.RECIPES.route) {
-            RecommendationRecipesScreen()
-        }
-
-        // Профиль
-        composable(Destination.PROFILE.route) {
-            ProfileScreen(
-                onSaveProfile = {},
-                onCalculateRate = {},
-                onNavigateToSettings = {
-                    navController.navigate(Destination.SETTINGS.route)
-                }
-            )
-        }
         //Рекомендации
         composable("recommendation") {
             val foodIntakeViewModel: FoodIntakeViewModel = hiltViewModel()
@@ -93,6 +75,16 @@ fun NavGraph(
             )
         }
 
+        // Профиль
+        composable(Destination.PROFILE.route) {
+            ProfileScreen(
+                onSaveProfile = {},
+                onCalculateRate = {},
+                onNavigateToSettings = {
+                    navController.navigate(Destination.SETTINGS.route)
+                }
+            )
+        }
         // Настройки
         composable(Destination.SETTINGS.route) {
             SettingsScreen(
@@ -108,6 +100,7 @@ fun NavGraph(
     }
 }
 
+
 enum class Destination(
     val route: String,
     @StringRes val labelRes: Int,
@@ -117,7 +110,6 @@ enum class Destination(
     HOME("home", R.string.nav_home, Icons.Default.Home, R.string.nav_home),
     CAMERA("camera", R.string.nav_camera, Icons.Default.CameraAlt, R.string.nav_camera),
     HISTORY("history", R.string.history, Icons.Default.History, R.string.history),
-    RECIPES("recipes", R.string.nav_recipes, Icons.Default.Search, R.string.nav_recipes),
     PROFILE("profile", R.string.nav_profile, Icons.Default.Person, R.string.nav_profile),
     SETTINGS("settings", R.string.nav_settings, Icons.Default.Settings, R.string.nav_settings),
 }
