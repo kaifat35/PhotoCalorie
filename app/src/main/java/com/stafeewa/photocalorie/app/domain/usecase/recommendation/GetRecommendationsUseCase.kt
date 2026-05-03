@@ -3,6 +3,7 @@ package com.stafeewa.photocalorie.app.domain.usecase.recommendation
 import com.stafeewa.photocalorie.app.domain.entity.FoodEntry
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
+import com.stafeewa.photocalorie.app.domain.provider.RecommendationStringProvider
 import com.stafeewa.photocalorie.app.domain.repository.RecommendationFeedbackRepository
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.repository.RecommendationFeedback
@@ -32,7 +33,8 @@ data class RecommendationResult(
 class GetRecommendationsUseCase @Inject constructor(
     private val productRepository: ProductRepository,
     private val preferencesRepository: UserFoodPreferencesRepository,
-    private val feedbackRepository: RecommendationFeedbackRepository
+    private val feedbackRepository: RecommendationFeedbackRepository,
+    private val stringProvider: RecommendationStringProvider
 ) {
     suspend operator fun invoke(
         tdee: Double, entries: List<FoodEntry>,
@@ -58,7 +60,7 @@ class GetRecommendationsUseCase @Inject constructor(
         val result = if (remainingCalories <= 50) listOf(
             RecommendationItem(
                 createLightSnack(),
-                "Лёгкий перекус при минимальном остатке калорий"
+                stringProvider.getLightSnackReason()
             )
         )
         else selectRecommendations(
@@ -135,9 +137,15 @@ class GetRecommendationsUseCase @Inject constructor(
         }
 
         if (selected.size < 3) {
-            listOf("Куриная грудка", "Овсяная каша", "Яблоко").forEach { fallback ->
+            val fallbackNames = stringProvider.getFallbackProductNames()
+            fallbackNames.forEach { fallback ->
                 products.firstOrNull { it.name.contains(fallback, true) }
-                    ?.let { selected += RecommendationItem(it, "Универсальный полезный вариант") }
+                    ?.let {
+                        selected += RecommendationItem(
+                            it,
+                            stringProvider.getUniversalReason()
+                        )
+                    }
             }
         }
         return selected.distinctBy { it.product.id }
@@ -197,7 +205,10 @@ class GetRecommendationsUseCase @Inject constructor(
 
     private fun mealTimeBoost(mealType: MealType, hour: Int): Double {
         val target = when (hour) {
-            in 5..10 -> MealType.BREAKFAST; in 11..15 -> MealType.LUNCH; in 16..20 -> MealType.DINNER; else -> MealType.SNACK
+            in 5..10 -> MealType.BREAKFAST
+            in 11..15 -> MealType.LUNCH
+            in 16..20 -> MealType.DINNER
+            else -> MealType.SNACK
         }
         return if (mealType == target) 1.25 else 0.9
     }
@@ -210,9 +221,9 @@ class GetRecommendationsUseCase @Inject constructor(
     ): String {
         val n = product.name.lowercase()
         return when {
-            feedback[n].orEmpty().any { it.isLiked } -> "Вам понравилось похожее блюдо"
-            product.proteinPer100g > product.fatPer100g && remainingProtein > remainingFat -> "Чтобы закрыть дефицит белка"
-            else -> "Поддерживает баланс нутриентов"
+            feedback[n].orEmpty().any { it.isLiked } -> stringProvider.getLikedReason()
+            product.proteinPer100g > product.fatPer100g && remainingProtein > remainingFat -> stringProvider.getProteinDeficitReason()
+            else -> stringProvider.getBalanceReason()
         }
     }
 
@@ -221,27 +232,41 @@ class GetRecommendationsUseCase @Inject constructor(
 
     private fun detectCategory(product: Product): String = detectCategoryByName(product.name)
     private fun detectCategoryByName(nameRaw: String): String {
-        val name = nameRaw.lowercase(); return when {
-            name.contains("каша") -> "Каши"; name.contains("суп") || name.contains("борщ") -> "Супы"; name.contains(
-                "салат"
-            ) -> "Салаты"; name.contains("кур") || name.contains("говяд") || name.contains("мяс") -> "Мясные блюда"; name.contains(
-                "рыб"
-            ) || name.contains("лосос") || name.contains("треск") -> "Рыбные блюда"; name.contains("компот") || name.contains(
-                "чай"
-            ) || name.contains("коф") -> "Напитки"; name.contains("торт") || name.contains("десерт") || name.contains(
-                "пирож"
-            ) -> "Десерты"; else -> "Прочее"
+        val name = nameRaw.lowercase()
+        return when {
+            name.contains("каша") -> stringProvider.getCategoryName("Каши")
+            name.contains("суп") || name.contains("борщ") -> stringProvider.getCategoryName("Супы")
+            name.contains("салат") -> stringProvider.getCategoryName("Салаты")
+            name.contains("кур") || name.contains("говяд") || name.contains("мяс") -> stringProvider.getCategoryName(
+                "Мясные блюда"
+            )
+
+            name.contains("рыб") || name.contains("лосос") || name.contains("треск") -> stringProvider.getCategoryName(
+                "Рыбные блюда"
+            )
+
+            name.contains("компот") || name.contains("чай") || name.contains("коф") -> stringProvider.getCategoryName(
+                "Напитки"
+            )
+
+            name.contains("торт") || name.contains("десерт") || name.contains("пирож") -> stringProvider.getCategoryName(
+                "Десерты"
+            )
+
+            else -> stringProvider.getCategoryName("Прочее")
         }
     }
 
-    private fun createLightSnack() = Product(
-        name = "Вода с лимоном",
-        mealType = MealType.SNACK,
-        defaultPortion = 200.0,
-        proteinPer100g = 0.0,
-        fatPer100g = 0.0,
-        carbsPer100g = 0.0,
-        caloriesPer100g = 0.0,
-        keywords = listOf("вода", "напиток")
-    )
+    private fun createLightSnack(): Product {
+        return Product(
+            name = stringProvider.getLightSnackName(),
+            mealType = MealType.SNACK,
+            defaultPortion = 200.0,
+            proteinPer100g = 0.0,
+            fatPer100g = 0.0,
+            carbsPer100g = 0.0,
+            caloriesPer100g = 0.0,
+            keywords = listOf("вода", "напиток")
+        )
+    }
 }

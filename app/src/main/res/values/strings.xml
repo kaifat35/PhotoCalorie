@@ -207,8 +207,26 @@
     <string name="select_start_date">Select start date</string>
     <string name="select_end_date">Select end date</string>
     <string name="selected_range">Range: %s — %s</string>
-
     <string name="like_recommendation">Like recommendation</string>
     <string name="dislike_recommendation">Dislike recommendation</string>
     <string name="personalized_recommendations_enabled">Personalized</string>
+    <string name="light_snack_name">Lemon water</string>
+    <string name="light_snack_reason">Light snack for minimal calorie leftover</string>
+    <string name="reason_protein_deficit">To cover protein deficit</string>
+    <string name="reason_balance">Supports nutrient balance</string>
+    <string name="reason_liked">You liked similar dishes</string>
+    <string name="reason_universal">Universal healthy option</string>
+    <string name="fallback_products_list">Chicken breast,Oatmeal,Apple</string>
+    <string name="category_porridges">Porridges</string>
+    <string name="category_soups">Soups</string>
+    <string name="category_salads">Salads</string>
+    <string name="category_meat_dishes">Meat dishes</string>
+    <string name="category_fish_dishes">Fish dishes</string>
+    <string name="category_drinks">Drinks</string>
+    <string name="category_desserts">Desserts</string>
+    <string name="category_other">Other</string>
+    <string name="meal_breakfast">Breakfast</string>
+    <string name="meal_lunch">Lunch</string>
+    <string name="meal_dinner">Dinner</string>
+    <string name="meal_snack">Snack</string>
 </resources>

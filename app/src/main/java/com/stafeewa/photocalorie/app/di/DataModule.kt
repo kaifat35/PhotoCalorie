@@ -9,6 +9,7 @@ import com.stafeewa.photocalorie.app.data.local.ProductDao
 import com.stafeewa.photocalorie.app.data.local.TrainingExampleDao
 import com.stafeewa.photocalorie.app.data.local.UserFoodPreferencesDao
 import com.stafeewa.photocalorie.app.data.local.RecommendationFeedbackDao
+import com.stafeewa.photocalorie.app.data.provider.RecommendationStringProviderImpl
 import com.stafeewa.photocalorie.app.data.remote.RecipesApiService
 import com.stafeewa.photocalorie.app.data.repository.PhotoCalorieRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.FoodIntakeRepositoryImpl
@@ -18,6 +19,7 @@ import com.stafeewa.photocalorie.app.data.repository.UserFoodPreferencesReposito
 import com.stafeewa.photocalorie.app.data.repository.RecommendationFeedbackRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.TrainingRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.UserProfileRepositoryImpl
+import com.stafeewa.photocalorie.app.domain.provider.RecommendationStringProvider
 import com.stafeewa.photocalorie.app.domain.repository.FoodIntakeRepository
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.repository.RecipeRepository
@@ -178,6 +180,14 @@ interface DataModule {
         @Singleton
         fun providesRecommendationFeedbackDao(database: PhotoCalorieDatabase): RecommendationFeedbackDao =
             database.recommendationFeedbackDao()
+
+        @Provides
+        @Singleton
+        fun provideRecommendationStringProvider(
+            @ApplicationContext context: Context
+        ): RecommendationStringProvider {
+            return RecommendationStringProviderImpl(context)
+        }
     }
 }
 
