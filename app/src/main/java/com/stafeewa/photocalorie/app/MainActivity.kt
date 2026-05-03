@@ -1,6 +1,5 @@
 package com.stafeewa.photocalorie.app
 
-import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,17 +26,16 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var productRepository: ProductRepository
 
-    override fun attachBaseContext (newBase: android . content . Context ) {
-
-        val prefs = newBase.getSharedPreferences( "app_settings" , MODE_PRIVATE)
-        val languageCode = prefs.getString( "language" , "en" ) ?: "en"
-        super.attachBaseContext (LocaleManager.setLocale(newBase, languageCode))
+    override fun attachBaseContext(newBase: android.content.Context) {
+        val prefs = newBase.getSharedPreferences("app_settings", MODE_PRIVATE)
+        val languageCode = prefs.getString("language", "en") ?: "en"
+        super.attachBaseContext(LocaleManager.setLocale(newBase, languageCode))
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Инициализация базы продуктов при запуске приложения
         lifecycleScope.launch {
             productRepository.initDefaultProducts()
         }

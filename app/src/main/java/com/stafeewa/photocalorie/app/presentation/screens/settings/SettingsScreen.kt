@@ -52,9 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.stafeewa.photocalorie.app.R
-import com.stafeewa.photocalorie.app.domain.entity.Language
 import com.stafeewa.photocalorie.app.domain.entity.MinTrainingExamplesOption
-import com.stafeewa.photocalorie.app.domain.entity.ThemeMode
 import com.stafeewa.photocalorie.app.domain.entity.TrainingFrequencyOption
 import com.stafeewa.photocalorie.app.presentation.ui.theme.textFieldColors
 
@@ -71,24 +69,12 @@ fun SettingsScreen(
         }
     )
     val context = LocalContext.current
-    // Следим за изменением языка
     val state by viewModel.state.collectAsState()
 
-    var lastLanguage by remember { mutableStateOf<Language?>(null) }
-    var lastTheme by remember { mutableStateOf<ThemeMode?>(null) }
-
-    // Перезапускаем Activity только когда язык в state действительно изменился
-    LaunchedEffect(state) {
-        if (state is SettingsState.Configuration) {
-            val currentLanguage = (state as SettingsState.Configuration).language
-            val currentTheme = (state as SettingsState.Configuration).themeMode
-            if ((lastLanguage != null && lastLanguage != currentLanguage) ||
-                (lastTheme != null && lastTheme != currentTheme)
-            ) {
-                (context as? Activity)?.recreate()
-            }
-            lastLanguage = currentLanguage
-            lastTheme = currentTheme
+    // Подписываемся на событие перезапуска при смене языка/темы
+    LaunchedEffect(Unit) {
+        viewModel.restartAppEvent.collect {
+            (context as? Activity)?.recreate()
         }
     }
 
@@ -132,7 +118,6 @@ fun SettingsScreen(
             )
         },
         content = { contentPadding ->
-
             when (val currentState = state) {
                 is SettingsState.Configuration -> {
                     LazyColumn(
@@ -142,34 +127,28 @@ fun SettingsScreen(
                         contentPadding = contentPadding,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        // Язык
                         item {
                             Spacer(modifier = Modifier.height(8.dp))
                             SettingsCard(
                                 title = stringResource(R.string.search_language),
                                 subtitle = stringResource(R.string.select_language_for_recipes_search)
-
                             ) {
                                 SettingsDropdown(
                                     items = currentState.languages,
                                     selectedItem = currentState.language,
                                     onItemSelected = { language ->
-                                        viewModel.processCommand(
-                                            SettingsCommand.SelectLanguage(
-                                                language
-                                            )
-                                        )
+                                        viewModel.processCommand(SettingsCommand.SelectLanguage(language))
                                     },
-                                    itemAsString = {
-                                        it.toLocalizedName()
-                                    }
+                                    itemAsString = { it.toLocalizedName() }
                                 )
                             }
                         }
+                        // Интервал обновления рецептов
                         item {
                             SettingsCard(
                                 title = stringResource(R.string.update_interval),
                                 subtitle = stringResource(R.string.how_often_to_update_recipe)
-
                             ) {
                                 SettingsDropdown(
                                     items = currentState.intervals,
@@ -177,52 +156,43 @@ fun SettingsScreen(
                                     onItemSelected = {
                                         viewModel.processCommand(SettingsCommand.SelectInterval(it))
                                     },
-                                    itemAsString = {
-                                        it.toLocalizedName()
-                                    }
+                                    itemAsString = { it.toLocalizedName() }
                                 )
                             }
                         }
+                        // Уведомления
                         item {
                             SettingsCard(
                                 title = stringResource(R.string.notifications),
                                 subtitle = stringResource(R.string.show_notifications_about_new_recipes)
-
                             ) {
                                 Switch(
                                     checked = currentState.notificationsEnabled,
                                     onCheckedChange = { enabled ->
                                         if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                            permissionLauncher.launch(
-                                                Manifest.permission.POST_NOTIFICATIONS
-                                            )
+                                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                                         } else {
-                                            viewModel.processCommand(
-                                                SettingsCommand
-                                                    .SetNotificationEnabled(enabled)
-                                            )
+                                            viewModel.processCommand(SettingsCommand.SetNotificationEnabled(enabled))
                                         }
                                     }
                                 )
                             }
                         }
+                        // Только Wi-Fi
                         item {
                             SettingsCard(
                                 title = stringResource(R.string.update_only_via_wi_fi),
                                 subtitle = stringResource(R.string.save_mobile_data)
-
                             ) {
                                 Switch(
                                     checked = currentState.wifiOnly,
                                     onCheckedChange = {
-                                        viewModel.processCommand(
-                                            SettingsCommand
-                                                .SeWifiOnly(it)
-                                        )
+                                        viewModel.processCommand(SettingsCommand.SeWifiOnly(it))
                                     }
                                 )
                             }
                         }
+                        // Тема
                         item {
                             SettingsCard(
                                 title = stringResource(R.string.theme),
@@ -232,18 +202,13 @@ fun SettingsScreen(
                                     items = currentState.themeModes,
                                     selectedItem = currentState.themeMode,
                                     onItemSelected = { themeMode ->
-                                        viewModel.processCommand(
-                                            SettingsCommand.SetThemeMode(
-                                                themeMode
-                                            )
-                                        )
+                                        viewModel.processCommand(SettingsCommand.SetThemeMode(themeMode))
                                     },
-                                    itemAsString = {
-                                        it.toLocalizedName()
-                                    }
+                                    itemAsString = { it.toLocalizedName() }
                                 )
                             }
                         }
+                        // Частота дообучения
                         item {
                             SettingsCard(
                                 title = stringResource(R.string.training_frequency),
@@ -251,18 +216,15 @@ fun SettingsScreen(
                             ) {
                                 SettingsDropdown(
                                     items = currentState.trainingFrequencyOptions,
-                                    selectedItem = TrainingFrequencyOption.fromHours(
-                                        currentState.trainingFrequencyHours
-                                    ),
+                                    selectedItem = TrainingFrequencyOption.fromHours(currentState.trainingFrequencyHours),
                                     onItemSelected = {
-                                        viewModel.processCommand(
-                                            SettingsCommand.SetTrainingFrequencyHours(it.hours)
-                                        )
+                                        viewModel.processCommand(SettingsCommand.SetTrainingFrequencyHours(it.hours))
                                     },
                                     itemAsString = { it.title }
                                 )
                             }
                         }
+                        // Минимум примеров
                         item {
                             SettingsCard(
                                 title = stringResource(R.string.min_training_examples),
@@ -270,13 +232,9 @@ fun SettingsScreen(
                             ) {
                                 SettingsDropdown(
                                     items = currentState.minTrainingExamplesOptions,
-                                    selectedItem = MinTrainingExamplesOption.fromCount(
-                                        currentState.minTrainingExamples
-                                    ),
+                                    selectedItem = MinTrainingExamplesOption.fromCount(currentState.minTrainingExamples),
                                     onItemSelected = {
-                                        viewModel.processCommand(
-                                            SettingsCommand.SetMinTrainingExamples(it.count)
-                                        )
+                                        viewModel.processCommand(SettingsCommand.SetMinTrainingExamples(it.count))
                                     },
                                     itemAsString = { it.title }
                                 )
@@ -285,11 +243,9 @@ fun SettingsScreen(
                         item {
                             Spacer(modifier = Modifier.height(32.dp))
                         }
-
                     }
                 }
-
-                SettingsState.Initial -> {}
+                SettingsState.Initial -> { }
             }
         }
     )
@@ -303,23 +259,14 @@ private fun SettingsCard(
     content: @Composable () -> Unit
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurface,
-                ),
+                style = MaterialTheme.typography.headlineMedium.copy(color = MaterialTheme.colorScheme.onSurface),
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 24.sp,
@@ -328,9 +275,7 @@ private fun SettingsCard(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurface,
-                ),
+                style = MaterialTheme.typography.headlineMedium.copy(color = MaterialTheme.colorScheme.onSurface),
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 24.sp,
                 modifier = Modifier.padding(horizontal = 24.dp)
@@ -350,26 +295,20 @@ private fun <T> SettingsDropdown(
     itemAsString: @Composable (T) -> String
 ) {
     var expanded by remember { mutableStateOf(false) }
-
     ExposedDropdownMenuBox(
         modifier = modifier.fillMaxWidth(),
         expanded = expanded,
         onExpandedChange = { expanded = it }
     ) {
         OutlinedTextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
+            modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
             value = itemAsString(selectedItem),
             onValueChange = {},
             shape = RoundedCornerShape(30.dp),
             readOnly = true,
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = textFieldColors()
         )
-
         ExposedDropdownMenu(
             expanded = expanded,
             shape = RoundedCornerShape(30.dp),
@@ -377,9 +316,7 @@ private fun <T> SettingsDropdown(
         ) {
             items.forEach { item ->
                 DropdownMenuItem(
-                    text = {
-                        Text(itemAsString(item))
-                    },
+                    text = { Text(itemAsString(item)) },
                     onClick = {
                         onItemSelected(item)
                         expanded = false
@@ -389,5 +326,3 @@ private fun <T> SettingsDropdown(
         }
     }
 }
-
-
