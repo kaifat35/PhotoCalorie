@@ -1,6 +1,7 @@
 package com.stafeewa.photocalorie.app.presentation.screens.history
 
 import android.widget.CalendarView
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,8 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,10 +24,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -62,7 +59,6 @@ import java.util.Calendar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    onNavigateBack: () -> Unit,
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -73,11 +69,6 @@ fun HistoryScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.history)) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
-                    }
-                }
             )
         }
     ) { paddingValues ->
@@ -407,16 +398,38 @@ fun DayGroupCard(dayEntries: DayEntries) {
                 NutrientChip(label = stringResource(R.string.fat_short), value = dayEntries.totalFat.toInt())
                 NutrientChip(label = stringResource(R.string.carbs_short), value = dayEntries.totalCarbs.toInt())
             }
-            if (expanded) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Divider()
-                dayEntries.entries.forEach { entry ->
-                    EntryRow(entry = entry)
-                    Spacer(modifier = Modifier.height(4.dp))
+            AnimatedVisibility(visible = expanded) {
+                Column {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalDivider()
+                    MealType.values().forEach { mealType ->
+                        val entries = dayEntries.mealsByType[mealType].orEmpty()
+                        if (entries.isNotEmpty()) {
+                            val totals = dayEntries.totalsByMealType[mealType]
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "${mealTypeLabel(mealType)} • ${totals?.calories?.toInt() ?: 0} ${stringResource(R.string.calories_short)}",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            entries.forEach { entry ->
+                                EntryRow(entry = entry)
+                            }
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+
+@Composable
+private fun mealTypeLabel(mealType: MealType): String = when (mealType) {
+    MealType.BREAKFAST -> stringResource(R.string.breakfast)
+    MealType.LUNCH -> stringResource(R.string.lunch)
+    MealType.DINNER -> stringResource(R.string.dinner)
+    MealType.SNACK -> stringResource(R.string.snack)
 }
 
 @Composable
@@ -447,6 +460,11 @@ fun EntryRow(entry: FoodEntry) {
                 text = "${entry.portion.toInt()} ${stringResource(R.string.gram_short)} • ${entry.calories.toInt()} ${stringResource(R.string.calories_short)}",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+            Text(
+                text = "Б:${entry.protein.toInt()} Ж:${entry.fat.toInt()} У:${entry.carbs.toInt()}",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
             )
         }
         MealTypeBadge(mealType = entry.mealType)
