@@ -1032,6 +1032,12 @@ object EnglishToRussianMap {
         return map.entries.find { it.value.equals(russianName, ignoreCase = true) }?.key
     }
 
+    fun getEnglishNames(russianName: String): List<String> {
+        return map.entries
+            .filter { it.value.equals(russianName, ignoreCase = true) }
+            .map { it.key }
+    }
+
     fun getEnglishDisplayName(russianName: String): String? {
         return getEnglishName(russianName)?.replace("_", " ")
     }

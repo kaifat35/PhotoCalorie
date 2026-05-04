@@ -1275,11 +1275,14 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     private fun addEnglishDictionaryKeywords(name: String, keywords: MutableSet<String>) {
-        val englishName = EnglishToRussianMap.getEnglishName(name) ?: return
-        val englishPhrase = englishName.replace("_", " ").lowercase()
+        val englishNames = EnglishToRussianMap.getEnglishNames(name)
+        if (englishNames.isEmpty()) return
 
-        keywords += englishName.lowercase()
-        keywords += englishPhrase
-        keywords += englishPhrase.split(" ").filter { it.length > 2 }
+        englishNames.forEach { englishName ->
+            val englishPhrase = englishName.replace("_", " ").lowercase()
+            keywords += englishName.lowercase()
+            keywords += englishPhrase
+            keywords += englishPhrase.split(" ").filter { it.length > 2 }
+        }
     }
 }

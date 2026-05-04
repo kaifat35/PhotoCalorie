@@ -146,7 +146,7 @@ fun CustomRangeCalendarDialog(
 ) {
     var startDate by remember { mutableStateOf<LocalDate?>(null) }
     var endDate by remember { mutableStateOf<LocalDate?>(null) }
-    var selectionStep by remember { mutableStateOf(0) } // 0 - ожидание выбора начала, 1 - выбор конца
+    var selectionStep by remember { mutableStateOf(0) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -312,7 +312,7 @@ fun PeriodSelector(
                 ),
                 modifier = Modifier.weight(1f)
             ) {
-                Text(stringResource(R.string.custom))
+                Text(stringResource(R.string.custom), color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }
