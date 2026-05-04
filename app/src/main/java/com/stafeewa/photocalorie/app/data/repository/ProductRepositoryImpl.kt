@@ -9,6 +9,7 @@ import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,20 +19,22 @@ class ProductRepositoryImpl @Inject constructor(
 ) : ProductRepository {
 
     override fun searchProducts(query: String): Flow<List<Product>> {
-        val normalizedQuery = query.trim().lowercase()
-        return productDao.searchProducts(query.trim(), normalizedQuery).map { dbModels ->
-            dbModels.map { it.toDomain() }
+        val trimmedQuery = query.trim()
+        val normalizedQuery = trimmedQuery.lowercase()
+        val localizedQuery = localizeQueryForSearch(trimmedQuery)
+        return productDao.searchProducts(localizedQuery, normalizedQuery).map { dbModels ->
+            dbModels.map { it.toDomain().localized() }
         }
     }
 
     override fun getProductsByMealType(mealType: MealType): Flow<List<Product>> {
         return productDao.getProductsByMealType(mealType).map { dbModels ->
-            dbModels.map { it.toDomain() }
+            dbModels.map { it.toDomain().localized() }
         }
     }
 
     override suspend fun getProductById(id: Long): Product? {
-        return productDao.getProductById(id)?.toDomain()
+        return productDao.getProductById(id)?.toDomain()?.localized()
     }
 
     override suspend fun addProduct(product: Product) {
@@ -52,8 +55,27 @@ class ProductRepositoryImpl @Inject constructor(
         }
     }
     override suspend fun getProductByName(name: String): Product? {
-        return productDao.getProductByName(name)?.toDomain()
+        return productDao.getProductByName(name)?.toDomain()?.localized()
     }
+
+
+    private fun Product.localized(): Product {
+        val language = Locale.getDefault().language
+        val localizedName = EnglishToRussianMap.getLocalizedName(name, language)
+        return if (localizedName == name) this else copy(name = localizedName)
+    }
+
+    private fun localizeQueryForSearch(query: String): String {
+        if (query.isBlank()) return query
+        val language = Locale.getDefault().language
+        return if (language.equals("en", ignoreCase = true)) {
+            EnglishToRussianMap.map[query.lowercase().replace(" ", "_")]
+                ?: query
+        } else {
+            query
+        }
+    }
+
 
     private fun getDefaultProducts(): List<Product> {
         return allRealProducts.map { (name, nutrition) ->
@@ -1202,7 +1224,7 @@ class ProductRepositoryImpl @Inject constructor(
         "Тартар из тунца" to Nutrition(18.0, 8.0, 2.0, 158.0),
         "Вафли" to Nutrition(5.0, 8.0, 30.0, 210.0)
     )
-    
+
     override suspend fun getAllProducts(): List<Product> {
         return productDao.getAllProducts().map { it.toDomain() }
     }

@@ -1,6 +1,14 @@
 package com.stafeewa.photocalorie.app.utils
 
 object EnglishToRussianMap {
+    private val translitMap = mapOf(
+        'а' to "a", 'б' to "b", 'в' to "v", 'г' to "g", 'д' to "d", 'е' to "e", 'ё' to "e",
+        'ж' to "zh", 'з' to "z", 'и' to "i", 'й' to "y", 'к' to "k", 'л' to "l", 'м' to "m",
+        'н' to "n", 'о' to "o", 'п' to "p", 'р' to "r", 'с' to "s", 'т' to "t", 'у' to "u",
+        'ф' to "f", 'х' to "kh", 'ц' to "ts", 'ч' to "ch", 'ш' to "sh", 'щ' to "sch",
+        'ъ' to "", 'ы' to "y", 'ь' to "", 'э' to "e", 'ю' to "yu", 'я' to "ya"
+    )
+
     val map = mapOf(
         "apple_pie" to "Яблочный пирог",
         "baby_back_ribs" to "Ребрышки по-домашнему",
@@ -121,11 +129,30 @@ object EnglishToRussianMap {
         return getEnglishName(russianName)?.replace("_", " ")
     }
 
+    fun getEnglishOrTransliteratedName(russianName: String): String {
+        return getEnglishDisplayName(russianName) ?: transliterate(russianName)
+    }
+
+    fun transliterate(value: String): String {
+        return value.map { ch ->
+            val lower = ch.lowercaseChar()
+            val tr = translitMap[lower]
+            when {
+                tr != null && ch.isUpperCase() -> tr.replaceFirstChar { it.uppercase() }
+                tr != null -> tr
+                ch == '№' -> "No"
+                else -> ch.toString()
+            }
+        }.joinToString("")
+    }
+
     fun getLocalizedName(russianName: String, languageCode: String): String {
         return if (languageCode.equals("ru", ignoreCase = true)) {
             russianName
         } else {
-            getEnglishDisplayName(russianName) ?: russianName
+            getEnglishOrTransliteratedName(russianName)
         }
     }
 }
+
+
