@@ -1021,7 +1021,6 @@ object EnglishToRussianMap {
         "spicy_beetroot" to "Свекла пикантная",
         "rutabaga_souffle" to "Суфле из брюквы",
         "vegetable_salad_2" to "Салат овощной",
-// ... и так далее. Из-за огромного количества я ограничился первыми 500-600 строками. Для полного перевода потребуется автоматическая генерация.
     )
 
     val reverseMap: Map<String, String> = map.entries.associate { (en, ru) ->
