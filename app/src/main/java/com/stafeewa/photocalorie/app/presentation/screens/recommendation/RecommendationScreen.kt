@@ -1,6 +1,7 @@
 package com.stafeewa.photocalorie.app.presentation.screens.recommendation
 
 import android.content.Intent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,9 +23,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,6 +40,9 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -47,6 +51,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,6 +75,9 @@ import com.stafeewa.photocalorie.app.presentation.screens.recipes.RecipesViewMod
 import com.stafeewa.photocalorie.app.presentation.screens.recipes.SubscriptionsCommand
 import com.stafeewa.photocalorie.app.presentation.ui.theme.CustomIcons
 import com.stafeewa.photocalorie.app.utils.toUserVisibleFoodName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +92,8 @@ fun RecommendationScreen(
     val uiState by viewModel.uiState.collectAsState()
     val tdee by foodIntakeViewModel.calorieGoal.collectAsState()
     val entries by foodIntakeViewModel.allEntries.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(tdee, entries) {
         when {
@@ -94,6 +104,12 @@ fun RecommendationScreen(
     }
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(bottom = 80.dp)
+            )
+        },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.recommendations)) },
@@ -208,7 +224,10 @@ fun RecommendationScreen(
                             Text(stringResource(R.string.other_recommendations))
                             if (data.personalized) {
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(stringResource(R.string.personalized_recommendations_enabled), fontSize = 12.sp)
+                                Text(
+                                    stringResource(R.string.personalized_recommendations_enabled),
+                                    fontSize = 12.sp
+                                )
                             }
                         }
                     }
@@ -226,7 +245,15 @@ fun RecommendationScreen(
                                 reason = item.reason,
                                 onLike = { viewModel.sendFeedback(item.product.name, true) },
                                 onDislike = { viewModel.sendFeedback(item.product.name, false) },
-                                onAdd = { mealType, portion -> onAddProduct(item.product, mealType, portion) }
+                                onAdd = { mealType, portion ->
+                                    onAddProduct(
+                                        item.product,
+                                        mealType,
+                                        portion
+                                    )
+                                },
+                                snackbarHostState = snackbarHostState,
+                                coroutineScope = scope
                             )
                         }
                     } else {
@@ -312,10 +339,28 @@ fun RecommendationProductCard(
     reason: String,
     onLike: () -> Unit,
     onDislike: () -> Unit,
-    onAdd: (MealType, Double) -> Unit
+    onAdd: (MealType, Double) -> Unit,
+    snackbarHostState: SnackbarHostState,
+    coroutineScope: CoroutineScope
 ) {
     var selectedMealType by remember { mutableStateOf(MealType.LUNCH) }
     var portion by remember { mutableStateOf(product.defaultPortion) }
+    var evaluationState by remember { mutableStateOf<Boolean?>(null) }
+    val buttonsEnabled = evaluationState == null
+
+    val likeMessage = stringResource(R.string.snackbar_like_thanks)
+    val dislikeMessage = stringResource(R.string.snackbar_dislike_noted)
+
+    val likeTint by animateColorAsState(
+        targetValue = if (evaluationState == true) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        label = "likeColor"
+    )
+    val dislikeTint by animateColorAsState(
+        targetValue = if (evaluationState == false) MaterialTheme.colorScheme.error
+        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        label = "dislikeColor"
+    )
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -327,7 +372,6 @@ fun RecommendationProductCard(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.fillMaxWidth()
             )
-
             Text(text = reason, style = MaterialTheme.typography.bodySmall)
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -337,10 +381,7 @@ fun RecommendationProductCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(
-                        R.string.calories_per_100g,
-                        product.caloriesPer100g.toInt()
-                    ),
+                    text = stringResource(R.string.calories_per_100g, product.caloriesPer100g.toInt()),
                     fontSize = 14.sp
                 )
                 OutlinedTextField(
@@ -350,20 +391,58 @@ fun RecommendationProductCard(
                     modifier = Modifier.width(80.dp)
                 )
             }
-
             Spacer(modifier = Modifier.height(8.dp))
 
             MealTypeSelector(
                 selectedMealType = selectedMealType,
                 onMealTypeSelected = { selectedMealType = it }
             )
-
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                IconButton(onClick = onLike) { Icon(Icons.Default.ThumbUp, contentDescription = stringResource(R.string.like_recommendation)) }
-                IconButton(onClick = onDislike) { Icon(Icons.Default.ThumbDown, contentDescription = stringResource(R.string.dislike_recommendation)) }
-                Button(onClick = { onAdd(selectedMealType, portion) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.add)) }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                IconButton(
+                    onClick = {
+                        if (evaluationState == null) {
+                            evaluationState = true
+                            onLike()
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = likeMessage,
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        }
+                    },
+                    enabled = buttonsEnabled
+                ) {
+                    Icon(Icons.Default.ThumbUp, contentDescription = stringResource(R.string.like_recommendation), tint = likeTint)
+                }
+                IconButton(
+                    onClick = {
+                        if (evaluationState == null) {
+                            evaluationState = false
+                            onDislike()
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = dislikeMessage,
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        }
+                    },
+                    enabled = buttonsEnabled
+                ) {
+                    Icon(Icons.Default.ThumbDown, contentDescription = stringResource(R.string.dislike_recommendation), tint = dislikeTint)
+                }
+                Button(
+                    onClick = { onAdd(selectedMealType, portion) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(stringResource(R.string.add))
+                }
             }
         }
     }
@@ -520,7 +599,10 @@ private fun RecipeCard(recipe: Recipe) {
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(Icons.Default.Share, contentDescription = stringResource(R.string.share_recipe))
+                Icon(
+                    Icons.Default.Share,
+                    contentDescription = stringResource(R.string.share_recipe)
+                )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.share))
             }

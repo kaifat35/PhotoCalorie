@@ -229,4 +229,6 @@
     <string name="meal_lunch">Lunch</string>
     <string name="meal_dinner">Dinner</string>
     <string name="meal_snack">Snack</string>
+    <string name="snackbar_like_thanks">Thank you for your feedback!</string>
+    <string name="snackbar_dislike_noted">Your opinion has been noted</string>
 </resources>
