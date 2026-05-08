@@ -22,17 +22,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -54,36 +51,32 @@ import com.stafeewa.photocalorie.app.domain.entity.NutritionStatistics
 import com.stafeewa.photocalorie.app.utils.toUserVisibleFoodName
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryScreen(
-    viewModel: HistoryViewModel = hiltViewModel()
-) {
+fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedPeriod by viewModel.selectedPeriod.collectAsState()
     var showCustomRangeDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.history)) },
-            )
-        }
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.history)) }) }
     ) { paddingValues ->
         when (uiState) {
             is HistoryUiState.Loading -> {
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
                     contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                ) { CircularProgressIndicator() }
             }
+
             is HistoryUiState.Error -> {
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -92,15 +85,21 @@ fun HistoryScreen(
                     )
                 }
             }
+
             is HistoryUiState.Success -> {
                 val data = uiState as HistoryUiState.Success
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item {
-                        StatisticsCard(statistics = data.statistics, dateRange = data.dateRange)
+                        StatisticsCard(
+                            statistics = data.statistics,
+                            dateRange = data.dateRange
+                        )
                     }
                     item {
                         PeriodSelector(
@@ -109,9 +108,7 @@ fun HistoryScreen(
                             onCustomRangeClick = { showCustomRangeDialog = true }
                         )
                     }
-                    items(data.groupedEntries) { dayEntries ->
-                        DayGroupCard(dayEntries = dayEntries)
-                    }
+                    items(data.groupedEntries) { dayEntries -> DayGroupCard(dayEntries = dayEntries) }
                     if (data.groupedEntries.isEmpty()) {
                         item {
                             Text(
@@ -120,9 +117,7 @@ fun HistoryScreen(
                             )
                         }
                     }
-                    item {
-                        Spacer(modifier = Modifier.height(56.dp))
-                    }
+                    item { Spacer(modifier = Modifier.height(56.dp)) }
                 }
             }
         }
@@ -152,29 +147,24 @@ fun CustomRangeCalendarDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = when (selectionStep) {
-                    0 -> stringResource(R.string.select_start_date)
-                    else -> stringResource(R.string.select_end_date)
-                }
+                text = if (selectionStep == 0) stringResource(R.string.select_start_date) else stringResource(
+                    R.string.select_end_date
+                )
             )
         },
         text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(400.dp)
-            ) {
-                // Отображаем выбранные даты
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp)) {
                 Text(
-                    text = stringResource(R.string.selected_range,
+                    text = stringResource(
+                        R.string.selected_range,
                         startDate?.toString() ?: "—",
                         endDate?.toString() ?: "—"
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-
-                // Календарь через AndroidView
                 AndroidView(
                     factory = { context ->
                         CalendarView(context).apply {
@@ -185,7 +175,6 @@ fun CustomRangeCalendarDialog(
                                     selectionStep = 1
                                 } else {
                                     endDate = selected
-                                    // Если endDate раньше startDate, меняем местами
                                     if (startDate != null && endDate != null && endDate!! < startDate!!) {
                                         val temp = startDate
                                         startDate = endDate
@@ -201,24 +190,19 @@ fun CustomRangeCalendarDialog(
             }
         },
         confirmButton = {
-            TextButton(
-                onClick = {
-                    if (startDate != null && endDate != null) {
-                        onRangeSelected(startDate!!, endDate!!)
-                    }
-                },
-                enabled = startDate != null && endDate != null
-            ) {
+            TextButton(onClick = {
+                if (startDate != null && endDate != null) onRangeSelected(
+                    startDate!!,
+                    endDate!!
+                )
+            }, enabled = startDate != null && endDate != null) {
                 Text(stringResource(R.string.ok))
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }
+
 @Composable
 fun StatisticsCard(statistics: NutritionStatistics, dateRange: String) {
     Card(
@@ -236,14 +220,22 @@ fun StatisticsCard(statistics: NutritionStatistics, dateRange: String) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                StatItem(title = stringResource(R.string.avg_calories),
-                    value = "${statistics.avgCalories.toInt()} ${stringResource(R.string.calories_short)}")
-                StatItem(title = stringResource(R.string.protein),
-                    value = "${statistics.avgProtein.toInt()} ${stringResource(R.string.gram_short)}")
-                StatItem(title = stringResource(R.string.fat),
-                    value = "${statistics.avgFat.toInt()} ${stringResource(R.string.gram_short)}")
-                StatItem(title = stringResource(R.string.carbs),
-                    value = "${statistics.avgCarbs.toInt()} ${stringResource(R.string.gram_short)}")
+                StatItem(
+                    title = stringResource(R.string.avg_calories),
+                    value = "${statistics.avgCalories.toInt()} ${stringResource(R.string.calories_short)}"
+                )
+                StatItem(
+                    title = stringResource(R.string.protein),
+                    value = "${statistics.avgProtein.toInt()} ${stringResource(R.string.gram_short)}"
+                )
+                StatItem(
+                    title = stringResource(R.string.fat),
+                    value = "${statistics.avgFat.toInt()} ${stringResource(R.string.gram_short)}"
+                )
+                StatItem(
+                    title = stringResource(R.string.carbs),
+                    value = "${statistics.avgCarbs.toInt()} ${stringResource(R.string.gram_short)}"
+                )
             }
             Text(
                 text = stringResource(R.string.based_on_days, statistics.totalDays),
@@ -268,10 +260,7 @@ fun PeriodSelector(
     onPeriodSelected: (PeriodType) -> Unit,
     onCustomRangeClick: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -289,11 +278,6 @@ fun PeriodSelector(
                 modifier = Modifier.weight(1f)
             )
         }
-    }
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -307,27 +291,31 @@ fun PeriodSelector(
             Button(
                 onClick = onCustomRangeClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (selectedPeriod == PeriodType.CUSTOM)
-                        MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-                ),
+                    containerColor = if
+                            (selectedPeriod == PeriodType.CUSTOM) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
                 modifier = Modifier.weight(1f)
-            ) {
-                Text(stringResource(R.string.custom), color = MaterialTheme.colorScheme.onSurface)
-            }
+            ) { Text(stringResource(R.string.custom), color = MaterialTheme.colorScheme.onSurface) }
         }
     }
 }
 
 @Composable
-fun PeriodButton(title: String, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun PeriodButton(
+    title: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Button(
         onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-        ),
+        colors = ButtonDefaults.buttonColors(containerColor = if
+                (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
         modifier = modifier
     ) {
-        Text(title, color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+        Text(
+            title,
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
@@ -335,7 +323,9 @@ fun PeriodButton(title: String, isSelected: Boolean, onClick: () -> Unit, modifi
 fun DayGroupCard(dayEntries: DayEntries) {
     var expanded by remember { mutableStateOf(false) }
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { expanded = !expanded },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -354,14 +344,26 @@ fun DayGroupCard(dayEntries: DayEntries) {
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
-            Row(
+
+            // Вертикальное расположение чипов БЖУ
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                NutrientChip(label = stringResource(R.string.protein_short), value = dayEntries.totalProtein.toInt())
-                NutrientChip(label = stringResource(R.string.fat_short), value = dayEntries.totalFat.toInt())
-                NutrientChip(label = stringResource(R.string.carbs_short), value = dayEntries.totalCarbs.toInt())
+                NutrientChip(
+                    label = stringResource(R.string.protein_short),
+                    value = dayEntries.totalProtein.toInt()
+                )
+                NutrientChip(
+                    label = stringResource(R.string.fat_short),
+                    value = dayEntries.totalFat.toInt()
+                )
+                NutrientChip(
+                    label = stringResource(R.string.carbs_short),
+                    value = dayEntries.totalCarbs.toInt()
+                )
             }
+
             AnimatedVisibility(visible = expanded) {
                 Column {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -372,13 +374,15 @@ fun DayGroupCard(dayEntries: DayEntries) {
                             val totals = dayEntries.totalsByMealType[mealType]
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "${mealTypeLabel(mealType)} • ${totals?.calories?.toInt() ?: 0} ${stringResource(R.string.calories_short)}",
+                                text = "${mealTypeLabel(mealType)} • ${totals?.calories?.toInt() ?: 0} ${
+                                    stringResource(
+                                        R.string.calories_short
+                                    )
+                                }",
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            entries.forEach { entry ->
-                                EntryRow(entry = entry)
-                            }
+                            entries.forEach { entry -> EntryRow(entry = entry) }
                         }
                     }
                 }
@@ -386,7 +390,6 @@ fun DayGroupCard(dayEntries: DayEntries) {
         }
     }
 }
-
 
 @Composable
 private fun mealTypeLabel(mealType: MealType): String = when (mealType) {
@@ -401,32 +404,57 @@ fun NutrientChip(label: String, value: Int) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = Modifier.padding(horizontal = 4.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = "$label: $value ${stringResource(R.string.gram_short)}",
-            fontSize = 12.sp,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Text(
+                text = "$value ${stringResource(R.string.gram_short)}",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
     }
 }
 
 @Composable
 fun EntryRow(entry: FoodEntry) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = entry.name.toUserVisibleFoodName(), fontWeight = FontWeight.Medium)
             Text(
-                text = "${entry.portion.toInt()} ${stringResource(R.string.gram_short)} • ${entry.calories.toInt()} ${stringResource(R.string.calories_short)}",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                text = entry.name.toUserVisibleFoodName(),
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp
             )
             Text(
-                text = "Б:${entry.protein.toInt()} Ж:${entry.fat.toInt()} У:${entry.carbs.toInt()}",
+                text = "${entry.portion.toInt()} ${stringResource(R.string.gram_short)} • ${entry.calories.toInt()} ${
+                    stringResource(
+                        R.string.calories_short
+                    )
+                }", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+            Text(
+                text = stringResource(
+                    R.string.nutrient_short_proteins,
+                    entry.protein.toInt()
+                ) + " • " +
+                        stringResource(R.string.nutrient_short_fats, entry.fat.toInt()) + " • " +
+                        stringResource(R.string.nutrient_short_carbs, entry.carbs.toInt()),
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
             )
@@ -448,6 +476,10 @@ fun MealTypeBadge(mealType: MealType) {
         color = MaterialTheme.colorScheme.tertiaryContainer,
         modifier = Modifier.padding(horizontal = 4.dp)
     ) {
-        Text(text = text, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+        Text(
+            text = text,
+            fontSize = 10.sp,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+        )
     }
 }
