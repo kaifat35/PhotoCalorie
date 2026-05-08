@@ -231,4 +231,7 @@
     <string name="meal_snack">Перекус</string>
     <string name="snackbar_like_thanks">Спасибо за оценку!</string>
     <string name="snackbar_dislike_noted">Учли ваше мнение</string>
+    <string name="edit">Редактировать</string>
+    <string name="edit_portion">Изменить порцию</string>
+    <string name="save">Сохранить</string>
 </resources>

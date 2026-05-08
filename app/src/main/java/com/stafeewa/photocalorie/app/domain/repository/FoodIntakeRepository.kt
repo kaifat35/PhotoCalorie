@@ -28,4 +28,7 @@ interface FoodIntakeRepository {
     fun getEntriesBetween(startDate: Long, endDate: Long): Flow<List<FoodEntry>>
     suspend fun deleteEntriesBetween(startDate: Long, endDate: Long)
 
+    suspend fun getEntryById(entryId: Long): FoodEntry?
+    suspend fun updateFoodEntry(entryId: Long, portion: Double, protein: Double, fat: Double, carbs: Double)
+
 }

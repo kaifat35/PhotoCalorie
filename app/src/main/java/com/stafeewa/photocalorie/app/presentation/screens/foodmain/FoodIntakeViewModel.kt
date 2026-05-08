@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.domain.entity.FoodEntry
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
+import com.stafeewa.photocalorie.app.domain.repository.FoodIntakeRepository
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.usecase.foodintake.AddFoodEntryUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.foodintake.AddFoodEntryWithValidationUseCase
@@ -31,7 +32,8 @@ class FoodIntakeViewModel @Inject constructor(
     private val removeFoodEntryUseCase: RemoveFoodEntryUseCase,
     private val getTodayEntriesUseCase: GetTodayEntriesUseCase,
     private val getDailyIntakeUseCase: GetDailyIntakeUseCase,
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val foodIntakeRepository: FoodIntakeRepository
 ) : ViewModel() {
 
     private val enToRuKeywordMap = mapOf(
@@ -265,6 +267,19 @@ class FoodIntakeViewModel @Inject constructor(
             _isLoading.value = false
             _successMessage.value = "Запись удалена"
             clearSuccessMessageAfterDelay()
+        }
+    }
+
+    fun updateFoodEntry(entryId: Long, newPortion: Double) {
+        viewModelScope.launch {
+            val currentEntry = foodIntakeRepository.getEntryById(entryId) ?: return@launch
+            val oldPortion = currentEntry.portion
+            if (oldPortion <= 0.0) return@launch
+            val factor = newPortion / oldPortion
+            val newProtein = currentEntry.protein * factor
+            val newFat = currentEntry.fat * factor
+            val newCarbs = currentEntry.carbs * factor
+            foodIntakeRepository.updateFoodEntry(entryId, newPortion, newProtein, newFat, newCarbs)
         }
     }
 

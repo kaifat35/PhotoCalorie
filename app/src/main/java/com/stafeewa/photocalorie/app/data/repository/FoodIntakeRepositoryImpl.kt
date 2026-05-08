@@ -74,4 +74,12 @@ class FoodIntakeRepositoryImpl @Inject constructor(
     override suspend fun deleteEntriesBetween(startDate: Long, endDate: Long) {
         dao.deleteEntriesBetween(startDate, endDate)
     }
+
+    override suspend fun getEntryById(entryId: Long): FoodEntry? {
+        return dao.getEntryById(entryId)?.toEntity()
+    }
+
+    override suspend fun updateFoodEntry(entryId: Long, portion: Double, protein: Double, fat: Double, carbs: Double) {
+        dao.updateFoodEntry(entryId, portion, protein, fat, carbs)
+    }
 }

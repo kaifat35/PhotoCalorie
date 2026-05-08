@@ -82,4 +82,23 @@ interface PhotoCalorieDao {
 
     @Query("DELETE FROM food_entry WHERE timestamp BETWEEN :start AND :end")
     suspend fun deleteEntriesBetween(start: Long, end: Long)
+
+    @Query("SELECT * FROM food_entry WHERE id = :entryId")
+    suspend fun getEntryById(entryId: Long): FoodEntryDbModel?
+
+    @Query("""
+    UPDATE food_entry 
+    SET portion = :portion,
+        protein = :protein,
+        fat = :fat,
+        carbs = :carbs
+    WHERE id = :entryId
+""")
+    suspend fun updateFoodEntry(
+        entryId: Long,
+        portion: Double,
+        protein: Double,
+        fat: Double,
+        carbs: Double
+    )
 }

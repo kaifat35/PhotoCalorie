@@ -18,7 +18,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -26,10 +28,12 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -70,33 +74,33 @@ fun FoodIntakeScreen(
     val breakfastEntries by viewModel.breakfastEntries.collectAsStateWithLifecycle()
     val lunchEntries by viewModel.lunchEntries.collectAsStateWithLifecycle()
     val dinnerEntries by viewModel.dinnerEntries.collectAsStateWithLifecycle()
+    val snackEntries by viewModel.snackEntries.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
     val successMessage by viewModel.successMessage.collectAsStateWithLifecycle()
-    val snackEntries by viewModel.snackEntries.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Состояние для диалога редактирования
+    var editingEntry by remember { mutableStateOf<FoodEntry?>(null) }
+    var newPortion by remember { mutableStateOf("") }
+
     // Получаем результат из камеры через NavController
     LaunchedEffect(navController) {
-        val savedStateHandle =
-            navController.currentBackStackEntry?.savedStateHandle ?: return@LaunchedEffect
+        val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle ?: return@LaunchedEffect
         savedStateHandle.getStateFlow<Bundle?>("food_result", null).collect { bundle ->
             bundle ?: return@collect
-
             val name = bundle.getString("name") ?: ""
             val mealTypeName = bundle.getString("mealType") ?: ""
             val portion = bundle.getDouble("portion", 0.0)
             val protein = bundle.getDouble("protein", 0.0)
             val fat = bundle.getDouble("fat", 0.0)
             val carbs = bundle.getDouble("carbs", 0.0)
-
             val mealType = try {
                 MealType.valueOf(mealTypeName)
             } catch (e: Exception) {
                 MealType.LUNCH
             }
-
             if (name.isNotBlank()) {
                 viewModel.addFoodEntry(name, mealType, portion, protein, fat, carbs)
             }
@@ -111,7 +115,6 @@ fun FoodIntakeScreen(
             viewModel.clearError()
         }
     }
-
     LaunchedEffect(successMessage) {
         successMessage?.let {
             snackbarHostState.showSnackbar(it)
@@ -163,13 +166,9 @@ fun FoodIntakeScreen(
                         fontSize = 30.sp
                     )
                 }
-
                 item {
                     Text(
-                        text = stringResource(
-                            R.string.your_normal_kcal,
-                            calorieGoal?.toInt() ?: 0
-                        ),
+                        text = stringResource(R.string.your_normal_kcal, calorieGoal?.toInt() ?: 0),
                         style = MaterialTheme.typography.headlineMedium.copy(
                             color = MaterialTheme.colorScheme.onSurface,
                         ),
@@ -178,9 +177,7 @@ fun FoodIntakeScreen(
                         fontSize = 24.sp
                     )
                 }
-
                 item {
-                    // Потребленные калории
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -190,17 +187,13 @@ fun FoodIntakeScreen(
                                 .size(150.dp)
                                 .background(
                                     brush = Brush.radialGradient(
-                                        colors = listOf(
-                                            Color(0xCC009E1D),
-                                            Color.Transparent
-                                        )
+                                        colors = listOf(Color(0xCC009E1D), Color.Transparent)
                                     ),
                                     shape = CircleShape
                                 )
                                 .blur(30.dp)
                                 .clip(CircleShape)
                         )
-
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 text = "${totalCalories.toInt()} / ${calorieGoal.toInt()}",
@@ -212,13 +205,8 @@ fun FoodIntakeScreen(
                                 fontSize = 30.sp
                             )
                             Text(
-                                text = stringResource(
-                                    R.string.There_are_kcal,
-                                    remainingCalories.toInt()
-                                ),
-                                color = if (remainingCalories < 0) Color.Red else MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.7f
-                                ),
+                                text = stringResource(R.string.There_are_kcal, remainingCalories.toInt()),
+                                color = if (remainingCalories < 0) Color.Red else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 14.sp
                             )
@@ -232,68 +220,69 @@ fun FoodIntakeScreen(
                 item {
                     MealSection(
                         title = stringResource(R.string.breakfast),
-                        mealType = MealType.BREAKFAST,
                         items = breakfastEntries,
                         onAddClick = {
                             selectedMealType = MealType.BREAKFAST
                             showAddDialog = true
                         },
-                        onDeleteClick = { entry ->
-                            viewModel.removeFoodEntry(entry.id)
+                        onDeleteClick = { viewModel.removeFoodEntry(it.id) },
+                        onEditClick = { entry ->
+                            editingEntry = entry
+                            newPortion = entry.portion.toInt().toString()
                         }
                     )
                 }
-
                 item { Spacer(modifier = Modifier.height(12.dp)) }
 
                 // Обед
                 item {
                     MealSection(
                         title = stringResource(R.string.lunch),
-                        mealType = MealType.LUNCH,
                         items = lunchEntries,
                         onAddClick = {
                             selectedMealType = MealType.LUNCH
                             showAddDialog = true
                         },
-                        onDeleteClick = { entry ->
-                            viewModel.removeFoodEntry(entry.id)
+                        onDeleteClick = { viewModel.removeFoodEntry(it.id) },
+                        onEditClick = { entry ->
+                            editingEntry = entry
+                            newPortion = entry.portion.toInt().toString()
                         }
                     )
                 }
-
                 item { Spacer(modifier = Modifier.height(12.dp)) }
 
                 // Ужин
                 item {
                     MealSection(
                         title = stringResource(R.string.dinner),
-                        mealType = MealType.DINNER,
                         items = dinnerEntries,
                         onAddClick = {
                             selectedMealType = MealType.DINNER
                             showAddDialog = true
                         },
-                        onDeleteClick = { entry ->
-                            viewModel.removeFoodEntry(entry.id)
+                        onDeleteClick = { viewModel.removeFoodEntry(it.id) },
+                        onEditClick = { entry ->
+                            editingEntry = entry
+                            newPortion = entry.portion.toInt().toString()
                         }
                     )
                 }
-
                 item { Spacer(modifier = Modifier.height(12.dp)) }
 
                 // Перекус
                 item {
                     MealSection(
                         title = stringResource(R.string.snack),
-                        mealType = MealType.SNACK,
                         items = snackEntries,
                         onAddClick = {
                             selectedMealType = MealType.SNACK
                             showAddDialog = true
                         },
-                        onDeleteClick = { entry ->
-                            viewModel.removeFoodEntry(entry.id)
+                        onDeleteClick = { viewModel.removeFoodEntry(it.id) },
+                        onEditClick = { entry ->
+                            editingEntry = entry
+                            newPortion = entry.portion.toInt().toString()
                         }
                     )
                 }
@@ -301,7 +290,6 @@ fun FoodIntakeScreen(
                 item { Spacer(modifier = Modifier.height(32.dp)) }
             }
 
-            // Индикатор загрузки
             if (isLoading) {
                 Box(
                     modifier = Modifier
@@ -326,15 +314,51 @@ fun FoodIntakeScreen(
             }
         )
     }
+
+    // Диалог редактирования порции
+    if (editingEntry != null) {
+        AlertDialog(
+            onDismissRequest = { editingEntry = null },
+            title = { Text(stringResource(R.string.edit_portion)) },
+            text = {
+                OutlinedTextField(
+                    value = newPortion,
+                    onValueChange = { newPortion = it },
+                    label = { Text(stringResource(R.string.grams_short)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val portionValue = newPortion.toDoubleOrNull()
+                        if (portionValue != null && portionValue > 0) {
+                            viewModel.updateFoodEntry(editingEntry!!.id, portionValue)
+                            editingEntry = null
+                            newPortion = ""
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { editingEntry = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 }
 
 @Composable
 fun MealSection(
     title: String,
-    mealType: MealType,
     items: List<FoodEntry>,
     onAddClick: () -> Unit,
     onDeleteClick: (FoodEntry) -> Unit,
+    onEditClick: (FoodEntry) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -371,7 +395,6 @@ fun MealSection(
                 fontFamily = FontFamily(Font(R.font.jura)),
                 fontSize = 24.sp
             )
-
             Icon(
                 painter = painterResource(id = if (isExpanded) R.drawable.down else R.drawable.plus),
                 contentDescription = if (isExpanded) "Свернуть" else "Развернуть",
@@ -381,6 +404,7 @@ fun MealSection(
                     .clickable { isExpanded = !isExpanded }
             )
         }
+
         if (items.isNotEmpty()) {
             Text(
                 text = "🔥 ${totalCalories.toInt()} ккал",
@@ -391,7 +415,6 @@ fun MealSection(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -427,12 +450,12 @@ fun MealSection(
 
         if (isExpanded) {
             Spacer(modifier = Modifier.height(8.dp))
-
             if (items.isNotEmpty()) {
                 items.forEach { item ->
                     FoodItemRow(
                         item = item,
-                        onDelete = { onDeleteClick(item) }
+                        onDelete = { onDeleteClick(item) },
+                        onEdit = { onEditClick(item) }
                     )
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
@@ -441,7 +464,6 @@ fun MealSection(
                     )
                 }
             }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -462,7 +484,8 @@ fun MealSection(
 @Composable
 fun FoodItemRow(
     item: FoodEntry,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -495,6 +518,15 @@ fun FoodItemRow(
             NutrientBadge(stringResource(R.string.F), item.fat.toInt(), Color(0xFFFF9800))
             NutrientBadge(stringResource(R.string.C), item.carbs.toInt(), Color(0xFF2196F3))
         }
+
+        Icon(
+            imageVector = Icons.Default.Edit,
+            contentDescription = stringResource(R.string.edit),
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .size(24.dp)
+                .clickable { onEdit() }
+        )
 
         Icon(
             painter = painterResource(id = R.drawable.bin),
