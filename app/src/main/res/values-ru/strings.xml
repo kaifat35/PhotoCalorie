@@ -234,4 +234,5 @@
     <string name="edit">Редактировать</string>
     <string name="edit_portion">Изменить порцию</string>
     <string name="save">Сохранить</string>
+    <string name="name">Имя</string>
 </resources>

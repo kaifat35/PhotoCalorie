@@ -269,7 +269,7 @@ fun ProfileScreen(
 
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
-                                text = stringResource(R.string.Login),
+                                text = stringResource(R.string.name),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = FontFamily(Font(R.font.jura)),
                                 fontSize = 24.sp,
