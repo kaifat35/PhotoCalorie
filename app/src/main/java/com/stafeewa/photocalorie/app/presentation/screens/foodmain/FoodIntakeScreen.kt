@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -22,7 +21,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,8 +30,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -128,206 +126,194 @@ fun FoodIntakeScreen(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        content = { contentPadding ->
-            Box(modifier = Modifier.fillMaxSize()) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding)
-                        .padding(16.dp)
-                        .padding(bottom = 80.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    item {
-                        Text(
-                            text = stringResource(R.string.calories_for_today),
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurface,
-                            ),
-                            fontFamily = FontFamily(Font(R.font.jura)),
-                            fontSize = 30.sp
-                        )
-                    }
-
-                    item {
-                        Text(
-                            text = stringResource(
-                                R.string.your_normal_kcal,
-                                calorieGoal?.toInt() ?: 0
-                            ),
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurface,
-                            ),
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily(Font(R.font.jura)),
-                            fontSize = 24.sp
-                        )
-                    }
-
-                    item {
-                        // Потребленные калории
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(150.dp)
-                                    .background(
-                                        brush = Brush.radialGradient(
-                                            colors = listOf(
-                                                Color(0xCC009E1D),
-                                                Color.Transparent
-                                            )
-                                        ),
-                                        shape = CircleShape
-                                    )
-                                    .blur(30.dp)
-                                    .clip(CircleShape)
-                            )
-
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "${totalCalories.toInt()} / ${calorieGoal.toInt()}",
-                                    style = MaterialTheme.typography.headlineMedium.copy(
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    ),
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily(Font(R.font.jura)),
-                                    fontSize = 30.sp
-                                )
-                                Text(
-                                    text = stringResource(
-                                        R.string.There_are_kcal,
-                                        remainingCalories.toInt()
-                                    ),
-                                    color = if (remainingCalories < 0) Color.Red else MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.7f
-                                    ),
-                                    fontFamily = FontFamily(Font(R.font.jura)),
-                                    fontSize = 14.sp
-                                )
-                            }
-                        }
-                    }
-
-                    item { Spacer(modifier = Modifier.height(12.dp)) }
-
-                    // Завтрак
-                    item {
-                        MealSection(
-                            title = stringResource(R.string.breakfast),
-                            mealType = MealType.BREAKFAST,
-                            items = breakfastEntries,
-                            onAddClick = {
-                                selectedMealType = MealType.BREAKFAST
-                                showAddDialog = true
-                            },
-                            onDeleteClick = { entry ->
-                                viewModel.removeFoodEntry(entry.id)
-                            }
-                        )
-                    }
-
-                    item { Spacer(modifier = Modifier.height(12.dp)) }
-
-                    // Обед
-                    item {
-                        MealSection(
-                            title = stringResource(R.string.lunch),
-                            mealType = MealType.LUNCH,
-                            items = lunchEntries,
-                            onAddClick = {
-                                selectedMealType = MealType.LUNCH
-                                showAddDialog = true
-                            },
-                            onDeleteClick = { entry ->
-                                viewModel.removeFoodEntry(entry.id)
-                            }
-                        )
-                    }
-
-                    item { Spacer(modifier = Modifier.height(12.dp)) }
-
-                    // Ужин
-                    item {
-                        MealSection(
-                            title = stringResource(R.string.dinner),
-                            mealType = MealType.DINNER,
-                            items = dinnerEntries,
-                            onAddClick = {
-                                selectedMealType = MealType.DINNER
-                                showAddDialog = true
-                            },
-                            onDeleteClick = { entry ->
-                                viewModel.removeFoodEntry(entry.id)
-                            }
-                        )
-                    }
-
-                    item { Spacer(modifier = Modifier.height(12.dp)) }
-
-                    // Перекус
-                    item {
-                        MealSection(
-                            title = stringResource(R.string.snack),
-                            mealType = MealType.SNACK,
-                            items = snackEntries,
-                            onAddClick = {
-                                selectedMealType = MealType.SNACK
-                                showAddDialog = true
-                            },
-                            onDeleteClick = { entry ->
-                                viewModel.removeFoodEntry(entry.id)
-                            }
-                        )
-                    }
-
-                    item { Spacer(modifier = Modifier.height(24.dp)) }
-
-                    // Кнопка "Рекомендации"
-                    item {
-                        FloatingActionButton(
-                            onClick = { navController.navigate("recommendation") },
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    Icons.Default.Lightbulb,
-                                    contentDescription = stringResource(R.string.recommendations),
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = stringResource(R.string.recommendations),
-                                    fontSize = 16.sp,
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
-                        }
-                    }
-
-                    item { Spacer(modifier = Modifier.height(32.dp)) }
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { navController.navigate("recommendation") },
+                icon = {
+                    Icon(
+                        Icons.Default.Lightbulb,
+                        contentDescription = stringResource(R.string.recommendations),
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                text = { Text(stringResource(R.string.recommendations)) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.padding(bottom = 80.dp, end = 16.dp)
+            )
+        },
+        floatingActionButtonPosition = FabPosition.End
+    ) { contentPadding ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding)
+                    .padding(16.dp)
+                    .padding(bottom = 80.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                item {
+                    Text(
+                        text = stringResource(R.string.calories_for_today),
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                        ),
+                        fontFamily = FontFamily(Font(R.font.jura)),
+                        fontSize = 30.sp
+                    )
                 }
 
-                // Индикатор загрузки
-                if (isLoading) {
+                item {
+                    Text(
+                        text = stringResource(
+                            R.string.your_normal_kcal,
+                            calorieGoal?.toInt() ?: 0
+                        ),
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                        ),
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily(Font(R.font.jura)),
+                        fontSize = 24.sp
+                    )
+                }
+
+                item {
+                    // Потребленные калории
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.5f)),
+                        modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = Color(0xFF009E1D))
+                        Box(
+                            modifier = Modifier
+                                .size(150.dp)
+                                .background(
+                                    brush = Brush.radialGradient(
+                                        colors = listOf(
+                                            Color(0xCC009E1D),
+                                            Color.Transparent
+                                        )
+                                    ),
+                                    shape = CircleShape
+                                )
+                                .blur(30.dp)
+                                .clip(CircleShape)
+                        )
+
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "${totalCalories.toInt()} / ${calorieGoal.toInt()}",
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                ),
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily(Font(R.font.jura)),
+                                fontSize = 30.sp
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.There_are_kcal,
+                                    remainingCalories.toInt()
+                                ),
+                                color = if (remainingCalories < 0) Color.Red else MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.7f
+                                ),
+                                fontFamily = FontFamily(Font(R.font.jura)),
+                                fontSize = 14.sp
+                            )
+                        }
                     }
+                }
+
+                item { Spacer(modifier = Modifier.height(12.dp)) }
+
+                // Завтрак
+                item {
+                    MealSection(
+                        title = stringResource(R.string.breakfast),
+                        mealType = MealType.BREAKFAST,
+                        items = breakfastEntries,
+                        onAddClick = {
+                            selectedMealType = MealType.BREAKFAST
+                            showAddDialog = true
+                        },
+                        onDeleteClick = { entry ->
+                            viewModel.removeFoodEntry(entry.id)
+                        }
+                    )
+                }
+
+                item { Spacer(modifier = Modifier.height(12.dp)) }
+
+                // Обед
+                item {
+                    MealSection(
+                        title = stringResource(R.string.lunch),
+                        mealType = MealType.LUNCH,
+                        items = lunchEntries,
+                        onAddClick = {
+                            selectedMealType = MealType.LUNCH
+                            showAddDialog = true
+                        },
+                        onDeleteClick = { entry ->
+                            viewModel.removeFoodEntry(entry.id)
+                        }
+                    )
+                }
+
+                item { Spacer(modifier = Modifier.height(12.dp)) }
+
+                // Ужин
+                item {
+                    MealSection(
+                        title = stringResource(R.string.dinner),
+                        mealType = MealType.DINNER,
+                        items = dinnerEntries,
+                        onAddClick = {
+                            selectedMealType = MealType.DINNER
+                            showAddDialog = true
+                        },
+                        onDeleteClick = { entry ->
+                            viewModel.removeFoodEntry(entry.id)
+                        }
+                    )
+                }
+
+                item { Spacer(modifier = Modifier.height(12.dp)) }
+
+                // Перекус
+                item {
+                    MealSection(
+                        title = stringResource(R.string.snack),
+                        mealType = MealType.SNACK,
+                        items = snackEntries,
+                        onAddClick = {
+                            selectedMealType = MealType.SNACK
+                            showAddDialog = true
+                        },
+                        onDeleteClick = { entry ->
+                            viewModel.removeFoodEntry(entry.id)
+                        }
+                    )
+                }
+
+                item { Spacer(modifier = Modifier.height(32.dp)) }
+            }
+
+            // Индикатор загрузки
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFF009E1D))
                 }
             }
         }
-    )
+    }
 
     // Диалог добавления еды
     if (showAddDialog && selectedMealType != null) {
@@ -395,7 +381,6 @@ fun MealSection(
                     .clickable { isExpanded = !isExpanded }
             )
         }
-
         if (items.isNotEmpty()) {
             Text(
                 text = "🔥 ${totalCalories.toInt()} ккал",
@@ -443,15 +428,7 @@ fun MealSection(
         if (isExpanded) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (items.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.There_are_no_added_dishes),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    fontFamily = FontFamily(Font(R.font.jura)),
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            } else {
+            if (items.isNotEmpty()) {
                 items.forEach { item ->
                     FoodItemRow(
                         item = item,
