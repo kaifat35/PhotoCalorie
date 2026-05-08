@@ -10,5 +10,6 @@ data class UserProfile(
     val age: Int? = null,
     val imageUri: String? = null,
     val dailyCalories: Double? = null,
-    val userId: Int?
+    val userId: Int?,
+    val activityLevel: ActivityLevel = ActivityLevel.MODERATELY_ACTIVE
 )

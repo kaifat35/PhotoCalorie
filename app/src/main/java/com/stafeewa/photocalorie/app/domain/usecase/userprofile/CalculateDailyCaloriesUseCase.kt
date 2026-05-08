@@ -12,7 +12,7 @@ class CalculateDailyCaloriesUseCase @Inject constructor(
         height: Double,
         weight: Double,
         age: Int,
-        activityLevel: ActivityLevel = ActivityLevel.ACTIVE
+        activityLevel: ActivityLevel
     ): Double {
         return userProfileRepository.calculateDailyCalories(
             gender = gender,

@@ -235,4 +235,11 @@
     <string name="edit_portion">Edit portion</string>
     <string name="save">Save</string>
     <string name="name">Name</string>
+    <string name="activity_sedentary">Sedentary (little or no exercise)</string>
+    <string name="activity_lightly_active">Lightly active (light exercise 1-3 days/week)</string>
+    <string name="activity_moderately_active">Moderately active (moderate exercise 3-5 days/week)</string>
+    <string name="activity_very_active">Very active (hard exercise 6-7 days/week)</string>
+    <string name="activity_extra_active">Extra active (very hard exercise physical job)</string>
+    <string name="activity_level">Activity level</string>
+    <string name="activity_level_updated">Activity level updated</string>
 </resources>

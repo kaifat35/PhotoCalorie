@@ -8,7 +8,7 @@ import com.stafeewa.photocalorie.app.domain.entity.TrainingExample
     entities = [RecipeDbModel::class, SubscriptionDbModel::class, User::class,
         FoodEntryDbModel::class, ProductDbModel::class, TrainingExample::class,
         UserFoodPreferencesEntity::class, RecommendationFeedbackEntity::class],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 

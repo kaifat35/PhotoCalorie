@@ -3,6 +3,7 @@ package com.stafeewa.photocalorie.app.data.repository
 import com.stafeewa.photocalorie.app.data.local.PhotoCalorieDao
 import com.stafeewa.photocalorie.app.data.local.User
 import com.stafeewa.photocalorie.app.data.mapper.toUserProfile
+import com.stafeewa.photocalorie.app.domain.entity.ActivityLevel
 import com.stafeewa.photocalorie.app.domain.entity.UserProfile
 import com.stafeewa.photocalorie.app.domain.repository.UserProfileRepository
 import kotlinx.coroutines.flow.Flow
@@ -185,5 +186,11 @@ class UserProfileRepositoryImpl @Inject constructor(
 
     override suspend fun deleteProfile(userId: Int?) {
         appDao.deleteUserById(userId)
+    }
+
+    override suspend fun updateActivityLevel(level: ActivityLevel) {
+        appDao.getCurrentUser()?.let { user ->
+            appDao.updateUser(user.copy(activityLevel = level.name))
+        }
     }
 }

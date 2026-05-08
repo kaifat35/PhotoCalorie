@@ -10,6 +10,7 @@ import com.stafeewa.photocalorie.app.domain.entity.ActivityLevel
 import com.stafeewa.photocalorie.app.domain.usecase.userprofile.CalculateDailyCaloriesUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.userprofile.DeleteUserUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.userprofile.ObserveUserProfileUseCase
+import com.stafeewa.photocalorie.app.domain.usecase.userprofile.UpdateActivityLevelUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.userprofile.UpdateAgeUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.userprofile.UpdateDailyCaloriesUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.userprofile.UpdateGenderUseCase
@@ -53,6 +54,7 @@ class ProfileViewModel @Inject constructor(
     private val updateWeightUseCase: UpdateWeightUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
     private val deleteUserUseCase: DeleteUserUseCase,
+    private val updateActivityLevelUseCase: UpdateActivityLevelUseCase, // новый use case
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -86,7 +88,7 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             observeUserProfileUseCase().collect { profile ->
-                val dailyCalories = profile.dailyCalories ?: 2000.0  // дефолт 2000
+                val dailyCalories = profile.dailyCalories ?: 2000.0
                 val loadedProfile = EditableProfile(
                     userId = profile.userId,
                     login = profile.login,
@@ -97,7 +99,8 @@ class ProfileViewModel @Inject constructor(
                     weightStr = profile.weight?.toString() ?: "",
                     ageStr = profile.age?.toString() ?: "",
                     imageUri = profile.imageUri,
-                    dailyCalories = dailyCalories
+                    dailyCalories = dailyCalories,
+                    activityLevel = profile.activityLevel
                 )
                 _originalProfile.value = loadedProfile
                 if (!_editableProfile.value.isUserEdited) {
@@ -113,7 +116,8 @@ class ProfileViewModel @Inject constructor(
                     weight = profile.weight,
                     age = profile.age,
                     imageUri = profile.imageUri,
-                    dailyCalories = dailyCalories
+                    dailyCalories = dailyCalories,
+                    activityLevel = profile.activityLevel
                 )
                 lastConfig = configState
                 _stateProfile.update { configState }
@@ -134,7 +138,7 @@ class ProfileViewModel @Inject constructor(
                 _editableProfile.update { it.copy(gender = command.gender, isUserEdited = true) }
                 viewModelScope.launch {
                     try {
-                        updateGenderUseCase(command.gender)
+                        updateGenderUseCase(command.gender ?: "")
                         _stateProfile.value = ProfileState.Success(R.string.gender_updated)
                         _uiMessages.emit(UiMessage.Resource(R.string.gender_updated))
                     } catch (e: Exception) {
@@ -163,6 +167,17 @@ class ProfileViewModel @Inject constructor(
                     } catch (e: Exception) {
                         _stateProfile.value = ProfileState.Error(R.string.error_updating_image)
                         _uiMessages.emit(UiMessage.Resource(R.string.error_updating_image))
+                    }
+                }
+            }
+            is ProfileCommand.UpdateActivityLevel -> {
+                _editableProfile.update { it.copy(activityLevel = command.level, isUserEdited = true) }
+                viewModelScope.launch {
+                    try {
+                        updateActivityLevelUseCase(command.level)
+                        _uiMessages.emit(UiMessage.Resource(R.string.activity_level_updated))
+                    } catch (e: Exception) {
+                        _uiMessages.emit(UiMessage.Plain(e.message ?: "Ошибка обновления активности"))
                     }
                 }
             }
@@ -219,6 +234,8 @@ class ProfileViewModel @Inject constructor(
                             imageUri = profile.imageUri,
                             dailyCalories = profile.dailyCalories
                         )
+                        // Сохраняем уровень активности отдельно
+                        updateActivityLevelUseCase(profile.activityLevel)
                         _editableProfile.update { it.copy(isUserEdited = false) }
                         _stateProfile.value = ProfileState.Success(R.string.save_profile)
                         _uiMessages.emit(UiMessage.Resource(R.string.save_profile))
@@ -295,12 +312,14 @@ data class EditableProfile(
     val ageStr: String = "",
     val imageUri: String? = null,
     val dailyCalories: Double? = null,
+    val activityLevel: ActivityLevel = ActivityLevel.MODERATELY_ACTIVE, // новое поле
     val isUserEdited: Boolean = false
 ) {
     fun getHeight(): Double? = heightStr.toDoubleOrNull()
     fun getWeight(): Double? = weightStr.toDoubleOrNull()
     fun getAge(): Int? = ageStr.toIntOrNull()
 }
+
 
 sealed interface ProfileCommand {
     data class UpdateLogin(val login: String) : ProfileCommand
@@ -311,12 +330,13 @@ sealed interface ProfileCommand {
     data class UpdateHeightStr(val heightStr: String) : ProfileCommand
     data class UpdateWeightStr(val weightStr: String) : ProfileCommand
     data class UpdateAgeStr(val ageStr: String) : ProfileCommand
+    data class UpdateActivityLevel(val level: ActivityLevel) : ProfileCommand
     data class Calculate(
         val gender: String,
         val height: Double,
         val weight: Double,
         val age: Int,
-        val activityLevel: ActivityLevel = ActivityLevel.MODERATE
+        val activityLevel: ActivityLevel = ActivityLevel.MODERATELY_ACTIVE
     ) : ProfileCommand
     data object SaveProfile : ProfileCommand
     data object DeleteProfile : ProfileCommand
@@ -336,6 +356,7 @@ sealed interface ProfileState {
         val weight: Double?,
         val age: Int?,
         val imageUri: String?,
-        val dailyCalories: Double?
+        val dailyCalories: Double?,
+        val activityLevel: ActivityLevel
     ) : ProfileState
 }

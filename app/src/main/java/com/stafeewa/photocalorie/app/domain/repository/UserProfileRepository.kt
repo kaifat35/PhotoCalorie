@@ -1,5 +1,6 @@
 package com.stafeewa.photocalorie.app.domain.repository
 
+import com.stafeewa.photocalorie.app.domain.entity.ActivityLevel
 import com.stafeewa.photocalorie.app.domain.entity.UserProfile
 import kotlinx.coroutines.flow.Flow
 
@@ -45,4 +46,6 @@ interface UserProfileRepository {
         age: Int,
         activityLevel: Double = 1.2
     ): Double
+
+    suspend fun updateActivityLevel(level: ActivityLevel)
 }

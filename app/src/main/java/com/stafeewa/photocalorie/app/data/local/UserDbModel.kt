@@ -15,5 +15,6 @@ data class User(
     val weight: Double? = null,
     val age: Int? = null,
     val imageUri: String? = null,
-    val dailyCalories: Double? = null
+    val dailyCalories: Double? = null,
+    val activityLevel: String? = null
 )
