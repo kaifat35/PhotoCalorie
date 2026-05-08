@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
@@ -64,7 +66,6 @@ fun AddFoodDialog(
     val newDishString = stringResource(R.string.new_dish)
     val configuration = LocalConfiguration.current
     val isRussian = configuration.locales.get(0).language == "ru"
-
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
@@ -144,8 +145,10 @@ fun AddFoodDialog(
         },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (isManualMode) {
                     OutlinedTextField(
@@ -232,11 +235,7 @@ fun AddFoodDialog(
                     )
 
                     if (showProductList && searchResults.isNotEmpty()) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                        ) {
+                        Column(modifier = Modifier.fillMaxWidth().height(200.dp)) {
                             LazyColumn {
                                 items(searchResults) { product ->
                                     val displayName = EnglishToRussianMap.getLocalizedName(
@@ -247,9 +246,8 @@ fun AddFoodDialog(
                                         product = product,
                                         onClick = {
                                             selectedProduct = product
-                                            searchQuery = displayName
-                                            showProductList = false
                                             portion = product.defaultPortion.toInt().toString()
+                                            searchQuery = ""
                                         },
                                         displayName = displayName
                                     )
@@ -311,7 +309,8 @@ fun AddFoodDialog(
                         Text(
                             text = stringResource(R.string.not_found_switch_to_manual),
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(vertical = 4.dp)
                         )
                     }
                 }
@@ -373,7 +372,8 @@ fun AddFoodDialog(
         },
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
-        textContentColor = MaterialTheme.colorScheme.onSurface
+        textContentColor = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.heightIn(max = 600.dp)
     )
 }
 
@@ -382,7 +382,7 @@ fun ProductSearchItem(
     product: Product,
     onClick: () -> Unit,
     displayName: String
-    ) {
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()

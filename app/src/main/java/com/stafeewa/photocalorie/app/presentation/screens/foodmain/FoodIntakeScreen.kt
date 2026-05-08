@@ -287,7 +287,7 @@ fun FoodIntakeScreen(
                     )
                 }
 
-                item { Spacer(modifier = Modifier.height(32.dp)) }
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
 
             if (isLoading) {
