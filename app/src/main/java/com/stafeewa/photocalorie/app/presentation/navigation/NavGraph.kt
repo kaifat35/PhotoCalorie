@@ -16,6 +16,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -37,6 +38,8 @@ import com.stafeewa.photocalorie.app.presentation.screens.history.HistoryScreen
 import com.stafeewa.photocalorie.app.presentation.screens.profile.ProfileScreen
 import com.stafeewa.photocalorie.app.presentation.screens.recommendation.RecommendationScreen
 import com.stafeewa.photocalorie.app.presentation.screens.settings.SettingsScreen
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +61,8 @@ fun NavGraph(
         composable(Destination.CAMERA.route) {
             CameraScreen()
         }
-        //Рекомендации
+
+        // Рекомендации
         composable("recommendation") {
             val foodIntakeViewModel: FoodIntakeViewModel = hiltViewModel()
             RecommendationScreen(
@@ -66,9 +70,9 @@ fun NavGraph(
                 onAddProduct = { product, mealType, portion ->
                     foodIntakeViewModel.addFoodEntry(
                         product.name, mealType, portion,
-                        product.proteinPer100g * portion/100,
-                        product.fatPer100g * portion/100,
-                        product.carbsPer100g * portion/100
+                        product.proteinPer100g * portion / 100,
+                        product.fatPer100g * portion / 100,
+                        product.carbsPer100g * portion / 100
                     )
                     navController.popBackStack()
                 }
@@ -85,21 +89,20 @@ fun NavGraph(
                 }
             )
         }
+
         // Настройки
         composable(Destination.SETTINGS.route) {
             SettingsScreen(
-                onBack = {
-                    navController.popBackStack()
-                },
+                onBack = { navController.popBackStack() }
             )
         }
 
+        // История
         composable(Destination.HISTORY.route) {
             HistoryScreen()
         }
     }
 }
-
 
 enum class Destination(
     val route: String,
@@ -117,8 +120,19 @@ enum class Destination(
 @Composable
 fun NavigationBarExample(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
-    val startDestination = Destination.HOME.route
     var selectedDestination by rememberSaveable { mutableIntStateOf(Destination.HOME.ordinal) }
+
+    LaunchedEffect(navController) {
+        navController.currentBackStackEntryFlow
+            .map { entry -> entry.destination.route }
+            .distinctUntilChanged()
+            .collect { route ->
+                val destination = Destination.values().find { it.route == route }
+                if (destination != null) {
+                    selectedDestination = destination.ordinal
+                }
+            }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -128,15 +142,15 @@ fun NavigationBarExample(modifier: Modifier = Modifier) {
                     NavigationBarItem(
                         selected = selectedDestination == destination.ordinal,
                         onClick = {
-                            if (selectedDestination != destination.ordinal) {
-                                navController.navigate(route = destination.route) {
-                                    launchSingleTop = true
+                            val currentRoute = navController.currentDestination?.route
+                            if (currentRoute != destination.route) {
+                                navController.navigate(destination.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                                        inclusive = true
                                     }
+                                    launchSingleTop = true
                                     restoreState = true
                                 }
-                                selectedDestination = destination.ordinal
                             }
                         },
                         icon = {
@@ -153,7 +167,7 @@ fun NavigationBarExample(modifier: Modifier = Modifier) {
     ) { contentPadding ->
         NavGraph(
             navController = navController,
-            startDestination = startDestination,
+            startDestination = Destination.HOME.route,
             modifier = Modifier.padding(contentPadding)
         )
     }
