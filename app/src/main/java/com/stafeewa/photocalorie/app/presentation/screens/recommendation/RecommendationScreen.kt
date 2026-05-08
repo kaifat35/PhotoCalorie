@@ -94,6 +94,8 @@ fun RecommendationScreen(
     val entries by foodIntakeViewModel.allEntries.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val productEvaluations by viewModel.productEvaluations.collectAsState()
+
 
     LaunchedEffect(tdee, entries) {
         when {
@@ -121,20 +123,6 @@ fun RecommendationScreen(
                                 contentDescription = stringResource(R.string.back)
                             )
                         }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { recipesViewModel.processCommand(SubscriptionsCommand.RefreshData) }) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = stringResource(R.string.update_recipes)
-                        )
-                    }
-                    IconButton(onClick = { recipesViewModel.processCommand(SubscriptionsCommand.ClearRecipes) }) {
-                        Icon(
-                            Icons.Default.Clear,
-                            contentDescription = stringResource(R.string.clear_recipes)
-                        )
                     }
                 }
             )
@@ -240,18 +228,14 @@ fun RecommendationScreen(
                             )
                         }
                         items(data.suggestedProducts) { item ->
+                            val evaluation = productEvaluations[item.product.name]
                             RecommendationProductCard(
                                 product = item.product,
                                 reason = item.reason,
-                                onLike = { viewModel.sendFeedback(item.product.name, true) },
-                                onDislike = { viewModel.sendFeedback(item.product.name, false) },
-                                onAdd = { mealType, portion ->
-                                    onAddProduct(
-                                        item.product,
-                                        mealType,
-                                        portion
-                                    )
-                                },
+                                evaluation = evaluation,
+                                onLike = { viewModel.setEvaluation(item.product.name, true) },
+                                onDislike = { viewModel.setEvaluation(item.product.name, false) },
+                                onAdd = { mealType, portion -> onAddProduct(item.product, mealType, portion) },
                                 snackbarHostState = snackbarHostState,
                                 coroutineScope = scope
                             )
@@ -263,40 +247,46 @@ fun RecommendationScreen(
                     }
                     item {
                         HorizontalDivider()
-                        Text(
-                            stringResource(R.string.subscriptions_title),
-                            style = MaterialTheme.typography.titleLarge
-                        )
                     }
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.subscriptions_title),
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(
+                                onClick = { recipesViewModel.processCommand(SubscriptionsCommand.RefreshData) }
+                            ) {
+                                Icon(
+                                    Icons.Default.Refresh,
+                                    contentDescription = stringResource(R.string.update_recipes)
+                                )
+                            }
+                            IconButton(
+                                onClick = { recipesViewModel.processCommand(SubscriptionsCommand.ClearRecipes) }
+                            ) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = stringResource(R.string.clear_recipes)
+                                )
+                            }
+                        }
+                    }
+
                     item {
                         SubscriptionsBlock(
                             subscriptions = recipeState.subscriptions,
                             query = recipeState.query,
                             isSubscribeButtonEnabled = recipeState.subscribeButtonEnable,
-                            onQueryChanged = {
-                                recipesViewModel.processCommand(
-                                    SubscriptionsCommand.InputTopic(
-                                        it
-                                    )
-                                )
-                            },
-                            onTopicClick = {
-                                recipesViewModel.processCommand(
-                                    SubscriptionsCommand.ToggleTopicSelection(
-                                        it
-                                    )
-                                )
-                            },
-                            onDeleteSubscription = {
-                                recipesViewModel.processCommand(
-                                    SubscriptionsCommand.RemoveSubscription(it)
-                                )
-                            },
-                            onSubscribeButtonClick = {
-                                recipesViewModel.processCommand(
-                                    SubscriptionsCommand.ClickSubscribe
-                                )
-                            }
+                            onQueryChanged = { recipesViewModel.processCommand(SubscriptionsCommand.InputTopic(it)) },
+                            onTopicClick = { recipesViewModel.processCommand(SubscriptionsCommand.ToggleTopicSelection(it)) },
+                            onDeleteSubscription = { recipesViewModel.processCommand(SubscriptionsCommand.RemoveSubscription(it)) },
+                            onSubscribeButtonClick = { recipesViewModel.processCommand(SubscriptionsCommand.ClickSubscribe) }
                         )
                     }
                     if (recipeState.recipes.isNotEmpty()) {
@@ -337,6 +327,7 @@ fun RecommendationScreen(
 fun RecommendationProductCard(
     product: Product,
     reason: String,
+    evaluation: Boolean?,
     onLike: () -> Unit,
     onDislike: () -> Unit,
     onAdd: (MealType, Double) -> Unit,
@@ -345,19 +336,18 @@ fun RecommendationProductCard(
 ) {
     var selectedMealType by remember { mutableStateOf(MealType.LUNCH) }
     var portion by remember { mutableStateOf(product.defaultPortion) }
-    var evaluationState by remember { mutableStateOf<Boolean?>(null) }
-    val buttonsEnabled = evaluationState == null
+    val buttonsEnabled = evaluation == null
 
     val likeMessage = stringResource(R.string.snackbar_like_thanks)
     val dislikeMessage = stringResource(R.string.snackbar_dislike_noted)
 
     val likeTint by animateColorAsState(
-        targetValue = if (evaluationState == true) MaterialTheme.colorScheme.primary
+        targetValue = if (evaluation == true) MaterialTheme.colorScheme.primary
         else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         label = "likeColor"
     )
     val dislikeTint by animateColorAsState(
-        targetValue = if (evaluationState == false) MaterialTheme.colorScheme.error
+        targetValue = if (evaluation == false) MaterialTheme.colorScheme.error
         else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         label = "dislikeColor"
     )
@@ -405,8 +395,7 @@ fun RecommendationProductCard(
             ) {
                 IconButton(
                     onClick = {
-                        if (evaluationState == null) {
-                            evaluationState = true
+                        if (evaluation == null) {
                             onLike()
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar(
@@ -418,12 +407,15 @@ fun RecommendationProductCard(
                     },
                     enabled = buttonsEnabled
                 ) {
-                    Icon(Icons.Default.ThumbUp, contentDescription = stringResource(R.string.like_recommendation), tint = likeTint)
+                    Icon(
+                        Icons.Default.ThumbUp,
+                        contentDescription = stringResource(R.string.like_recommendation),
+                        tint = likeTint
+                    )
                 }
                 IconButton(
                     onClick = {
-                        if (evaluationState == null) {
-                            evaluationState = false
+                        if (evaluation == null) {
                             onDislike()
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar(
@@ -435,7 +427,11 @@ fun RecommendationProductCard(
                     },
                     enabled = buttonsEnabled
                 ) {
-                    Icon(Icons.Default.ThumbDown, contentDescription = stringResource(R.string.dislike_recommendation), tint = dislikeTint)
+                    Icon(
+                        Icons.Default.ThumbDown,
+                        contentDescription = stringResource(R.string.dislike_recommendation),
+                        tint = dislikeTint
+                    )
                 }
                 Button(
                     onClick = { onAdd(selectedMealType, portion) },

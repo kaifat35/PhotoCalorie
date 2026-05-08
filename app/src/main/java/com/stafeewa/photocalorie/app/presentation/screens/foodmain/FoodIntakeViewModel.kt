@@ -151,7 +151,7 @@ class FoodIntakeViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             val result = runCatching {
-                val resolvedProduct = if (protein == 0.0 && fat == 0.0 && carbs == 0.0) {
+                val resolvedProduct = if (protein == 0.0 && fat == 0.0 && carbs == 0.0 && !isLightSnackProduct(name)) {
                     resolveMlKitProduct(name)
                 } else {
                     null
@@ -303,5 +303,10 @@ class FoodIntakeViewModel @Inject constructor(
             kotlinx.coroutines.delay(3000)
             _successMessage.value = null
         }
+    }
+
+    private fun isLightSnackProduct(name: String): Boolean {
+        val lowerName = name.lowercase()
+        return lowerName.contains("вода с лимоном") || lowerName.contains("lemon water")
     }
 }
