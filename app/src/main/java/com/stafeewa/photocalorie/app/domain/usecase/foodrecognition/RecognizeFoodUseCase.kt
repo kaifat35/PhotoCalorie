@@ -7,6 +7,7 @@ import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.ml.FoodClassifier
+import com.stafeewa.photocalorie.app.ml.LabelResult
 import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
@@ -20,7 +21,11 @@ class RecognizeFoodUseCase @Inject constructor(
     private val foodClassifier by lazy { FoodClassifier(context) }
 
     sealed class Result {
-        data class Success(val product: Product, val confidence: Float) : Result()
+        data class Success(
+            val product: Product,
+            val confidence: Float,
+            val alternatives: List<ProductMatch> = emptyList()
+        ) : Result()
         data class MultipleMatches(val products: List<ProductMatch>) : Result()
         data class NotFound(val suggestedName: String) : Result()
         data class LowConfidence(val suggestedName: String) : Result()
@@ -49,15 +54,21 @@ class RecognizeFoodUseCase @Inject constructor(
 
             val russianLabel = EnglishToRussianMap.map[bestLabel] ?: bestLabel
 
-            // Сначала ищем точное совпадение в БД
-            val exactProduct = productRepository.getProductByName(russianLabel)
-            if (exactProduct != null) {
-                return Result.Success(exactProduct, confidence)
-            }
-
             val allProducts = MealType.entries.flatMap { mealType ->
                 productRepository.getProductsByMealType(mealType).first()
             }.distinctBy { it.id }
+
+            val topModelMatches = buildTopModelMatches(results, allProducts)
+
+            // Сначала ищем точное совпадение в БД
+            val exactProduct = productRepository.getProductByName(russianLabel)
+            if (exactProduct != null) {
+                return Result.Success(
+                    product = exactProduct,
+                    confidence = confidence,
+                    alternatives = prioritizeAlternatives(exactProduct, topModelMatches, confidence)
+                )
+            }
 
             if (allProducts.isEmpty()) {
                 return Result.NotFound(russianLabel)
@@ -66,25 +77,71 @@ class RecognizeFoodUseCase @Inject constructor(
             val scoredMatches = allProducts.map { product ->
                 val score = calculateMatchScore(russianLabel, product.name.lowercase())
                 ProductMatch(product, confidence, score)
-            }.filter { it.matchScore > 30 }.sortedByDescending { it.matchScore }
+            }.filter { it.matchScore > MIN_MATCH_SCORE }.sortedByDescending { it.matchScore }
 
             if (scoredMatches.isEmpty()) {
                 return Result.NotFound(russianLabel)
             }
 
-            val exactMatch = scoredMatches.firstOrNull { it.matchScore >= 95 }
+            val exactMatch = scoredMatches.firstOrNull { it.matchScore >= EXACT_MATCH_THRESHOLD }
             if (exactMatch != null) {
-                return Result.Success(exactMatch.product, confidence)
+                return Result.Success(
+                    product = exactMatch.product,
+                    confidence = confidence,
+                    alternatives = prioritizeAlternatives(exactMatch.product, topModelMatches, confidence)
+                )
             }
 
             if (scoredMatches.size > 1) {
-                return Result.MultipleMatches(scoredMatches.take(5))
+                return Result.MultipleMatches(scoredMatches.take(3))
             }
 
-            Result.Success(scoredMatches.first().product, confidence)
+            val matchedProduct = scoredMatches.first().product
+            Result.Success(
+                product = matchedProduct,
+                confidence = confidence,
+                alternatives = prioritizeAlternatives(matchedProduct, topModelMatches, confidence)
+            )
         } catch (e: Exception) {
             Result.Error(e.message ?: "Ошибка распознавания")
         }
+    }
+
+    private suspend fun buildTopModelMatches(
+        recognitionResults: List<LabelResult>,
+        allProducts: List<Product>
+    ): List<ProductMatch> {
+        return recognitionResults
+            .take(TOP_MODEL_OPTIONS_COUNT)
+            .mapNotNull { result ->
+                val recognizedLabel = result.label.lowercase().trim()
+                val russianLabel = EnglishToRussianMap.map[recognizedLabel] ?: recognizedLabel
+                val exactProduct = productRepository.getProductByName(russianLabel)
+                if (exactProduct != null) {
+                    ProductMatch(exactProduct, result.confidence, EXACT_MATCH_SCORE)
+                } else {
+                    allProducts
+                        .map { product ->
+                            val score = calculateMatchScore(russianLabel, product.name.lowercase())
+                            ProductMatch(product, result.confidence, score)
+                        }
+                        .filter { it.matchScore > MIN_MATCH_SCORE }
+                        .maxByOrNull { it.matchScore }
+                }
+            }
+            .distinctBy { it.product.id }
+            .take(TOP_MODEL_OPTIONS_COUNT)
+    }
+
+    private fun prioritizeAlternatives(
+        mainProduct: Product,
+        alternatives: List<ProductMatch>,
+        mainConfidence: Float
+    ): List<ProductMatch> {
+        val mainMatch = ProductMatch(mainProduct, mainConfidence, EXACT_MATCH_SCORE)
+        return (listOf(mainMatch) + alternatives)
+            .distinctBy { it.product.id }
+            .take(TOP_MODEL_OPTIONS_COUNT)
     }
 
     fun close() {
@@ -103,8 +160,8 @@ class RecognizeFoodUseCase @Inject constructor(
         )
 
         for ((key, values) in synonyms) {
-            if (recognized == key && values.any { dbName.contains(it) }) return 95
-            if (values.contains(recognized) && dbName.contains(key)) return 95
+            if (recognized == key && values.any { dbName.contains(it) }) return EXACT_MATCH_THRESHOLD
+            if (values.contains(recognized) && dbName.contains(key)) return EXACT_MATCH_THRESHOLD
         }
 
         if (recognized == dbName) return 100
@@ -126,5 +183,12 @@ class RecognizeFoodUseCase @Inject constructor(
         val weightsFile = File(context.filesDir, "trained_weights.ckpt")
         if (!weightsFile.exists()) return
         foodClassifier.restore(weightsFile.absolutePath)
+    }
+
+    private companion object {
+        const val TOP_MODEL_OPTIONS_COUNT = 3
+        const val EXACT_MATCH_SCORE = 100
+        const val EXACT_MATCH_THRESHOLD = 95
+        const val MIN_MATCH_SCORE = 30
     }
 }

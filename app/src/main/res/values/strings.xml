@@ -66,6 +66,7 @@
     <string name="error">Error</string>
     <string name="add_manually_without_saving">Add manually (without saving)</string>
     <string name="choose_dish">Choose dish</string>
+    <string name="choose_top_recognition_option">If recognition is wrong, choose one of the top 3 model options:</string>
     <string name="similar_dishes_found">Several similar dishes found</string>
     <string name="interval_15_minutes">15 minutes</string>
     <string name="interval_30_minutes">30 minutes</string>
