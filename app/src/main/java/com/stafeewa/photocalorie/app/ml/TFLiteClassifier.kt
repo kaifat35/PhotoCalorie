@@ -68,8 +68,8 @@ class TFLiteClassifier(private val context: Context) {
 
             outputBuffer[0]
                 .mapIndexed { index, score -> LabelResult(getLabelForIndex(index), score) }
-                .filter { it.confidence > 0.1f }
                 .sortedByDescending { it.confidence }
+                .take(TOP_RECOGNITION_RESULTS)
         } catch (_: Exception) {
             emptyList()
         }
@@ -109,6 +109,9 @@ class TFLiteClassifier(private val context: Context) {
                 "restore"
             )
         }
+    }
+    private companion object {
+        const val TOP_RECOGNITION_RESULTS = 3
     }
 }
 

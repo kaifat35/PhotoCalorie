@@ -69,6 +69,12 @@ fun RecognitionResultDialog(
     var showLocalSearchDialog by remember { mutableStateOf(false) }
     var localSearchQuery by remember { mutableStateOf("") }
     var localSearchResults by remember { mutableStateOf<List<Product>>(emptyList()) }
+    var selectedSuccessProduct by remember(result) {
+        mutableStateOf((result as? RecognitionResult.Success)?.product)
+    }
+    var selectedSuccessConfidence by remember(result) {
+        mutableStateOf((result as? RecognitionResult.Success)?.confidence ?: 0f)
+    }
 
     LaunchedEffect(localSearchQuery) {
         if (localSearchQuery.isNotBlank()) {
@@ -107,28 +113,76 @@ fun RecognitionResultDialog(
             ) {
                 when (result) {
                     is RecognitionResult.Success -> {
+                        val currentProduct = selectedSuccessProduct ?: result.product
+                        val currentConfidence = selectedSuccessConfidence
+
                         Text(
-                            text = "${result.product.name.toUserVisibleFoodName()} (${(result.confidence * 100).toInt()}%)",
+                            text = "${currentProduct.name.toUserVisibleFoodName()} (${(currentConfidence * 100).toInt()}%)",
                             color = MaterialTheme.colorScheme.primary,
                             fontSize = 18.sp,
                             fontFamily = FontFamily(Font(R.font.jura))
                         )
+
+                        if (result.alternatives.isNotEmpty()) {
+                            Text(
+                                text = stringResource(R.string.choose_top_recognition_option),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                fontSize = 12.sp
+                            )
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                result.alternatives.forEach { match ->
+                                    val isSelected = match.product.id == currentProduct.id
+                                    TextButton(
+                                        onClick = {
+                                            selectedSuccessProduct = match.product
+                                            selectedSuccessConfidence = match.confidence
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.textButtonColors(
+                                            containerColor = if (isSelected) {
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                                            } else {
+                                                Color.Transparent
+                                            }
+                                        )
+                                    ) {
+                                        Column(modifier = Modifier.fillMaxWidth()) {
+                                            Text(
+                                                text = "${match.product.name.toUserVisibleFoodName()} (${(match.confidence * 100).toInt()}%)",
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = stringResource(
+                                                    R.string.kbju_inline_per_100g,
+                                                    match.product.caloriesPer100g.toInt(),
+                                                    match.product.proteinPer100g.toInt(),
+                                                    match.product.fatPer100g.toInt(),
+                                                    match.product.carbsPer100g.toInt()
+                                                ),
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
                             NutrientInfoDialog(stringResource(R.string.calories),
-                                "${result.product.caloriesPer100g.toInt()} ${stringResource(R.string.kcal_short)}",
+                                "${currentProduct.caloriesPer100g.toInt()} ${stringResource(R.string.kcal_short)}",
                                 MaterialTheme.colorScheme.tertiary)
                             NutrientInfoDialog(stringResource(R.string.proteins),
-                                "${result.product.proteinPer100g.toInt()} ${stringResource(R.string.grams_short)}",
+                                "${currentProduct.proteinPer100g.toInt()} ${stringResource(R.string.grams_short)}",
                                 MaterialTheme.colorScheme.secondary)
                             NutrientInfoDialog(stringResource(R.string.fats),
-                                "${result.product.fatPer100g.toInt()} ${stringResource(R.string.grams_short)}",
+                                "${currentProduct.fatPer100g.toInt()} ${stringResource(R.string.grams_short)}",
                                 MaterialTheme.colorScheme.error)
                             NutrientInfoDialog(stringResource(R.string.carbohydrates),
-                                "${result.product.carbsPer100g.toInt()} ${stringResource(R.string.grams_short)}",
+                                "${currentProduct.carbsPer100g.toInt()} ${stringResource(R.string.grams_short)}",
                                 Color(0xFF9C27B0))
                         }
 
@@ -152,10 +206,10 @@ fun RecognitionResultDialog(
                             text = stringResource(
                                 R.string.kbju_inline_format,
                                 portion.toIntOrNull() ?: 100,
-                                (result.product.caloriesPer100g * factor).toInt(),
-                                (result.product.proteinPer100g * factor).toInt(),
-                                (result.product.fatPer100g * factor).toInt(),
-                                (result.product.carbsPer100g * factor).toInt()
+                                (currentProduct.caloriesPer100g * factor).toInt(),
+                                (currentProduct.proteinPer100g * factor).toInt(),
+                                (currentProduct.fatPer100g * factor).toInt(),
+                                (currentProduct.carbsPer100g * factor).toInt()
                             ),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
@@ -420,13 +474,14 @@ fun RecognitionResultDialog(
                     Button(
                         onClick = {
                             val factor = portion.toDoubleOrNull()?.div(100) ?: 1.0
+                            val currentProduct = selectedSuccessProduct ?: result.product
                             onConfirm(
-                                result.product.name,
+                                currentProduct.name,
                                 selectedMealType,
                                 portion.toDoubleOrNull() ?: 100.0,
-                                result.product.proteinPer100g * factor,
-                                result.product.fatPer100g * factor,
-                                result.product.carbsPer100g * factor
+                                currentProduct.proteinPer100g * factor,
+                                currentProduct.fatPer100g * factor,
+                                currentProduct.carbsPer100g * factor
                             )
                             onDismiss()
                         },

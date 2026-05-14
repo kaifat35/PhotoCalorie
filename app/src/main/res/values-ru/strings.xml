@@ -66,6 +66,7 @@
     <string name="error">Ошибка</string>
     <string name="add_manually_without_saving">Добавить вручную (без сохранения)</string>
     <string name="choose_dish">Выберите блюдо</string>
+    <string name="choose_top_recognition_option">Если модель ошиблась, выберите один из топ-3 вариантов:</string>
     <string name="similar_dishes_found">Найдено несколько похожих блюд</string>
     <string name="interval_15_minutes">15 минут</string>
     <string name="interval_30_minutes">30 минут</string>

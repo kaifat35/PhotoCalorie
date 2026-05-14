@@ -136,9 +136,14 @@ class CameraViewModel @Inject constructor(
             _recognitionResult.value = when (result) {
                 is RecognizeFoodUseCase.Result.Success -> {
                     val translatedProduct = translateProduct(result.product)
+                    val translatedAlternatives = result.alternatives.map { match ->
+                        val translatedAlternative = translateProduct(match.product)
+                        match.copy(product = translatedAlternative)
+                    }
                     RecognitionResult.Success(
                         product = translatedProduct,
-                        confidence = result.confidence
+                        confidence = result.confidence,
+                        alternatives = translatedAlternatives
                     )
                 }
                 is RecognizeFoodUseCase.Result.MultipleMatches -> {
@@ -213,7 +218,11 @@ class CameraViewModel @Inject constructor(
 }
 
 sealed class RecognitionResult {
-    data class Success(val product: Product, val confidence: Float) : RecognitionResult()
+    data class Success(
+        val product: Product,
+        val confidence: Float,
+        val alternatives: List<RecognizeFoodUseCase.ProductMatch> = emptyList()
+    ) : RecognitionResult()
     data class MultipleMatches(val matches: List<RecognizeFoodUseCase.ProductMatch>) : RecognitionResult()
     data class NotFound(val suggestedName: String) : RecognitionResult()
     data class LowConfidence(val suggestedName: String) : RecognitionResult()
