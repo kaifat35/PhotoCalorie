@@ -5,14 +5,10 @@ import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.PhotoCalorieApp
-import com.stafeewa.photocalorie.app.domain.entity.Interval
 import com.stafeewa.photocalorie.app.domain.entity.Language
 import com.stafeewa.photocalorie.app.domain.entity.ThemeMode
 import com.stafeewa.photocalorie.app.domain.usecase.settings.GetSettingsUseCase
-import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateIntervalUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateLanguageUseCase
-import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateNotificationsEnabledUseCase
-import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateWifiOnlyUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
