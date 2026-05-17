@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
     entities = [RecipeDbModel::class, SubscriptionDbModel::class, User::class,
         FoodEntryDbModel::class, ProductDbModel::class,
         UserFoodPreferencesEntity::class, RecommendationFeedbackEntity::class],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 

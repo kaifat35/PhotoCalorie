@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import org.tensorflow.lite.Interpreter
 import java.io.File
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -14,29 +15,33 @@ class TFLiteClassifier(private val context: Context) {
     private val modelFileName = "food_model.tflite"
 
     init {
-        loadModel()
+        runCatching { loadModel() }
+            .onFailure { interpreter = null }
     }
 
     private fun loadModel() {
-        val modelFile = copyModelToCache()
+        val modelFile = copyModelToCache() ?: return
         val options = Interpreter.Options()
         // Используем только CPU (GPU delegate отключён для избежания ошибок)
         interpreter = Interpreter(modelFile, options)
     }
 
-    private fun copyModelToCache(): File {
+    private fun copyModelToCache(): File? {
         val cacheFile = File(context.cacheDir, modelFileName)
         if (cacheFile.exists()) {
             return cacheFile
         }
 
-        context.assets.open(modelFileName).use { input ->
-            cacheFile.outputStream().use { output ->
-                input.copyTo(output)
+        return try {
+            context.assets.open(modelFileName).use { input ->
+                cacheFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
             }
+            cacheFile
+        } catch (_: IOException) {
+            null
         }
-
-        return cacheFile
     }
 
     suspend fun recognizeFood(bitmap: Bitmap): List<LabelResult> {
@@ -99,11 +104,17 @@ class TFLiteClassifier(private val context: Context) {
     }
 
     fun restore(checkpointPath: String) {
+        val activeInterpreter = interpreter ?: return
         val checkpointFile = File(checkpointPath)
-        if (!checkpointFile.exists()) return
+        if (!checkpointFile.exists() || !checkpointFile.isFile || checkpointFile.length() == 0L) return
+
+        val hasRestoreSignature = runCatching {
+            activeInterpreter.signatureKeys.contains("restore")
+        }.getOrDefault(false)
+        if (!hasRestoreSignature) return
 
         runCatching {
-            interpreter?.runSignature(
+            activeInterpreter.runSignature(
                 mapOf("checkpoint_path" to arrayOf(checkpointPath)),
                 mutableMapOf(),
                 "restore"

@@ -180,9 +180,11 @@ class RecognizeFoodUseCase @Inject constructor(
     }
 
     fun restoreTrainedWeights() {
-        val weightsFile = File(context.filesDir, "trained_weights.ckpt")
-        if (!weightsFile.exists()) return
-        foodClassifier.restore(weightsFile.absolutePath)
+        runCatching {
+            val weightsFile = File(context.filesDir, "trained_weights.ckpt")
+            if (!weightsFile.exists()) return
+            foodClassifier.restore(weightsFile.absolutePath)
+        }
     }
 
     private companion object {
