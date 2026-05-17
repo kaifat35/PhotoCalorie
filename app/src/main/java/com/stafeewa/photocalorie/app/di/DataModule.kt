@@ -6,7 +6,6 @@ import androidx.work.WorkManager
 import com.stafeewa.photocalorie.app.data.local.PhotoCalorieDao
 import com.stafeewa.photocalorie.app.data.local.PhotoCalorieDatabase
 import com.stafeewa.photocalorie.app.data.local.ProductDao
-import com.stafeewa.photocalorie.app.data.local.TrainingExampleDao
 import com.stafeewa.photocalorie.app.data.local.UserFoodPreferencesDao
 import com.stafeewa.photocalorie.app.data.local.RecommendationFeedbackDao
 import com.stafeewa.photocalorie.app.data.provider.RecommendationStringProviderImpl
@@ -17,14 +16,12 @@ import com.stafeewa.photocalorie.app.data.repository.ProductRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.SettingsRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.UserFoodPreferencesRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.RecommendationFeedbackRepositoryImpl
-import com.stafeewa.photocalorie.app.data.repository.TrainingRepositoryImpl
 import com.stafeewa.photocalorie.app.data.repository.UserProfileRepositoryImpl
 import com.stafeewa.photocalorie.app.domain.provider.RecommendationStringProvider
 import com.stafeewa.photocalorie.app.domain.repository.FoodIntakeRepository
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
 import com.stafeewa.photocalorie.app.domain.repository.RecipeRepository
 import com.stafeewa.photocalorie.app.domain.repository.SettingsRepository
-import com.stafeewa.photocalorie.app.domain.repository.TrainingRepository
 import com.stafeewa.photocalorie.app.domain.repository.UserProfileRepository
 import com.stafeewa.photocalorie.app.domain.repository.UserFoodPreferencesRepository
 import com.stafeewa.photocalorie.app.domain.repository.RecommendationFeedbackRepository
@@ -75,12 +72,6 @@ interface DataModule {
     fun bindFoodIntakeRepository(
         impl: FoodIntakeRepositoryImpl
     ): FoodIntakeRepository
-
-    @Binds
-    @Singleton
-    fun bindTrainingRepository(
-        impl: TrainingRepositoryImpl
-    ): TrainingRepository
 
     @Binds
     @Singleton
@@ -164,12 +155,6 @@ interface DataModule {
         fun providesProductDao(
             database: PhotoCalorieDatabase
         ): ProductDao = database.productDao()
-
-        @Provides
-        @Singleton
-        fun providesTrainingExampleDao(
-            database: PhotoCalorieDatabase
-        ): TrainingExampleDao = database.trainingExampleDao()
 
         @Provides
         @Singleton

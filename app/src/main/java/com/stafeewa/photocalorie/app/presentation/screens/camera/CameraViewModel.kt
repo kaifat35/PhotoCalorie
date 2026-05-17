@@ -1,17 +1,14 @@
 package com.stafeewa.photocalorie.app.presentation.screens.camera
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkManager
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import com.stafeewa.photocalorie.app.domain.entity.Product
 import com.stafeewa.photocalorie.app.domain.repository.ProductRepository
-import com.stafeewa.photocalorie.app.domain.repository.TrainingRepository
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.AddRecognizedFoodToDatabaseUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.RecognizeFoodUseCase
 import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
@@ -23,7 +20,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
-import java.io.FileOutputStream
 import java.util.concurrent.ExecutorService
 import javax.inject.Inject
 
@@ -31,9 +27,6 @@ import javax.inject.Inject
 class CameraViewModel @Inject constructor(
     private val recognizeFoodUseCase: RecognizeFoodUseCase,
     private val addRecognizedFoodToDatabaseUseCase: AddRecognizedFoodToDatabaseUseCase,
-    private val trainingRepository: TrainingRepository,
-    private val workManager: WorkManager,
-    @ApplicationContext private val appContext: Context,
     val productRepository: ProductRepository
 ) : ViewModel() {
 
@@ -100,22 +93,6 @@ class CameraViewModel @Inject constructor(
     fun onRecognitionConfirmed(foodName: String) {
         val bitmap = lastRecognizedBitmap ?: return
         val englishLabel = resolveEnglishLabel(foodName)
-        saveTrainingExample(bitmap, englishLabel)
-    }
-
-    private fun saveTrainingExample(bitmap: Bitmap, label: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val trainingDir = File(appContext.filesDir, "training_examples").apply { mkdirs() }
-                val file = File(trainingDir, "train_${System.currentTimeMillis()}.jpg")
-                FileOutputStream(file).use { out ->
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
-                }
-                trainingRepository.saveTrainingExample(file.absolutePath, label)
-            } catch (e: Exception) {
-                // no-op
-            }
-        }
     }
 
     private fun resolveEnglishLabel(foodName: String): String {

@@ -52,8 +52,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.stafeewa.photocalorie.app.R
-import com.stafeewa.photocalorie.app.domain.entity.MinTrainingExamplesOption
-import com.stafeewa.photocalorie.app.domain.entity.TrainingFrequencyOption
 import com.stafeewa.photocalorie.app.presentation.ui.theme.textFieldColors
 
 @Composable
@@ -205,38 +203,6 @@ fun SettingsScreen(
                                         viewModel.processCommand(SettingsCommand.SetThemeMode(themeMode))
                                     },
                                     itemAsString = { it.toLocalizedName() }
-                                )
-                            }
-                        }
-                        // Частота дообучения
-                        item {
-                            SettingsCard(
-                                title = stringResource(R.string.training_frequency),
-                                subtitle = stringResource(R.string.training_frequency_hint)
-                            ) {
-                                SettingsDropdown(
-                                    items = currentState.trainingFrequencyOptions,
-                                    selectedItem = TrainingFrequencyOption.fromHours(currentState.trainingFrequencyHours),
-                                    onItemSelected = {
-                                        viewModel.processCommand(SettingsCommand.SetTrainingFrequencyHours(it.hours))
-                                    },
-                                    itemAsString = { it.title }
-                                )
-                            }
-                        }
-                        // Минимум примеров
-                        item {
-                            SettingsCard(
-                                title = stringResource(R.string.min_training_examples),
-                                subtitle = stringResource(R.string.min_training_examples_hint)
-                            ) {
-                                SettingsDropdown(
-                                    items = currentState.minTrainingExamplesOptions,
-                                    selectedItem = MinTrainingExamplesOption.fromCount(currentState.minTrainingExamples),
-                                    onItemSelected = {
-                                        viewModel.processCommand(SettingsCommand.SetMinTrainingExamples(it.count))
-                                    },
-                                    itemAsString = { it.title }
                                 )
                             }
                         }

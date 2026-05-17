@@ -7,17 +7,12 @@ import androidx.lifecycle.viewModelScope
 import com.stafeewa.photocalorie.app.PhotoCalorieApp
 import com.stafeewa.photocalorie.app.domain.entity.Interval
 import com.stafeewa.photocalorie.app.domain.entity.Language
-import com.stafeewa.photocalorie.app.domain.entity.MinTrainingExamplesOption
 import com.stafeewa.photocalorie.app.domain.entity.ThemeMode
-import com.stafeewa.photocalorie.app.domain.entity.TrainingFrequencyOption
 import com.stafeewa.photocalorie.app.domain.usecase.settings.GetSettingsUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateIntervalUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateLanguageUseCase
-import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateMinTrainingExamplesUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateNotificationsEnabledUseCase
-import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateTrainingFrequencyUseCase
 import com.stafeewa.photocalorie.app.domain.usecase.settings.UpdateWifiOnlyUseCase
-import com.stafeewa.photocalorie.app.presentation.workers.TrainingScheduleConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,9 +31,7 @@ class SettingsViewModel @Inject constructor(
     private val updateIntervalUseCase: UpdateIntervalUseCase,
     private val updateLanguageUseCase: UpdateLanguageUseCase,
     private val updateNotificationsEnabledUseCase: UpdateNotificationsEnabledUseCase,
-    private val updateWifiOnlyUseCase: UpdateWifiOnlyUseCase,
-    private val updateTrainingFrequencyUseCase: UpdateTrainingFrequencyUseCase,
-    private val updateMinTrainingExamplesUseCase: UpdateMinTrainingExamplesUseCase
+    private val updateWifiOnlyUseCase: UpdateWifiOnlyUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<SettingsState>(SettingsState.Initial)
@@ -58,8 +51,6 @@ class SettingsViewModel @Inject constructor(
                         interval = settings.interval,
                         wifiOnly = settings.wifiOnly,
                         notificationsEnabled = settings.notificationsEnabled,
-                        trainingFrequencyHours = settings.trainingFrequencyHours,
-                        minTrainingExamples = settings.minTrainingExamples,
                         themeMode = savedTheme
                     )
                 }
@@ -98,16 +89,6 @@ class SettingsViewModel @Inject constructor(
                 is SettingsCommand.SetThemeMode -> {
                     updateThemeModeUseCase(command.themeMode)
                 }
-                is SettingsCommand.SetTrainingFrequencyHours -> {
-                    updateTrainingFrequencyUseCase(
-                        TrainingScheduleConfig.normalizeFrequencyHours(command.hours)
-                    )
-                }
-                is SettingsCommand.SetMinTrainingExamples -> {
-                    updateMinTrainingExamplesUseCase(
-                        TrainingScheduleConfig.normalizeMinExamples(command.count)
-                    )
-                }
             }
         }
     }
@@ -139,8 +120,6 @@ sealed interface SettingsCommand {
     data class SetNotificationEnabled(val enabled: Boolean) : SettingsCommand
     data class SeWifiOnly(val wifiOnly: Boolean) : SettingsCommand
     data class SetThemeMode(val themeMode: ThemeMode) : SettingsCommand
-    data class SetTrainingFrequencyHours(val hours: Int) : SettingsCommand
-    data class SetMinTrainingExamples(val count: Int) : SettingsCommand
 }
 
 sealed interface SettingsState {
@@ -150,13 +129,9 @@ sealed interface SettingsState {
         val interval: Interval,
         val wifiOnly: Boolean,
         val notificationsEnabled: Boolean,
-        val trainingFrequencyHours: Int,
-        val minTrainingExamples: Int,
         val themeMode: ThemeMode,
         val languages: List<Language> = Language.entries,
         val intervals: List<Interval> = Interval.entries,
-        val themeModes: List<ThemeMode> = ThemeMode.entries,
-        val trainingFrequencyOptions: List<TrainingFrequencyOption> = TrainingFrequencyOption.entries,
-        val minTrainingExamplesOptions: List<MinTrainingExamplesOption> = MinTrainingExamplesOption.entries
+        val themeModes: List<ThemeMode> = ThemeMode.entries
     ) : SettingsState
 }
