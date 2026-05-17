@@ -10,9 +10,4 @@ interface SettingsRepository {
 
     suspend fun updateLanguage(language: Language)
 
-    suspend fun updateInterval(minutes: Int)
-
-    suspend fun updateNotificationEnabled(enabled: Boolean)
-
-    suspend fun updateWifiOnly(wifiOnly: Boolean)
 }
