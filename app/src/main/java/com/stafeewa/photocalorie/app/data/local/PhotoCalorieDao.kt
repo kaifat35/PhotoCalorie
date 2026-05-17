@@ -5,34 +5,12 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Transaction
 import androidx.room.Update
 import com.stafeewa.photocalorie.app.domain.entity.MealType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PhotoCalorieDao {
-
-    // ============ Subscriptions ============
-    @Query("SELECT * FROM subscriptions")
-    fun getAllSubscriptions(): Flow<List<SubscriptionDbModel>>
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun addSubscription(subscriptionDbModel: SubscriptionDbModel)
-
-    @Transaction
-    @Delete
-    suspend fun deleteSubscription(subscriptionDbModel: SubscriptionDbModel)
-
-    // ============ Recipes ============
-    @Query("SELECT * FROM recipes WHERE topic IN (:topics)")
-    fun getAllRecipesByTopics(topics: List<String>): Flow<List<RecipeDbModel>>
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun addRecipes(recipes: List<RecipeDbModel>): List<Long>
-
-    @Query("DELETE FROM recipes WHERE topic IN (:topics)")
-    suspend fun deleteRecipesByTopics(topics: List<String>)
 
     // ============ Users ============
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -4,10 +4,10 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [RecipeDbModel::class, SubscriptionDbModel::class, User::class,
+    entities = [User::class,
         FoodEntryDbModel::class, ProductDbModel::class,
         UserFoodPreferencesEntity::class, RecommendationFeedbackEntity::class],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 
