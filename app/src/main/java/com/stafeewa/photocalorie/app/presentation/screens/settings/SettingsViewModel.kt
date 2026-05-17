@@ -28,10 +28,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val application: Application,
     getSettingsUseCase: GetSettingsUseCase,
-    private val updateIntervalUseCase: UpdateIntervalUseCase,
     private val updateLanguageUseCase: UpdateLanguageUseCase,
-    private val updateNotificationsEnabledUseCase: UpdateNotificationsEnabledUseCase,
-    private val updateWifiOnlyUseCase: UpdateWifiOnlyUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<SettingsState>(SettingsState.Initial)
@@ -48,9 +45,6 @@ class SettingsViewModel @Inject constructor(
                 _state.update {
                     SettingsState.Configuration(
                         language = settings.language,
-                        interval = settings.interval,
-                        wifiOnly = settings.wifiOnly,
-                        notificationsEnabled = settings.notificationsEnabled,
                         themeMode = savedTheme
                     )
                 }
@@ -71,21 +65,13 @@ class SettingsViewModel @Inject constructor(
     fun processCommand(command: SettingsCommand) {
         viewModelScope.launch {
             when (command) {
-                is SettingsCommand.SeWifiOnly -> {
-                    updateWifiOnlyUseCase(command.wifiOnly)
-                }
-                is SettingsCommand.SelectInterval -> {
-                    updateIntervalUseCase(command.interval)
-                }
                 is SettingsCommand.SelectLanguage -> {
                     updateLanguageUseCase(command.language)
                     saveAndApplyLanguage(command.language)
                     updateAppLocale(command.language.code)    // обновляем ресурсы приложения
                     _restartAppEvent.emit(Unit)               // перезапускаем Activity
                 }
-                is SettingsCommand.SetNotificationEnabled -> {
-                    updateNotificationsEnabledUseCase(command.enabled)
-                }
+
                 is SettingsCommand.SetThemeMode -> {
                     updateThemeModeUseCase(command.themeMode)
                 }
@@ -116,9 +102,6 @@ class SettingsViewModel @Inject constructor(
 
 sealed interface SettingsCommand {
     data class SelectLanguage(val language: Language) : SettingsCommand
-    data class SelectInterval(val interval: Interval) : SettingsCommand
-    data class SetNotificationEnabled(val enabled: Boolean) : SettingsCommand
-    data class SeWifiOnly(val wifiOnly: Boolean) : SettingsCommand
     data class SetThemeMode(val themeMode: ThemeMode) : SettingsCommand
 }
 
@@ -126,12 +109,8 @@ sealed interface SettingsState {
     data object Initial : SettingsState
     data class Configuration(
         val language: Language,
-        val interval: Interval,
-        val wifiOnly: Boolean,
-        val notificationsEnabled: Boolean,
         val themeMode: ThemeMode,
         val languages: List<Language> = Language.entries,
-        val intervals: List<Interval> = Interval.entries,
         val themeModes: List<ThemeMode> = ThemeMode.entries
     ) : SettingsState
 }

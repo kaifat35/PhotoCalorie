@@ -142,54 +142,6 @@ fun SettingsScreen(
                                 )
                             }
                         }
-                        // Интервал обновления рецептов
-                        item {
-                            SettingsCard(
-                                title = stringResource(R.string.update_interval),
-                                subtitle = stringResource(R.string.how_often_to_update_recipe)
-                            ) {
-                                SettingsDropdown(
-                                    items = currentState.intervals,
-                                    selectedItem = currentState.interval,
-                                    onItemSelected = {
-                                        viewModel.processCommand(SettingsCommand.SelectInterval(it))
-                                    },
-                                    itemAsString = { it.toLocalizedName() }
-                                )
-                            }
-                        }
-                        // Уведомления
-                        item {
-                            SettingsCard(
-                                title = stringResource(R.string.notifications),
-                                subtitle = stringResource(R.string.show_notifications_about_new_recipes)
-                            ) {
-                                Switch(
-                                    checked = currentState.notificationsEnabled,
-                                    onCheckedChange = { enabled ->
-                                        if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                        } else {
-                                            viewModel.processCommand(SettingsCommand.SetNotificationEnabled(enabled))
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                        // Только Wi-Fi
-                        item {
-                            SettingsCard(
-                                title = stringResource(R.string.update_only_via_wi_fi),
-                                subtitle = stringResource(R.string.save_mobile_data)
-                            ) {
-                                Switch(
-                                    checked = currentState.wifiOnly,
-                                    onCheckedChange = {
-                                        viewModel.processCommand(SettingsCommand.SeWifiOnly(it))
-                                    }
-                                )
-                            }
-                        }
                         // Тема
                         item {
                             SettingsCard(
