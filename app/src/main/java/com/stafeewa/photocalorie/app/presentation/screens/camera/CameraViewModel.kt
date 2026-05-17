@@ -1,5 +1,6 @@
 package com.stafeewa.photocalorie.app.presentation.screens.camera
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.camera.core.ImageCapture
@@ -13,7 +14,6 @@ import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.AddRecognize
 import com.stafeewa.photocalorie.app.domain.usecase.foodrecognition.RecognizeFoodUseCase
 import com.stafeewa.photocalorie.app.utils.EnglishToRussianMap
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

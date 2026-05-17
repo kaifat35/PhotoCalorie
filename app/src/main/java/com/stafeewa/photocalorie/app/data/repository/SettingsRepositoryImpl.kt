@@ -70,5 +70,4 @@ class SettingsRepositoryImpl @Inject constructor(
             preferences[wifiOnlyKey] = wifiOnly
         }
     }
-    }
 }
