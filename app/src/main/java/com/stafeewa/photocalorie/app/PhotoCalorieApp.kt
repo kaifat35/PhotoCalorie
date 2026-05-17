@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.res.Configuration as ResConfiguration
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import com.stafeewa.photocalorie.app.presentation.workers.AppStartupManager
 import com.stafeewa.photocalorie.app.utils.LocaleManager
 import dagger.hilt.android.HiltAndroidApp
 import java.util.Locale
@@ -17,8 +16,6 @@ class PhotoCalorieApp : Application(), Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
-    @Inject
-    lateinit var appStartupManager: AppStartupManager
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -31,10 +28,6 @@ class PhotoCalorieApp : Application(), Configuration.Provider {
         super.attachBaseContext(LocaleManager.setLocale(base, languageCode))
     }
 
-    override fun onCreate() {
-        super.onCreate()
-        appStartupManager.startRefreshData()
-    }
 
     /**
      * Обновляет локаль приложения (ресурсы) без перезапуска всего процесса.

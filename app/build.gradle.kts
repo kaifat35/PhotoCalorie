@@ -1,6 +1,3 @@
-import java.util.Properties
-import kotlin.apply
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -8,14 +5,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt.android)
 }
-private val keystorePropertiesFile = rootProject.file("keystore.properties")
-private val keystoreProperties = keystorePropertiesFile.inputStream().use { inputStream ->
-    Properties().apply {
-        load(inputStream)
-    }
-}
-private val apiKey = keystoreProperties.getProperty("SPONACULAR_API_KEY")
-
 android {
     namespace = "com.stafeewa.photocalorie.app"
     compileSdk {
@@ -35,7 +24,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "SPONACULAR_API_KEY", apiKey)
     }
 
     buildTypes {
@@ -110,10 +98,6 @@ dependencies {
 
     //SplashScreen
     implementation(libs.androidx.core.splashscreen)
-
-    //Retrofit
-    implementation(libs.retrofit)
-    implementation(libs.converter.kotlinx.serialization)
 
     //WorkManager
     implementation(libs.androidx.work.runtime.ktx)
