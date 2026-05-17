@@ -29,8 +29,6 @@ class SettingsRepositoryImpl @Inject constructor(
     private val intervalKey = intPreferencesKey("interval")
     private val notificationsEnabledKey = booleanPreferencesKey("notifications_enabled")
     private val wifiOnlyKey = booleanPreferencesKey("wifi_only")
-    private val trainingFrequencyHoursKey = intPreferencesKey("training_frequency_hours")
-    private val minTrainingExamplesKey = intPreferencesKey("min_training_examples")
 
     override fun getSettings(): Flow<Settings> {
         return context.dataStore.data.map { preferences ->
@@ -40,18 +38,11 @@ class SettingsRepositoryImpl @Inject constructor(
             val notificationsEnabled =
                 preferences[notificationsEnabledKey] ?: Settings.DEFAULT_NOTIFICATION_ENABLED
             val wifiOnly = preferences[wifiOnlyKey] ?: Settings.DEFAULT_WIFI_ONLY
-            val trainingFrequencyHours = preferences[trainingFrequencyHoursKey]
-                ?: Settings.DEFAULT_TRAINING_FREQUENCY_HOURS
-            val minTrainingExamples = preferences[minTrainingExamplesKey]
-                ?: Settings.DEFAULT_MIN_TRAINING_EXAMPLES
-
             Settings(
                 language = language,
                 interval = interval,
                 notificationsEnabled = notificationsEnabled,
-                wifiOnly = wifiOnly,
-                trainingFrequencyHours = trainingFrequencyHours,
-                minTrainingExamples = minTrainingExamples
+                wifiOnly = wifiOnly
             )
         }
     }
@@ -79,16 +70,5 @@ class SettingsRepositoryImpl @Inject constructor(
             preferences[wifiOnlyKey] = wifiOnly
         }
     }
-
-    override suspend fun updateTrainingFrequencyHours(hours: Int) {
-        context.dataStore.edit { preferences ->
-            preferences[trainingFrequencyHoursKey] = hours
-        }
-    }
-
-    override suspend fun updateMinTrainingExamples(count: Int) {
-        context.dataStore.edit { preferences ->
-            preferences[minTrainingExamplesKey] = count
-        }
     }
 }

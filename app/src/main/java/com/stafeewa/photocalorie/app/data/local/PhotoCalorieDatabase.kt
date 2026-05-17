@@ -2,11 +2,10 @@ package com.stafeewa.photocalorie.app.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.stafeewa.photocalorie.app.domain.entity.TrainingExample
 
 @Database(
     entities = [RecipeDbModel::class, SubscriptionDbModel::class, User::class,
-        FoodEntryDbModel::class, ProductDbModel::class, TrainingExample::class,
+        FoodEntryDbModel::class, ProductDbModel::class,
         UserFoodPreferencesEntity::class, RecommendationFeedbackEntity::class],
     version = 7,
     exportSchema = false
@@ -17,7 +16,6 @@ abstract class PhotoCalorieDatabase : RoomDatabase() {
 
     abstract fun productDao(): ProductDao
 
-    abstract fun trainingExampleDao(): TrainingExampleDao
     abstract fun userFoodPreferencesDao(): UserFoodPreferencesDao
     abstract fun recommendationFeedbackDao(): RecommendationFeedbackDao
 
